@@ -77,7 +77,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan, openapi_url="/openapi.json", docs_url="/docs")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(CORSMiddleware, allow_origins=settings.origins, allow_credentials=True, allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], allow_headers=["Authorization", "Content-Type", "X-Hardware-Token"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.origins if settings.origins else ["*"],
+    allow_origin_regex=r"^https://.*\.onrender\.com$|^https://.*\.trycloudflare\.com$|^https://.*\.loca\.lt$|^https://.*\.vercel\.app$|^http://localhost(:\d+)?$|^http://127\.0\.0\.1(:\d+)?$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(biometric.router, prefix="/api/v1")

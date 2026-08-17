@@ -20,7 +20,8 @@ class Settings(BaseSettings):
     public_app_url: str = ""
     next_public_public_app_url: str = ""
     next_public_public_voting_url: str = ""
-    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001"
+    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://civitas-frontend.onrender.com,https://civitas-frontend-nvp6.onrender.com"
+    cors_allowed_origins: str = ""
     access_token_minutes: int = 10
     refresh_token_days: int = 1
     max_authentication_minutes: int = 5
@@ -81,7 +82,19 @@ class Settings(BaseSettings):
 
     @property
     def origins(self) -> list[str]:
-        base_list = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        raw_combined = f"{self.cors_origins},{self.cors_allowed_origins}"
+        base_list = [origin.strip() for origin in raw_combined.split(",") if origin.strip()]
+        # Add default local development and known production origins
+        defaults = [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+            "https://civitas-frontend.onrender.com",
+        ]
+        for d in defaults:
+            if d not in base_list:
+                base_list.append(d)
         eff = self.effective_public_app_url
         if eff and eff not in base_list:
             base_list.append(eff)

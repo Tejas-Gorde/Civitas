@@ -7,7 +7,11 @@ export const getApiBaseUrl = (): string => {
 
   // 1. If explicit valid remote URL is provided in NEXT_PUBLIC_API_URL (not localhost)
   if (envUrl && typeof envUrl === "string" && envUrl.trim() && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
-    return envUrl.trim().replace(/\/+$/, "");
+    let cleanUrl = envUrl.trim().replace(/\/+$/, "");
+    if (!cleanUrl.endsWith("/api/v1")) {
+      cleanUrl = `${cleanUrl}/api/v1`;
+    }
+    return cleanUrl;
   }
 
   // 2. If running on client/browser:
@@ -43,6 +47,8 @@ api.interceptors.request.use((config) => {
       const currentBase = config.baseURL || "";
       if (!currentBase || currentBase.startsWith("/") || currentBase.includes("localhost") || currentBase.includes("127.0.0.1")) {
         config.baseURL = DEFAULT_PRODUCTION_API_URL;
+      } else if (!currentBase.endsWith("/api/v1")) {
+        config.baseURL = `${currentBase.replace(/\/+$/, "")}/api/v1`;
       }
     }
 
@@ -114,7 +120,7 @@ export function readable(error: unknown): string {
       return data?.detail || "Server error occurred. Please verify backend logs.";
     }
     if (error.code === "ERR_NETWORK") {
-      return "Unable to connect to the election server.";
+      return "Unable to connect to the election server. This may be a network issue, a CORS error, or the backend may be unreachable.";
     }
   }
   if (error instanceof Error && error.message) {
