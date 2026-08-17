@@ -1,9 +1,30 @@
 import axios from "axios";
 
-const getApiBaseUrl = () => {
+export const DEFAULT_PRODUCTION_API_URL = "https://civitas-backend-adjg.onrender.com/api/v1";
+
+export const getApiBaseUrl = (): string => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
-    return envUrl;
+
+  // 1. If explicit valid remote URL is provided in NEXT_PUBLIC_API_URL (not localhost)
+  if (envUrl && typeof envUrl === "string" && envUrl.trim() && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+
+  // 2. If running on client/browser:
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    // If not running on localhost/127.0.0.1 (e.g. *.onrender.com, custom domain, tunnel):
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return DEFAULT_PRODUCTION_API_URL;
+    }
+  } else if (process.env.NODE_ENV === "production") {
+    // 3. During production build or SSR:
+    return DEFAULT_PRODUCTION_API_URL;
+  }
+
+  // 4. Local development environment fallback
+  if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, "");
   }
   return "/api/v1";
 };
@@ -14,9 +35,17 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Automatic Request Interceptor to inject Authorization Bearer token from localStorage/sessionStorage
+// Automatic Request Interceptor to inject Authorization Bearer token and ensure production base URL
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      const currentBase = config.baseURL || "";
+      if (!currentBase || currentBase.startsWith("/") || currentBase.includes("localhost") || currentBase.includes("127.0.0.1")) {
+        config.baseURL = DEFAULT_PRODUCTION_API_URL;
+      }
+    }
+
     const token = localStorage.getItem("token") || sessionStorage.getItem("voting-access");
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
