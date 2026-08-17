@@ -280,15 +280,15 @@ export default function CreateElectionWizardPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-6">
+    <div className="max-w-3xl mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Top Banner */}
-      <div className="card p-6 sm:p-8 bg-slate-950 text-white rounded-xl shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="card p-5 sm:p-8 bg-slate-950 text-white rounded-xl shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-400 bg-indigo-950/80 px-3 py-1 rounded-full border border-indigo-800/60">
+          <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-indigo-400 bg-indigo-950/80 px-3 py-1 rounded-full border border-indigo-800/60">
             <Plus className="h-3.5 w-3.5" />
             <span>CREATE NEW ELECTION WIZARD</span>
           </div>
-          <h1 className="mt-2.5 text-2xl sm:text-3xl font-black tracking-tight text-white">
+          <h1 className="mt-2 text-xl sm:text-3xl font-black tracking-tight text-white">
             Create Election & Local Admin Credentials
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-slate-400">
@@ -299,15 +299,15 @@ export default function CreateElectionWizardPage() {
         <button
           type="button"
           onClick={() => router.push("/admin/manage")}
-          className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition shrink-0"
+          className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition shrink-0 self-start sm:self-auto min-h-[40px]"
         >
           <ArrowLeft className="h-3.5 w-3.5 mr-1.5 inline" />
           Cancel Setup
         </button>
       </div>
 
-      {/* Progress Steps Bar */}
-      <div className="flex rounded-xl bg-slate-100 p-1.5 border border-slate-200/80 overflow-x-auto text-[11px] font-bold text-slate-600 shadow-xs">
+      {/* Progress Steps Bar (Desktop sm+) */}
+      <div className="hidden sm:flex rounded-xl bg-slate-100 p-1.5 border border-slate-200/80 overflow-x-auto text-[11px] font-bold text-slate-600 shadow-xs">
         {[
           "1. Admin Credentials",
           "2. Election Info",
@@ -336,15 +336,39 @@ export default function CreateElectionWizardPage() {
         ))}
       </div>
 
+      {/* Progress Steps Bar (Mobile <sm) */}
+      <div className="sm:hidden card p-4 space-y-2 bg-white border border-slate-200">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white text-xs font-black">
+              {currentStep}
+            </span>
+            <span className="font-bold text-slate-900">
+              {
+                ["Admin Credentials", "Election Info", "Candidates", "Voters", "Verification", "Review"][currentStep - 1]
+              }
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-500 font-semibold">
+            Step {currentStep} of 6
+          </span>
+        </div>
+        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+          <div
+            className="bg-indigo-600 h-full transition-all duration-300 rounded-full"
+            style={{ width: `${(currentStep / 6) * 100}%` }}
+          ></div>
+        </div>
+      </div>
 
       {/* STEP 1: CREATE YOUR LOCAL ADMIN CREDENTIALS */}
       {currentStep === 1 && (
-        <div className="card p-6 sm:p-8 space-y-6">
-          <div className="border-b border-slate-100 pb-4">
+        <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
+          <div className="border-b border-slate-100 pb-3 sm:pb-4">
             <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
               STEP 1 OF 6
             </span>
-            <h2 className="text-xl font-bold text-slate-900">CREATE YOUR LOCAL ADMIN CREDENTIALS</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">CREATE YOUR LOCAL ADMIN CREDENTIALS</h2>
             <p className="text-xs text-slate-600 mt-1">
               These credentials will be used to manage this election after it is created.
             </p>

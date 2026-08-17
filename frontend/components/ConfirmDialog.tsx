@@ -40,9 +40,9 @@ export default function ConfirmDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-      <div className="card max-w-md w-full p-6 space-y-5 bg-white border border-slate-200 shadow-xl rounded-2xl">
-        <div className="flex items-start justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3.5 sm:p-4 animate-in fade-in duration-200">
+      <div className="card max-w-md w-full p-5 sm:p-6 space-y-4 sm:space-y-5 bg-white border border-slate-200 shadow-xl rounded-2xl">
+        <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
             <div
               className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
@@ -56,7 +56,7 @@ export default function ConfirmDialog({
               <AlertTriangle className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{title}</h3>
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                 Action Confirmation Required
               </span>
@@ -66,7 +66,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition"
+            className="text-slate-400 hover:text-slate-700 p-2 rounded-lg transition min-h-[40px] min-w-[40px] flex items-center justify-center"
             aria-label="Close confirmation dialog"
           >
             <X className="h-5 w-5" />
@@ -77,12 +77,12 @@ export default function ConfirmDialog({
           {description}
         </p>
 
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-2.5 pt-2 border-t border-slate-100">
           <button
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="button button-secondary text-xs py-2 px-4"
+            className="button button-secondary text-xs py-2.5 px-4 w-full sm:w-auto min-h-[44px] order-2 sm:order-1"
           >
             {cancelText}
           </button>
@@ -91,7 +91,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`button text-xs py-2 px-5 transition ${getButtonClass()} disabled:opacity-60`}
+            className={`button text-xs py-2.5 px-5 transition ${getButtonClass()} disabled:opacity-60 w-full sm:w-auto min-h-[44px] order-1 sm:order-2`}
           >
             {loading ? (
               <>

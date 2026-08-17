@@ -108,14 +108,13 @@ const Camera = forwardRef<CameraHandle>(function Camera(_, ref) {
 
   if (error) {
     return (
-      <div className="flex aspect-video w-full flex-col items-center justify-center rounded-xl border border-slate-300 bg-slate-100 p-6 text-center text-slate-700">
-        <AlertCircle className="mb-2 h-10 w-10 text-amber-600" />
-        <p className="font-semibold text-slate-900">Webcam Access Notice</p>
-        <p className="mt-1 text-xs text-slate-600">{error}</p>
+      <div className="flex aspect-video min-h-[200px] w-full flex-col items-center justify-center rounded-xl border border-slate-300 bg-slate-100 p-4 sm:p-6 text-center text-slate-700">
+        <AlertCircle className="mb-2 h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
+        <p className="font-semibold text-xs sm:text-sm text-slate-900">Webcam Access Notice</p>
+        <p className="mt-1 text-[11px] sm:text-xs text-slate-600">{error}</p>
       </div>
     );
   }
-
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-md">
@@ -124,20 +123,20 @@ const Camera = forwardRef<CameraHandle>(function Camera(_, ref) {
         autoPlay
         muted
         playsInline
-        className="aspect-video w-full object-cover"
+        className="aspect-[4/3] sm:aspect-video w-full object-cover min-h-[220px] max-h-[360px]"
         aria-label="Live webcam preview"
       />
 
       {/* Face Positioning Oval Boundary Guide (OmniVote Pattern) */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-        <div className="w-48 h-64 sm:w-56 sm:h-72 border-2 border-dashed border-indigo-400/90 rounded-[50%] shadow-[0_0_0_9999px_rgba(15,23,42,0.5)] flex flex-col items-center justify-between p-4 transition-all">
+        <div className="w-40 h-52 sm:w-56 sm:h-72 border-2 border-dashed border-indigo-400/90 rounded-[50%] shadow-[0_0_0_9999px_rgba(15,23,42,0.5)] flex flex-col items-center justify-between p-3 sm:p-4 transition-all">
           <div className="w-full text-center">
-            <span className="bg-indigo-600/90 backdrop-blur-md text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
+            <span className="bg-indigo-600/90 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
               Position Face Inside Oval
             </span>
           </div>
-          <div className="w-full text-center mb-2">
-            <span className="text-[10px] font-bold text-slate-300 bg-slate-900/80 px-2 py-0.5 rounded-md backdrop-blur-sm">
+          <div className="w-full text-center mb-1 sm:mb-2">
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-300 bg-slate-900/80 px-2 py-0.5 rounded-md backdrop-blur-sm">
               Keep Steady
             </span>
           </div>
@@ -145,14 +144,13 @@ const Camera = forwardRef<CameraHandle>(function Camera(_, ref) {
       </div>
 
       {/* Live Badge Status */}
-      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-md border border-slate-700/60 shadow-xs">
+      <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20 flex items-center gap-1.5 rounded-full bg-slate-900/80 px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-white backdrop-blur-md border border-slate-700/60 shadow-xs">
         <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <CameraIcon className="h-3.5 w-3.5 text-indigo-400" />
+        <CameraIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400" />
         <span>LIVE CAMERA</span>
       </div>
     </div>
   );
-
 });
 
 export default Camera;

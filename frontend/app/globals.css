@@ -65,7 +65,8 @@ a:focus-visible {
   transform: translateY(-1px);
 }
 
-.field {
+.field,
+.input {
   width: 100%;
   border-radius: 0.5rem;
   border: 1px solid #cbd5e1;
@@ -77,11 +78,13 @@ a:focus-visible {
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.field::placeholder {
+.field::placeholder,
+.input::placeholder {
   color: #94a3b8;
 }
 
-.field:focus {
+.field:focus,
+.input:focus {
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
   outline: none;
@@ -101,6 +104,7 @@ a:focus-visible {
   transition: background-color 0.15s ease, transform 0.1s ease;
   border: 1px solid transparent;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .button:hover:not(:disabled) {
@@ -170,4 +174,26 @@ a:focus-visible {
   color: #475569;
   border: 1px solid #e2e8f0;
 }
+
+/* ==========================================================================
+   Mobile-First Optimization Breakpoints (<640px)
+   Protects Desktop UI while ensuring mobile feels like a polished native app
+   ========================================================================== */
+@media (max-width: 639px) {
+  /* Prevent unwanted iOS Safari auto-zoom on input focus */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .field,
+  .input {
+    font-size: 16px !important;
+    min-height: 46px;
+  }
+
+  /* Ensure interactive touch targets have comfortable height on phones */
+  .button {
+    min-height: 46px;
+  }
+}
+
 

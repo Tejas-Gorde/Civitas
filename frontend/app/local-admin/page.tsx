@@ -68,16 +68,16 @@ export default function LocalAdminLoginPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 space-y-6 px-4">
+    <div className="max-w-2xl mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-2 sm:px-4">
       {/* Header Banner */}
-      <div className="card p-6 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="card p-5 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-400 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
               <Shield className="h-3.5 w-3.5 text-teal-400" />
               LOCAL ADMIN ENTRY PORTAL
             </div>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight">
               Local Admin Login
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-300">
@@ -88,7 +88,7 @@ export default function LocalAdminLoginPage() {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0 self-start sm:self-auto"
+            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0 self-start sm:self-auto min-h-[40px] px-3.5"
           >
             <ArrowLeft className="h-3.5 w-3.5 mr-1 inline" />
             Back to Home
@@ -97,12 +97,12 @@ export default function LocalAdminLoginPage() {
       </div>
 
       {/* Main Login Card */}
-      <div className="card p-6 sm:p-8 space-y-6 bg-white border border-slate-200 shadow-sm rounded-2xl">
-        <div className="border-b border-slate-100 pb-4">
+      <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6 bg-white border border-slate-200 shadow-sm rounded-2xl">
+        <div className="border-b border-slate-100 pb-3 sm:pb-4">
           <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest block mb-1">
             Assigned Election Management
           </span>
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900">
             Sign In to Local Admin Panel
           </h2>
           <p className="text-xs text-slate-600 mt-1">
@@ -111,7 +111,7 @@ export default function LocalAdminLoginPage() {
         </div>
 
         {errorMsg && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
             <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">Authentication Failed</p>
@@ -134,7 +134,7 @@ export default function LocalAdminLoginPage() {
                 placeholder="e.g. electionA_admin"
                 className="input font-mono font-bold pl-9"
               />
-              <Key className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+              <Key className="h-4 w-4 text-slate-400 absolute left-3 top-3.5" />
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export default function LocalAdminLoginPage() {
                 placeholder="Enter password"
                 className="input pl-9"
               />
-              <Lock className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+              <Lock className="h-4 w-4 text-slate-400 absolute left-3 top-3.5" />
             </div>
           </div>
 
@@ -168,7 +168,7 @@ export default function LocalAdminLoginPage() {
           <button
             type="submit"
             disabled={loading || !tempAdminId.trim() || !tempPassword.trim()}
-            className="button button-teal w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+            className="button button-teal w-full min-h-[48px] py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
           >
             {loading ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -183,7 +183,7 @@ export default function LocalAdminLoginPage() {
       </div>
 
       {/* Option to Create New Election */}
-      <div className="card p-6 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="card p-5 sm:p-6 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
         <div className="space-y-1 text-center sm:text-left">
           <h3 className="text-sm font-bold text-slate-900 flex items-center justify-center sm:justify-start gap-2">
             <Plus className="h-4 w-4 text-teal-600" />
@@ -197,7 +197,7 @@ export default function LocalAdminLoginPage() {
         <button
           type="button"
           onClick={() => router.push("/admin/create")}
-          className="button button-secondary text-xs font-bold py-2.5 px-4 shrink-0 text-slate-800 hover:bg-white"
+          className="button button-secondary text-xs font-bold py-2.5 px-4 shrink-0 text-slate-800 hover:bg-white w-full sm:w-auto min-h-[44px]"
         >
           Create New Election →
         </button>

@@ -1052,9 +1052,9 @@ export default function LocalAdminPage() {
 
         {/* TAB 4: REGISTERED VOTERS */}
         {activeTab === "voters" && election && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-4 sm:space-y-6 animate-fade-in">
             <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="relative w-full sm:w-80">
                   <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -1062,14 +1062,14 @@ export default function LocalAdminPage() {
                     value={voterSearch}
                     onChange={(e) => setVoterSearch(e.target.value)}
                     placeholder="Search by name, voter ID, email..."
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
+                    className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setShowAddVoterModal(true)}
-                  className="w-full sm:w-auto py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition"
+                  className="w-full sm:w-auto min-h-[44px] py-2.5 sm:py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Register Single Voter</span>
@@ -1077,7 +1077,8 @@ export default function LocalAdminPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-600">
+                {/* Desktop Table (md+) */}
+                <table className="hidden md:table w-full text-left text-xs text-slate-600">
                   <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-100">
                     <tr>
                       <th className="py-3.5 px-6 font-semibold">Voter Name</th>
@@ -1142,6 +1143,68 @@ export default function LocalAdminPage() {
                     )}
                   </tbody>
                 </table>
+
+                {/* Mobile Voter Card List (<md) */}
+                <div className="block md:hidden divide-y divide-slate-100">
+                  {filteredVoters.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 text-xs">
+                      No voters registered for this election yet.
+                    </div>
+                  ) : (
+                    filteredVoters.map((v) => (
+                      <div key={v.id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="font-bold text-slate-900 text-sm">{v.full_name}</h4>
+                            <span className="font-mono text-xs text-blue-700 font-bold">{v.voter_id}</span>
+                          </div>
+                          <div>
+                            {v.has_voted ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Voted
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                                Not Voted
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {(v.email || v.mobile) && (
+                          <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg space-y-0.5">
+                            {v.email && <div>Email: {v.email}</div>}
+                            {v.mobile && <div>Mobile: {v.mobile}</div>}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setSetPasswordVoter(v)}
+                            className="flex-1 py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-blue-700 text-xs font-bold transition border border-slate-200 min-h-[40px] text-center"
+                          >
+                            Reset Password
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVoter(v)}
+                            disabled={v.has_voted}
+                            title={v.has_voted ? "Cannot delete voted voter" : "Delete voter"}
+                            className={`py-2 px-3 rounded-lg transition min-h-[40px] flex items-center justify-center ${
+                              v.has_voted
+                                ? "text-slate-300 bg-slate-50 cursor-not-allowed"
+                                : "text-red-600 bg-red-50 hover:bg-red-100"
+                            }`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1425,7 +1488,8 @@ export default function LocalAdminPage() {
                 Voter Participation Log
               </div>
               <div className="overflow-x-auto max-h-80 overflow-y-auto">
-                <table className="w-full text-left text-xs text-slate-600">
+                {/* Desktop Table (md+) */}
+                <table className="hidden md:table w-full text-left text-xs text-slate-600">
                   <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-100 sticky top-0">
                     <tr>
                       <th className="py-3 px-6">Voter Identifier</th>
@@ -1459,6 +1523,32 @@ export default function LocalAdminPage() {
                     )}
                   </tbody>
                 </table>
+
+                {/* Mobile Participation Cards (<md) */}
+                <div className="block md:hidden divide-y divide-slate-100">
+                  {!results?.voter_participation_log || results.voter_participation_log.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400 text-xs">
+                      No participation records recorded yet.
+                    </div>
+                  ) : (
+                    results.voter_participation_log.map((log: any, i: number) => (
+                      <div key={i} className="p-3.5 space-y-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-blue-700">{log.voter_id}</span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            Recorded & Chained
+                          </span>
+                        </div>
+                        {election.show_voter_names_in_results && log.voter_name && (
+                          <div className="font-semibold text-slate-800">{log.voter_name}</div>
+                        )}
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          {log.voted_at ? new Date(log.voted_at).toLocaleString() : "—"}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1466,14 +1556,15 @@ export default function LocalAdminPage() {
 
         {/* TAB 8: AUDIT TRAIL */}
         {activeTab === "audit" && election && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-4 sm:space-y-6 animate-fade-in">
             <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
               <div className="p-4 border-b border-slate-100 font-bold text-slate-900 text-sm flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-blue-600" />
                 <span>Election Audit Trail</span>
               </div>
               <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                <table className="w-full text-left text-xs text-slate-600 font-mono text-[11px]">
+                {/* Desktop Table (md+) */}
+                <table className="hidden md:table w-full text-left text-xs text-slate-600 font-mono text-[11px]">
                   <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-100 sticky top-0">
                     <tr>
                       <th className="py-3 px-6">Timestamp</th>
@@ -1503,6 +1594,31 @@ export default function LocalAdminPage() {
                     )}
                   </tbody>
                 </table>
+
+                {/* Mobile Audit Cards (<md) */}
+                <div className="block md:hidden divide-y divide-slate-100">
+                  {auditLogs.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400 text-xs">
+                      No audit logs found for this election.
+                    </div>
+                  ) : (
+                    auditLogs.map((l) => (
+                      <div key={l.id} className="p-3.5 space-y-1 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-blue-700 text-xs">{l.action}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {l.created_at ? new Date(l.created_at).toLocaleString() : "—"}
+                          </span>
+                        </div>
+                        {l.metadata && (
+                          <div className="text-[11px] text-slate-600 font-mono bg-slate-50 p-2 rounded break-all">
+                            {JSON.stringify(l.metadata)}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>

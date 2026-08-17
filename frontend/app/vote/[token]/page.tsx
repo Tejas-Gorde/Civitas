@@ -88,14 +88,14 @@ export default function RemoteVotePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 py-4 px-3 sm:px-4">
+    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 py-3 sm:py-4 px-2 sm:px-4">
       {/* Header Banner */}
-      <div className="card p-6 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white space-y-3 shadow-xl rounded-2xl border border-slate-800">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-400">
-          <ShieldCheck className="h-4 w-4" />
+      <div className="card p-5 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white space-y-2.5 sm:space-y-3 shadow-xl rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400">
+          <ShieldCheck className="h-4 w-4 shrink-0" />
           <span>CIVITAS SECURE REMOTE VOTING PORTAL</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight">
           {election ? election.name : "Authorized Digital Ballot"}
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -105,7 +105,7 @@ export default function RemoteVotePage() {
 
       {/* Loading Skeleton */}
       {loading && (
-        <div className="card p-8 animate-pulse space-y-4 rounded-2xl bg-white border border-slate-200">
+        <div className="card p-6 sm:p-8 animate-pulse space-y-4 rounded-2xl bg-white border border-slate-200">
           <div className="h-5 w-36 bg-slate-200 rounded"></div>
           <div className="h-7 w-3/4 bg-slate-200 rounded"></div>
           <div className="h-4 w-full bg-slate-100 rounded"></div>
@@ -115,23 +115,23 @@ export default function RemoteVotePage() {
 
       {/* Error / Invalid / Revoked Link State */}
       {!loading && error && (
-        <div className="card p-6 sm:p-8 text-center space-y-4 border-amber-300 bg-amber-50/70 rounded-2xl">
+        <div className="card p-5 sm:p-8 text-center space-y-4 border-amber-300 bg-amber-50/70 rounded-2xl">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-800 shadow-xs">
             <AlertTriangle className="h-7 w-7" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">
               Remote Voting Link Unavailable
             </h3>
             <p className="mt-2 text-xs sm:text-sm text-slate-700 max-w-md mx-auto leading-relaxed">
               {error}
             </p>
           </div>
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
             <button
               type="button"
               onClick={validateToken}
-              className="button button-teal text-xs py-2 px-4 inline-flex items-center gap-1.5 font-bold"
+              className="button button-teal text-xs py-3 px-5 inline-flex items-center justify-center gap-1.5 font-bold w-full sm:w-auto"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Retry Access</span>
@@ -139,7 +139,7 @@ export default function RemoteVotePage() {
             <button
               type="button"
               onClick={() => router.push("/voter")}
-              className="button button-outline text-xs py-2 px-4 font-bold bg-white"
+              className="button button-outline text-xs py-3 px-5 font-bold bg-white w-full sm:w-auto"
             >
               <span>Go to General Voter Entry</span>
             </button>
@@ -149,10 +149,10 @@ export default function RemoteVotePage() {
 
       {/* Election Landing Card */}
       {!loading && !error && election && (
-        <div className="card p-6 sm:p-8 space-y-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
           {/* Status Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 sm:pb-4">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={`badge text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
                 election.state === "open" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-slate-100 text-slate-700 border-slate-300"
               }`}>
@@ -162,14 +162,14 @@ export default function RemoteVotePage() {
                 ● MOBILE ACCESS READY
               </span>
             </div>
-            <span className="text-[11px] font-mono font-bold text-slate-500">
+            <span className="text-[10px] sm:text-[11px] font-mono font-bold text-slate-500">
               ID: {election.election_id || election.id}
             </span>
           </div>
 
           {/* Election Details */}
-          <div className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <div className="space-y-2 sm:space-y-3">
+            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
               {election.name}
             </h2>
             {election.description && (
@@ -190,7 +190,7 @@ export default function RemoteVotePage() {
 
           {/* Candidates Summary Preview */}
           {candidates.length > 0 && (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1 sm:pt-2">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5 text-teal-700" />
@@ -222,9 +222,9 @@ export default function RemoteVotePage() {
           )}
 
           {/* Guidelines for Mobile Voters */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 sm:space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-              <Smartphone className="h-4 w-4 text-teal-700" />
+              <Smartphone className="h-4 w-4 text-teal-700 shrink-0" />
               <span>Mobile Verification Instructions</span>
             </h4>
             <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
@@ -244,11 +244,11 @@ export default function RemoteVotePage() {
           </div>
 
           {/* Start Verification Action Button */}
-          <div className="pt-2">
+          <div className="pt-1 sm:pt-2">
             <button
               type="button"
               onClick={() => setStarted(true)}
-              className="button button-teal w-full text-sm py-3.5 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all font-black rounded-xl"
+              className="button button-teal w-full text-sm py-3.5 sm:py-3.5 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all font-black rounded-xl"
             >
               <Vote className="h-5 w-5" />
               <span>Start Voter Verification</span>

@@ -499,9 +499,10 @@ export default function BigAdminMonitorPage() {
                   </div>
                 </div>
 
-                {/* Directory Table */}
+                {/* Directory Table (Desktop) & Card List (Mobile) */}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-600">
+                  {/* Desktop Table (md+) */}
+                  <table className="hidden md:table w-full text-left text-xs text-slate-600">
                     <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-100">
                       <tr>
                         <th className="py-3.5 px-6 font-semibold">ELECTION NAME</th>
@@ -579,6 +580,54 @@ export default function BigAdminMonitorPage() {
                       )}
                     </tbody>
                   </table>
+
+                  {/* Mobile Card List (<md) */}
+                  <div className="block md:hidden divide-y divide-slate-100">
+                    {loading ? (
+                      <div className="py-12 text-center text-slate-400">
+                        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
+                        Loading election directory...
+                      </div>
+                    ) : paginatedElections.length === 0 ? (
+                      <div className="py-12 text-center text-slate-400 text-xs">
+                        No elections found matching the query.
+                      </div>
+                    ) : (
+                      paginatedElections.map((el, idx) => (
+                        <div
+                          key={el.id}
+                          onClick={() => handleOpenStatusModal(el)}
+                          className="p-4 space-y-3 hover:bg-slate-50/70 active:bg-slate-100 transition cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                                {getElectionIcon(idx, el.name)}
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-900 text-sm leading-snug">{el.name}</div>
+                                <div className="text-[10px] text-slate-400 font-mono">
+                                  ID: {el.election_id || el.id.slice(0, 10).toUpperCase()}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="shrink-0">
+                              {getStatusBadge(el.state)}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
+                            <span className="font-medium text-slate-700">
+                              {el.temp_admin_username ? `@${el.temp_admin_username}` : "District 4, New City"}
+                            </span>
+                            <span className="text-slate-500">
+                              {formatDateRange(el.starts_at, el.ends_at)}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 {/* Directory Pagination Footer */}

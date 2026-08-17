@@ -674,10 +674,11 @@ export default function VotingFlow({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Progress Bar Header */}
-      <div className="card p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+      <div className="card p-3.5 sm:p-5">
+        {/* Desktop Header Audio & Language Toolbar (Locked for Desktop) */}
+        <div className="hidden sm:flex items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Verification Protocol Progress
           </span>
@@ -764,7 +765,6 @@ export default function VotingFlow({
               </button>
             )}
 
-
             {/* Voice Guidance Mute/Unmute Toggle */}
             {voice.isSupported && (
               <button
@@ -778,13 +778,6 @@ export default function VotingFlow({
                     ? "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300"
                     : "bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100"
                 }`}
-                title={
-                  !voice.adminVoiceEnabled
-                    ? "Voice guidance is disabled by administrator"
-                    : voice.voterMuted
-                    ? "Click to unmute voice guidance"
-                    : "Click to mute voice guidance"
-                }
               >
                 {!voice.adminVoiceEnabled ? (
                   <>
@@ -819,7 +812,7 @@ export default function VotingFlow({
           </div>
         </div>
 
-        {/* Desktop & Tablet Stepper */}
+        {/* Desktop & Tablet Stepper Grid (Locked for Desktop) */}
         <div className={`hidden sm:grid ${activeStageOrder.length === 6 ? "sm:grid-cols-6" : "sm:grid-cols-7"} gap-1 text-center`}>
           {activeStageOrder.map((sKey: Stage, idx: number) => {
             const isCompleted = idx < currentStageIdx;
@@ -855,27 +848,75 @@ export default function VotingFlow({
           })}
         </div>
 
-        {/* Mobile Stepper Header */}
-        <div className="flex items-center justify-between sm:hidden">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-              {currentStageIdx + 1}
+        {/* Mobile Stepper Header & Compact Toolbar (<sm) */}
+        <div className="sm:hidden space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shrink-0">
+                {currentStageIdx + 1}
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-900 block leading-tight">
+                  {STAGE_CONFIG[stage]?.label || stage}
+                </span>
+                <span className="text-[10px] text-slate-500 font-semibold">
+                  Step {currentStageIdx + 1} of {activeStageOrder.length}
+                </span>
+              </div>
             </div>
-            <span className="text-sm font-bold text-slate-900">
-              {STAGE_CONFIG[stage]?.label || stage}
-            </span>
+
+            {/* Mobile Progress Bar */}
+            <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+              <div
+                className="bg-teal-700 h-full transition-all duration-300 rounded-full"
+                style={{ width: `${((currentStageIdx + 1) / activeStageOrder.length) * 100}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="w-28 bg-slate-100 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-teal-700 h-full transition-all duration-300"
-              style={{ width: `${((currentStageIdx + 1) / activeStageOrder.length) * 100}%` }}
-            ></div>
+
+          {/* Mobile Ergonomic Audio & Timer Strip */}
+          <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-1.5">
+              {/* Mobile Language Toggle */}
+              <div className="flex items-center bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700">
+                <select
+                  value={voice.language}
+                  onChange={(e) => voice.setLanguage(e.target.value as "en" | "hi")}
+                  className="bg-transparent text-[11px] font-bold text-slate-900 focus:outline-none cursor-pointer"
+                >
+                  <option value="en">EN</option>
+                  <option value="hi">HI</option>
+                </select>
+              </div>
+
+              {/* Mobile Voice Guidance Button */}
+              {voice.isSupported && voice.adminVoiceEnabled && (
+                <button
+                  type="button"
+                  onClick={voice.voiceUnlocked ? replayCurrentInstruction : handleEnableVoice}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200 min-h-[30px]"
+                >
+                  <Volume2 className="h-3 w-3 text-teal-700" />
+                  <span>{voice.voiceUnlocked ? "Repeat" : "Voice"}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Session Timer Badge on Mobile */}
+            {session && (
+              <div className="text-[11px]">
+                <SessionTimer
+                  expiresAt={sessionExpiresAt}
+                  onExpired={() => setSessionExpired(true)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content Area for Current Stage */}
-      <div className="card p-6 sm:p-8">
+      <div className="card p-4 sm:p-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={stage}
@@ -886,13 +927,13 @@ export default function VotingFlow({
           >
             {/* STAGE 1: IDENTIFY */}
             {stage === "identify" && (
-              <div className="mx-auto max-w-xl space-y-6">
+              <div className="mx-auto max-w-xl space-y-4 sm:space-y-6">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-teal-700">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
                     Step 1 — Eligibility Check
                   </span>
-                  <h2 className="text-2xl font-bold text-slate-900 mt-1">Voter Identification</h2>
-                  <p className="mt-1.5 text-xs text-slate-600">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Voter Identification</h2>
+                  <p className="mt-1 text-xs text-slate-600">
                     {currentInstruction?.display}
                   </p>
                 </div>
@@ -926,14 +967,14 @@ export default function VotingFlow({
                   </div>
 
                   {verifyError && (
-                    <div className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-700 border border-red-200">
+                    <div className="rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200">
                       {verifyError}
                     </div>
                   )}
 
                   <button
                     type="submit"
-                    className="button button-teal w-full"
+                    className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold"
                     disabled={busy}
                   >
                     {busy ? "Verifying Record..." : "Verify Voter Eligibility"}
@@ -944,23 +985,23 @@ export default function VotingFlow({
 
             {/* STAGE 2: SECURE DEVICE / BIOMETRIC VERIFICATION (WEBAUTHN PASSKEY) */}
             {stage === "fingerprint" && (
-              <div className="mx-auto max-w-xl text-center space-y-6">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-700 border border-teal-200">
-                  <Fingerprint className="h-10 w-10" />
+              <div className="mx-auto max-w-xl text-center space-y-4 sm:space-y-6">
+                <div className="mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                  <Fingerprint className="h-8 w-8 sm:h-10 sm:w-10" />
                 </div>
 
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-teal-700">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
                     Step 2 — Secure Device Verification
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Passkey & Device Security</h2>
-                  <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mt-1">Passkey & Device Security</h2>
+                  <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
                     Use your phone's fingerprint, Face ID, or device passkey to securely verify this device.
                   </p>
                 </div>
 
                 {verifyError && (
-                  <div className="rounded-lg bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 text-left space-y-2">
+                  <div className="rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 text-left space-y-2">
                     <p>{verifyError}</p>
                   </div>
                 )}
@@ -971,7 +1012,7 @@ export default function VotingFlow({
                       type="button"
                       onClick={handleRegisterPasskeyForDomain}
                       disabled={busy}
-                      className="button button-teal w-full min-h-[48px] text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                      className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
                     >
                       <Key className="h-5 w-5" />
                       <span>{busy ? "Registering Passkey..." : "Register Passkey for this Domain"}</span>
@@ -980,7 +1021,7 @@ export default function VotingFlow({
                       type="button"
                       onClick={verifyTouchID}
                       disabled={busy}
-                      className="button button-outline w-full text-xs py-2 text-slate-600"
+                      className="button button-outline w-full text-xs py-3 text-slate-600 min-h-[44px]"
                     >
                       Already registered? Retry Passkey Verification
                     </button>
@@ -990,7 +1031,7 @@ export default function VotingFlow({
                     type="button"
                     onClick={verifyTouchID}
                     disabled={busy}
-                    className="button button-teal w-full min-h-[48px] text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                    className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
                   >
                     <Fingerprint className="h-5 w-5" />
                     <span>{busy ? "Awaiting Biometric Prompt..." : "Verify with Passkey"}</span>
@@ -1001,15 +1042,15 @@ export default function VotingFlow({
 
             {/* STAGE 3: PHOTO CAPTURE */}
             {stage === "face" && (
-              <div className="mx-auto max-w-xl space-y-6">
+              <div className="mx-auto max-w-xl space-y-4 sm:space-y-6">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-teal-700">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
                     Step 3 — Voter Photo Capture
                   </span>
-                  <h2 className="text-2xl font-bold text-slate-900 mt-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
                     {photoPhase === "live" ? "Take Verification Photo" : "Review Captured Photograph"}
                   </h2>
-                  <p className="mt-1.5 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-slate-600">
                     {currentInstruction?.display}
                   </p>
                 </div>
@@ -1021,7 +1062,7 @@ export default function VotingFlow({
                       type="button"
                       onClick={handleCapturePhoto}
                       disabled={busy}
-                      className="button button-teal w-full"
+                      className="button button-teal w-full min-h-[48px] font-bold text-xs sm:text-sm"
                     >
                       <CameraIcon className="mr-1.5 h-4 w-4 inline" /> Capture Photo
                     </button>
@@ -1029,20 +1070,20 @@ export default function VotingFlow({
                 ) : (
                   <div className="space-y-4 text-center">
                     {capturedUrl && (
-                      <div className="relative overflow-hidden rounded-2xl border-2 border-slate-300 shadow-md">
+                      <div className="relative overflow-hidden rounded-2xl border-2 border-slate-300 shadow-md max-w-sm mx-auto">
                         <img
                           src={capturedUrl}
                           alt="Captured Voter Snapshot"
-                          className="w-full h-auto object-cover max-h-[320px]"
+                          className="w-full h-auto object-cover max-h-[280px] sm:max-h-[320px]"
                         />
                       </div>
                     )}
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3">
                       <button
                         type="button"
                         onClick={handleRetakePhoto}
                         disabled={busy}
-                        className="button button-outline flex-1"
+                        className="button button-outline w-full sm:flex-1 min-h-[46px] text-xs font-bold"
                       >
                         <RotateCcw className="mr-1.5 h-4 w-4 inline" /> Retake Photo
                       </button>
@@ -1050,7 +1091,7 @@ export default function VotingFlow({
                         type="button"
                         onClick={handleConfirmSavePhoto}
                         disabled={busy}
-                        className="button button-teal flex-1"
+                        className="button button-teal w-full sm:flex-1 min-h-[46px] text-xs font-bold"
                       >
                         <Save className="mr-1.5 h-4 w-4 inline" /> {busy ? "Saving photo..." : "Confirm & Save Photo"}
                       </button>
@@ -1062,45 +1103,45 @@ export default function VotingFlow({
 
             {/* STAGE 4: DEMONSTRATION CHALLENGE */}
             {stage === "challenge" && (
-              <div className="mx-auto max-w-xl text-center space-y-6">
+              <div className="mx-auto max-w-xl text-center space-y-4 sm:space-y-6">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-teal-700">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
                     Challenge
                   </span>
-                  <h2 className="text-2xl font-bold text-slate-900 mt-1">Demonstration Challenge</h2>
-                  <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Demonstration Challenge</h2>
+                  <p className="mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Complete the simple challenge to continue.
                   </p>
                 </div>
 
                 {verifyError && (
-                  <div className="rounded-lg bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 text-left">
+                  <div className="rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 text-left">
                     {verifyError}
                   </div>
                 )}
 
                 {/* Clean Demonstration Challenge Card */}
-                <div className="rounded-2xl bg-slate-900 text-white p-6 sm:p-8 border border-slate-800 shadow-lg space-y-5">
+                <div className="rounded-2xl bg-slate-900 text-white p-5 sm:p-8 border border-slate-800 shadow-lg space-y-4 sm:space-y-5">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-900/60 text-teal-300 border border-teal-700/50">
                     CHALLENGE
                   </div>
 
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-wide leading-snug">
+                  <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-wide leading-snug">
                     Please shake your hand in front of the camera.
                   </h3>
 
                   {/* Countdown or Completed Badge */}
                   {challengeStepState === "counting" && (
-                    <div className="py-4">
-                      <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-teal-500/20 text-teal-400 text-4xl font-extrabold border-2 border-teal-400/40 animate-pulse">
+                    <div className="py-3 sm:py-4">
+                      <div className="inline-flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-teal-500/20 text-teal-400 text-3xl sm:text-4xl font-extrabold border-2 border-teal-400/40 animate-pulse">
                         {countdownVal}
                       </div>
                     </div>
                   )}
 
                   {challengeStepState === "completed" && (
-                    <div className="py-3 flex items-center justify-center gap-2 text-emerald-400 font-bold text-lg">
-                      <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+                    <div className="py-3 flex items-center justify-center gap-2 text-emerald-400 font-bold text-base sm:text-lg">
+                      <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
                       <span>✓ Challenge completed</span>
                     </div>
                   )}
@@ -1112,14 +1153,14 @@ export default function VotingFlow({
                       type="button"
                       onClick={startDemoChallenge}
                       disabled={busy}
-                      className="button button-teal w-full min-h-[48px] text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                      className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
                     >
                       <span>Start Challenge</span>
                     </button>
                   )}
 
                   {challengeStepState === "counting" && (
-                    <div className="button bg-slate-100 text-slate-700 w-full min-h-[48px] text-sm font-bold flex items-center justify-center gap-2">
+                    <div className="button bg-slate-100 text-slate-700 w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
                       <RefreshCw className="h-4 w-4 animate-spin text-teal-700" />
                       <span>Challenge in progress ({countdownVal}s)...</span>
                     </div>
@@ -1130,7 +1171,7 @@ export default function VotingFlow({
                       type="button"
                       onClick={forceProceedToBallot}
                       disabled={busy}
-                      className="button button-teal w-full min-h-[48px] text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                      className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
                     >
                       <CheckCircle2 className="h-5 w-5" />
                       <span>{busy ? "Unlocking Ballot..." : "Challenge Completed — Proceed to Ballot"}</span>
@@ -1143,7 +1184,7 @@ export default function VotingFlow({
                       type="button"
                       onClick={forceProceedToBallot}
                       disabled={busy}
-                      className="button button-outline w-full text-xs py-2.5 text-slate-600 font-semibold"
+                      className="button button-outline w-full text-xs py-3 text-slate-600 font-semibold min-h-[44px]"
                     >
                       Continue
                     </button>
@@ -1152,24 +1193,24 @@ export default function VotingFlow({
               </div>
             )}
 
-
-            {/* STAGE 6: BALLOT SELECTION */}
+            {/* STAGE 5: BALLOT CANDIDATE SELECTION */}
             {stage === "ballot" && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-teal-700">
+                    <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
                       Official Secret Ballot
                     </span>
-                    <span className="badge badge-open">Single Choice Allowed</span>
+                    <span className="badge badge-open text-[10px] sm:text-xs">Single Choice Allowed</span>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900 mt-1">{election.name}</h2>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{election.name}</h2>
+                  <p className="mt-1 text-xs sm:text-sm text-slate-600">
                     {currentInstruction?.display}
                   </p>
                 </div>
 
-                <div className="space-y-3">
+                {/* Candidate Selection List */}
+                <div className="space-y-2.5 sm:space-y-3">
                   {candidates.map((c) => {
                     const isSelected = selectedCandidateId === c.id;
                     const handleSelectCandidate = () => {
@@ -1185,33 +1226,52 @@ export default function VotingFlow({
                       <div
                         key={c.id}
                         onClick={handleSelectCandidate}
-                        className={`card-interactive cursor-pointer p-5 transition-all ${
+                        role="radio"
+                        aria-checked={isSelected}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === " " || e.key === "Enter") {
+                            e.preventDefault();
+                            handleSelectCandidate();
+                          }
+                        }}
+                        className={`card-interactive cursor-pointer p-4 sm:p-5 transition-all duration-150 rounded-xl sm:rounded-2xl select-none ${
                           isSelected
-                            ? "border-teal-600 bg-teal-50/40 ring-2 ring-teal-600/20"
-                            : "hover:border-slate-300"
+                            ? "border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/30 shadow-md"
+                            : "hover:border-slate-300 active:bg-slate-50"
                         }`}
                       >
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-3 sm:gap-4">
                           <div className="pt-0.5">
                             <input
                               type="radio"
                               name="candidate"
                               checked={isSelected}
                               onChange={handleSelectCandidate}
-                              className="h-4 w-4 accent-teal-700 cursor-pointer"
+                              className="h-5 w-5 accent-teal-700 cursor-pointer"
                             />
                           </div>
 
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <h3 className="text-base font-bold text-slate-900">{c.name}</h3>
-                              <span className="rounded bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-1.5">
+                              <h3 className={`text-base font-extrabold transition-colors ${
+                                isSelected ? "text-teal-950" : "text-slate-900"
+                              }`}>
+                                {c.name}
+                              </h3>
+                              <span className={`rounded-lg px-2.5 py-0.5 text-xs font-bold border ${
+                                isSelected
+                                  ? "bg-teal-100 text-teal-800 border-teal-300"
+                                  : "bg-slate-100 text-slate-700 border-slate-200"
+                              }`}>
                                 {c.party}
                               </span>
                             </div>
-                            <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-                              {c.manifesto}
-                            </p>
+                            {c.manifesto && (
+                              <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
+                                {c.manifesto}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1219,67 +1279,67 @@ export default function VotingFlow({
                   })}
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-end gap-3 pt-3 sm:pt-4 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={proceedToReview}
                     disabled={!selectedCandidateId}
-                    className="button button-teal"
+                    className="button button-teal w-full sm:w-auto min-h-[48px] text-xs sm:text-sm font-bold shadow-md shadow-indigo-600/10"
                   >
-                    Proceed to Review Selection
+                    Proceed to Review Selection →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STAGE 7: REVIEW */}
+            {/* STAGE 6: REVIEW */}
             {stage === "review" && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-600">
-                    Step 7 — Ballot Summary Review
+                  <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-indigo-600">
+                    Step 6 — Ballot Summary Review
                   </span>
-                  <h2 className="text-2xl font-black text-slate-900 mt-1">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
                     Review Ballot Selection
                   </h2>
-                  <p className="mt-1.5 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-slate-600">
                     {currentInstruction?.display}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Target Election</span>
-                    <span className="text-sm font-extrabold text-slate-900">{election.name}</span>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 space-y-3 sm:space-y-4 shadow-xs">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Target Election</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 text-right">{election.name}</span>
                   </div>
 
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Selected Choice</span>
-                    <span className="text-sm font-extrabold text-indigo-700 bg-indigo-50 px-3.5 py-1.5 rounded-xl border border-indigo-100 shadow-xs">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Selected Choice</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 shadow-xs">
                       {selectedCandidate?.name || "None Selected"}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Security Token Status</span>
-                    <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Security Token Status</span>
+                    <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold">
                       <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                       <span>Single-Use Grant Active</span>
                     </span>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-amber-50 p-4 text-xs text-amber-900 border border-amber-200 flex items-start gap-3">
+                <div className="rounded-xl bg-amber-50 p-3.5 sm:p-4 text-xs text-amber-900 border border-amber-200 flex items-start gap-2.5 sm:gap-3">
                   <AlertCircle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
                     <strong>Final Step:</strong> Clicking "Confirm & Cast Ballot" will permanently submit your anonymous ballot to the electronic tally vault.
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
                   <button
                     type="button"
-                    className="button button-outline flex-1 py-3 text-xs font-bold"
+                    className="button button-outline w-full sm:flex-1 py-3 text-xs font-bold min-h-[46px] order-2 sm:order-1"
                     disabled={busy}
                     onClick={() => setStage("ballot")}
                   >
@@ -1288,7 +1348,7 @@ export default function VotingFlow({
                   </button>
                   <button
                     type="button"
-                    className="button button-teal flex-1 disabled:opacity-60 font-extrabold py-3 shadow-md shadow-indigo-600/20"
+                    className="button button-teal w-full sm:flex-1 disabled:opacity-60 font-extrabold py-3.5 text-xs sm:text-sm shadow-md shadow-indigo-600/20 min-h-[48px] order-1 sm:order-2"
                     disabled={busy}
                     onClick={submitFinalVote}
                   >
@@ -1305,11 +1365,11 @@ export default function VotingFlow({
               </div>
             )}
 
-            {/* STAGE 8: RECEIPT */}
+            {/* STAGE 7: RECEIPT */}
             {stage === "receipt" && (
-              <div className="mx-auto max-w-lg text-center space-y-6 py-2">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-md">
-                  <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+              <div className="mx-auto max-w-lg text-center space-y-4 sm:space-y-6 py-2">
+                <div className="mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-md">
+                  <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-600" />
                 </div>
 
                 <div>
@@ -1317,28 +1377,28 @@ export default function VotingFlow({
                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
                     <span>Vote Successfully Recorded</span>
                   </div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                     Official Cryptographic Receipt
                   </h2>
-                  <p className="mt-1.5 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-slate-600">
                     {currentInstruction?.display}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 text-left space-y-4 shadow-md">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 text-left space-y-3 sm:space-y-4 shadow-md">
                   <div>
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Election</span>
-                    <p className="text-base font-extrabold text-slate-900 mt-0.5">{election.name}</p>
+                    <p className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">{election.name}</p>
                   </div>
 
                   <div>
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Verification Receipt ID</span>
-                    <div className="mt-1 flex items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950 p-3.5 font-mono text-xs font-bold text-emerald-400 shadow-inner">
+                    <div className="mt-1 flex items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-3.5 font-mono text-xs font-bold text-emerald-400 shadow-inner">
                       <span className="break-all">{receipt}</span>
                       <button
                         type="button"
                         onClick={copyReceipt}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shrink-0 transition"
+                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shrink-0 transition min-h-[34px]"
                       >
                         <Copy className="h-3.5 w-3.5 mr-1 inline" />
                         {copied ? "Copied" : "Copy"}
@@ -1358,10 +1418,10 @@ export default function VotingFlow({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
                   <button
                     type="button"
-                    className="button button-outline text-xs min-h-[44px] px-5 font-bold"
+                    className="button button-outline text-xs min-h-[44px] px-5 font-bold w-full sm:w-auto"
                     onClick={downloadReceiptTxt}
                   >
                     <Save className="mr-2 h-4 w-4 inline text-indigo-600" />
@@ -1369,7 +1429,7 @@ export default function VotingFlow({
                   </button>
                   <button
                     type="button"
-                    className="button button-outline text-xs min-h-[44px] px-5 font-bold"
+                    className="button button-outline text-xs min-h-[44px] px-5 font-bold w-full sm:w-auto"
                     onClick={() => window.print()}
                   >
                     <Printer className="mr-2 h-4 w-4 inline text-slate-700" />
@@ -1378,7 +1438,7 @@ export default function VotingFlow({
                   {onReset && (
                     <button
                       type="button"
-                      className="button button-teal text-xs min-h-[44px] px-5"
+                      className="button button-teal text-xs min-h-[44px] px-5 w-full sm:w-auto"
                       onClick={onReset}
                     >
                       Finish & Exit
@@ -1388,6 +1448,7 @@ export default function VotingFlow({
               </div>
             )}
           </motion.div>
+
         </AnimatePresence>
       </div>
 

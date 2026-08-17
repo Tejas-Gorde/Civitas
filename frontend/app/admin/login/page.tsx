@@ -69,16 +69,16 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 space-y-6">
+    <div className="max-w-2xl mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Header Banner */}
-      <div className="card p-6 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="card p-5 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-400 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
               <Shield className="h-3.5 w-3.5 text-teal-400" />
               ELECTION ADMINISTRATOR PORTAL
             </div>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight">
               Administrator Entry Portal
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-300">
@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0"
+            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0 self-start sm:self-auto min-h-[40px] px-3.5"
           >
             <ArrowLeft className="h-3.5 w-3.5 mr-1 inline" />
             Back to Options
@@ -98,11 +98,11 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex rounded-xl bg-slate-100 p-1.5 border border-slate-200">
+      <div className="flex rounded-xl bg-slate-100 p-1.5 border border-slate-200 gap-1">
         <button
           type="button"
           onClick={() => setActiveTab("temp")}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-lg text-xs font-extrabold transition-all min-h-[44px] flex items-center justify-center ${
             activeTab === "temp"
               ? "bg-white text-slate-900 shadow-xs"
               : "text-slate-600 hover:text-slate-900"
@@ -113,7 +113,7 @@ export default function AdminLoginPage() {
         <button
           type="button"
           onClick={() => setActiveTab("big")}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-lg text-xs font-extrabold transition-all min-h-[44px] flex items-center justify-center ${
             activeTab === "big"
               ? "bg-white text-slate-900 shadow-xs"
               : "text-slate-600 hover:text-slate-900"
@@ -125,12 +125,12 @@ export default function AdminLoginPage() {
 
       {/* TAB A: LOCAL ADMIN LOGIN */}
       {activeTab === "temp" && (
-        <div className="card p-6 sm:p-8 space-y-6">
-          <div className="border-b border-slate-100 pb-4">
+        <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
+          <div className="border-b border-slate-100 pb-3 sm:pb-4">
             <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
               Assigned Election Access
             </span>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">
               Local Admin Login
             </h2>
             <p className="text-xs text-slate-600 mt-1">
@@ -139,7 +139,7 @@ export default function AdminLoginPage() {
           </div>
 
           {errorMsg && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
               <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Authentication Failed</p>
@@ -190,7 +190,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading || !tempAdminId.trim() || !tempPassword.trim()}
-              className="button button-teal w-full py-3 text-xs font-bold"
+              className="button button-teal w-full min-h-[48px] py-3 text-xs font-bold"
             >
               {loading ? (
                 <RefreshCw className="h-4 w-4 animate-spin inline mr-2" />
@@ -206,7 +206,7 @@ export default function AdminLoginPage() {
 
       {/* TAB B: BIG ADMIN LOGIN */}
       {activeTab === "big" && (
-        <div className="card p-6 sm:p-8 text-center space-y-6">
+        <div className="card p-5 sm:p-8 text-center space-y-5 sm:space-y-6">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-900 border border-slate-200">
             <Shield className="h-7 w-7 text-teal-600" />
           </div>
@@ -215,7 +215,7 @@ export default function AdminLoginPage() {
             <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">
               Full System Control Portal
             </span>
-            <h2 className="text-xl font-extrabold text-slate-900">
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
               Big Admin Master Control
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -228,7 +228,7 @@ export default function AdminLoginPage() {
               type="button"
               onClick={handleBigAdminDirectLogin}
               disabled={loggingInBig}
-              className="button button-primary py-3 px-8 text-xs uppercase tracking-wider font-extrabold"
+              className="button button-primary min-h-[48px] py-3 px-8 text-xs uppercase tracking-wider font-extrabold w-full sm:w-auto"
             >
               {loggingInBig ? (
                 <RefreshCw className="h-4 w-4 animate-spin inline mr-2" />

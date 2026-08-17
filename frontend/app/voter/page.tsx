@@ -118,16 +118,16 @@ function VoterPortalContent() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-6 space-y-6">
+    <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Top Banner */}
-      <div className="card p-6 sm:p-8 bg-gradient-to-r from-slate-900 to-teal-950 text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="card p-5 sm:p-8 bg-gradient-to-r from-slate-900 to-teal-950 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-400 bg-teal-900/60 px-3 py-1 rounded-full border border-teal-700/50">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 bg-teal-900/60 px-3 py-1 rounded-full border border-teal-700/50">
               <UserCheck className="h-3.5 w-3.5" />
               OPTION 1 — VOTER PORTAL
             </div>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight">
               Official Voter Entry & Ballot
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-300">
@@ -138,7 +138,7 @@ function VoterPortalContent() {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0"
+            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0 self-start sm:self-auto min-h-[40px] px-3.5"
           >
             <ArrowLeft className="h-3.5 w-3.5 mr-1 inline" />
             Back to Options
@@ -148,10 +148,10 @@ function VoterPortalContent() {
 
       {/* STEP 1: ELECTION SELECTION */}
       {step === "election_input" && (
-        <div className="card p-6 sm:p-8 space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black">
+        <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
+          <div className="border-b border-slate-100 pb-3 sm:pb-4">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black shrink-0">
                 1
               </span>
               Enter Election ID
@@ -162,7 +162,7 @@ function VoterPortalContent() {
           </div>
 
           {errorMsg && (
-            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Authentication Failure</p>
@@ -176,7 +176,7 @@ function VoterPortalContent() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                 Election ID
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-2">
                 <input
                   type="text"
                   value={electionId}
@@ -188,7 +188,7 @@ function VoterPortalContent() {
                   type="button"
                   onClick={() => handleValidateElection()}
                   disabled={loading || !electionId.trim()}
-                  className="button button-teal text-xs shrink-0"
+                  className="button button-teal text-xs shrink-0 py-3 sm:py-2.5 px-5 font-bold"
                 >
                   {loading ? (
                     <>
@@ -205,12 +205,12 @@ function VoterPortalContent() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+            <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600">
               <span>Don't have your Election ID?</span>
               <button
                 type="button"
                 onClick={() => router.push("/live-elections")}
-                className="text-teal-700 font-bold hover:underline inline-flex items-center gap-1"
+                className="text-teal-700 font-bold hover:underline inline-flex items-center gap-1 self-start sm:self-auto py-1"
               >
                 Browse Live Elections <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -221,13 +221,13 @@ function VoterPortalContent() {
 
       {/* STEP 2: VOTER AUTHENTICATION */}
       {step === "voter_auth" && election && (
-        <div className="card p-6 sm:p-8 space-y-6">
-          <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+        <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
+          <div className="border-b border-slate-100 pb-3 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
               <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
                 Selected Election
               </span>
-              <h2 className="text-xl font-bold text-slate-900">{election.name}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">{election.name}</h2>
             </div>
             <button
               type="button"
@@ -235,15 +235,15 @@ function VoterPortalContent() {
                 setStep("election_input");
                 setElection(null);
               }}
-              className="button button-secondary text-xs"
+              className="button button-secondary text-xs self-start sm:self-auto"
             >
               Change Election
             </button>
           </div>
 
-          <div className="border-b border-slate-100 pb-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black">
+          <div className="border-b border-slate-100 pb-3 sm:pb-4">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black shrink-0">
                 2
               </span>
               Authenticate Voter Credentials
@@ -254,7 +254,7 @@ function VoterPortalContent() {
           </div>
 
           {errorMsg && (
-            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Authentication Failure</p>
@@ -295,16 +295,16 @@ function VoterPortalContent() {
               </p>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                <Lock className="h-3.5 w-3.5 text-teal-600" />
+                <Lock className="h-3.5 w-3.5 text-teal-600 shrink-0" />
                 <span>Protected against duplicate voting</span>
               </div>
 
               <button
                 type="submit"
                 disabled={loading || !voterIdInput.trim() || !voterPasswordInput.trim()}
-                className="button button-teal font-bold text-xs py-2.5 px-6 disabled:opacity-60"
+                className="button button-teal font-bold text-xs py-3 sm:py-2.5 px-6 disabled:opacity-60 w-full sm:w-auto"
               >
                 {loading ? (
                   <>

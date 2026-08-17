@@ -48,16 +48,16 @@ export default function LiveElectionsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto py-6">
+    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto py-4 sm:py-6 px-2 sm:px-0">
       {/* Header Banner */}
-      <div className="card p-6 sm:p-8 bg-gradient-to-r from-sky-900 via-slate-900 to-teal-950 text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="card p-5 sm:p-8 bg-gradient-to-r from-sky-900 via-slate-900 to-teal-950 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-900/60 px-3 py-1 rounded-full border border-sky-700/50">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-900/60 px-3 py-1 rounded-full border border-sky-700/50">
               <Activity className="h-3.5 w-3.5 text-sky-400" />
               OPTION 3 — LIVE ELECTIONS SHOWCASE
             </div>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight">
               Currently Active Elections
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-300">
@@ -68,7 +68,7 @@ export default function LiveElectionsPage() {
           <button
             type="button"
             onClick={fetchLiveElections}
-            className="button button-secondary text-xs text-slate-200 shrink-0"
+            className="button button-secondary text-xs text-slate-200 shrink-0 self-start sm:self-auto min-h-[40px] px-3.5"
           >
             <RefreshCw className="h-3.5 w-3.5 mr-1.5 inline" />
             Refresh Polls
@@ -78,9 +78,9 @@ export default function LiveElectionsPage() {
 
       {/* Loading Skeleton */}
       {loading && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="card p-6 animate-pulse space-y-3">
+            <div key={i} className="card p-5 sm:p-6 animate-pulse space-y-3">
               <div className="h-4 w-24 bg-slate-200 rounded"></div>
               <div className="h-6 w-2/3 bg-slate-200 rounded"></div>
               <div className="h-4 w-full bg-slate-100 rounded"></div>
@@ -91,15 +91,15 @@ export default function LiveElectionsPage() {
 
       {/* Error State */}
       {!loading && error && (
-        <div className="card p-8 text-center space-y-4">
+        <div className="card p-6 sm:p-8 text-center space-y-4">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Unable to Load Live Elections</h3>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">Unable to Load Live Elections</h3>
             <p className="mt-1 text-xs text-slate-600">{error}</p>
           </div>
-          <button type="button" onClick={fetchLiveElections} className="button button-teal text-xs">
+          <button type="button" onClick={fetchLiveElections} className="button button-teal text-xs py-2.5 px-4 min-h-[44px]">
             <RefreshCw className="mr-1.5 h-3.5 w-3.5 inline" />
             Retry Connection
           </button>
@@ -108,15 +108,15 @@ export default function LiveElectionsPage() {
 
       {/* Empty State */}
       {!loading && !error && elections.length === 0 && (
-        <div className="card p-12 text-center space-y-3">
+        <div className="card p-8 sm:p-12 text-center space-y-3">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
             <Vote className="h-6 w-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900">No Active Elections Currently Open</h3>
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">No Active Elections Currently Open</h3>
           <p className="max-w-md mx-auto text-xs text-slate-600">
             There are currently no active public elections scheduled for voting. Check back during official election windows.
           </p>
-          <button type="button" onClick={fetchLiveElections} className="button button-secondary text-xs">
+          <button type="button" onClick={fetchLiveElections} className="button button-secondary text-xs py-2.5 px-4 min-h-[44px]">
             <RefreshCw className="mr-1.5 h-3.5 w-3.5 inline" />
             Check Again
           </button>
@@ -125,25 +125,25 @@ export default function LiveElectionsPage() {
 
       {/* Elections List */}
       {!loading && !error && elections.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {elections.map((e) => (
             <div
               key={e.id}
-              className="card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-l-4 border-l-teal-600"
+              className="card p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 border-l-4 border-l-teal-600"
             >
               <div className="space-y-2 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="badge badge-open font-extrabold text-[10px]">
                     STATUS: LIVE / OPEN
                   </span>
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
                     <Users className="h-3 w-3 text-slate-600" />
                     {e.candidate_count || 0} Candidates Registered
                   </span>
                 </div>
 
-                <h2 className="text-xl font-extrabold text-slate-900">{e.name}</h2>
-                <p className="text-xs font-mono font-bold text-teal-800">
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">{e.name}</h2>
+                <p className="text-[11px] sm:text-xs font-mono font-bold text-teal-800 break-all">
                   Election ID: {e.election_id || e.id}
                 </p>
 
@@ -153,27 +153,27 @@ export default function LiveElectionsPage() {
                   </p>
                 )}
 
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1 font-medium">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-slate-500 pt-1 font-medium">
                   {e.starts_at && (
                     <span className="inline-flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5 text-teal-600" />
+                      <Calendar className="h-3.5 w-3.5 text-teal-600 shrink-0" />
                       Starts: {new Date(e.starts_at).toLocaleString()}
                     </span>
                   )}
                   {e.ends_at && (
                     <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
-                      <Calendar className="h-3.5 w-3.5 text-rose-600" />
+                      <Calendar className="h-3.5 w-3.5 text-rose-600 shrink-0" />
                       Closes: {new Date(e.ends_at).toLocaleString()}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                 <button
                   type="button"
                   onClick={() => handleOpenDetails(e)}
-                  className="button button-secondary text-xs"
+                  className="button button-secondary text-xs min-h-[44px] justify-center"
                 >
                   <Info className="mr-1.5 h-3.5 w-3.5 inline" />
                   View Details
@@ -181,7 +181,7 @@ export default function LiveElectionsPage() {
                 <button
                   type="button"
                   onClick={() => router.push(`/voter?election_id=${e.id}`)}
-                  className="button button-teal text-xs"
+                  className="button button-teal text-xs min-h-[44px] justify-center font-bold"
                 >
                   Vote Now
                   <ArrowRight className="ml-1.5 h-3.5 w-3.5 inline" />
@@ -194,31 +194,32 @@ export default function LiveElectionsPage() {
 
       {/* Details Roster Modal */}
       {detailsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="card max-w-xl w-full p-6 space-y-5 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3.5 sm:p-4">
+          <div className="card max-w-xl w-full p-5 sm:p-6 space-y-4 sm:space-y-5 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
             <div className="flex items-start justify-between border-b border-slate-100 pb-3">
               <div>
                 <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-wider">
                   Election Details & Candidate Roster
                 </span>
-                <h3 className="text-lg font-bold text-slate-900">{detailsModal.name}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">{detailsModal.name}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setDetailsModal(null)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-slate-400 hover:text-slate-700 p-2 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                aria-label="Close roster modal"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-y-auto flex-1 pr-0.5">
               <p className="text-xs text-slate-600 leading-relaxed">
                 {detailsModal.description || "No additional description provided."}
               </p>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs text-slate-600">
-                <p><strong>Election ID:</strong> <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">{detailsModal.id}</code></p>
+                <p><strong>Election ID:</strong> <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-800 break-all">{detailsModal.id}</code></p>
                 <p><strong>Start Time:</strong> {new Date(detailsModal.starts_at).toLocaleString()}</p>
                 <p><strong>End Time:</strong> {new Date(detailsModal.ends_at).toLocaleString()}</p>
               </div>
@@ -242,7 +243,7 @@ export default function LiveElectionsPage() {
                 )}
 
                 {!loadingCandidates && candidatesList.length > 0 && (
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {candidatesList.map((c) => (
                       <div key={c.id} className="p-3 bg-white border border-slate-200 rounded-lg flex items-start justify-between">
                         <div>
@@ -263,7 +264,7 @@ export default function LiveElectionsPage() {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <span className="text-[11px] text-slate-500 font-medium">
                 Voting requires Voter ID & Password authentication.
               </span>
@@ -274,7 +275,7 @@ export default function LiveElectionsPage() {
                   setDetailsModal(null);
                   router.push(`/voter?election_id=${targetId}`);
                 }}
-                className="button button-teal text-xs"
+                className="button button-teal text-xs min-h-[44px] justify-center font-bold w-full sm:w-auto"
               >
                 Proceed to Vote
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5 inline" />
