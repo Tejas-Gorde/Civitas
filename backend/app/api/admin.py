@@ -31,6 +31,7 @@ from app.models import (
     AuthenticationLog,
     WebAuthnCredential,
     SystemSetting,
+    VoterPhoto,
 )
 
 from app.schemas import (
@@ -59,6 +60,7 @@ from app.schemas import (
     RemoteVotingUrlUpdateIn,
     PublicUrlConfigIn,
     PublicUrlConfigOut,
+    VoterPhotoOut,
 )
 
 
@@ -1751,4 +1753,69 @@ def update_voter_assistance_settings(
 
     return get_voter_assistance_settings(admin=admin, db=db)
 
+    return get_voter_assistance_settings(admin=admin, db=db)
 
+
+from fastapi.responses import FileResponse
+from typing import List
+
+@router.get("/photos", response_model=List[VoterPhotoOut])
+def list_voter_photos(
+    admin: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    List all verification photos.
+    Big Admin sees all photos.
+    Local Admin sees ONLY photos for elections assigned to them.
+    """
+    if admin.role not in (Role.BIG_ADMIN, Role.ADMIN, Role.TEMP_ADMIN):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not authorized to view verification photos.")
+
+    query = select(VoterPhoto).order_by(VoterPhoto.created_at.desc())
+    
+    if admin.role == Role.TEMP_ADMIN:
+        query = query.where(VoterPhoto.local_admin_id == str(admin.id))
+        
+    photos = db.scalars(query).all()
+    
+    # Enrich with display fields
+    enriched = []
+    for photo in photos:
+        out = VoterPhotoOut.model_validate(photo)
+        voter = db.get(Voter, photo.voter_id)
+        if voter:
+            out.voter_reg_id = voter.voter_id
+            out.voter_name = voter.full_name
+        election = db.get(Election, photo.election_id)
+        if election:
+            out.election_name = election.name
+        enriched.append(out)
+        
+    return enriched
+
+
+@router.get("/photos/{photo_id}/view")
+def view_voter_photo(
+    photo_id: str,
+    admin: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Securely serve a voter photo image.
+    Enforces that Local Admin can only access their authorized photos.
+    """
+    if admin.role not in (Role.BIG_ADMIN, Role.ADMIN, Role.TEMP_ADMIN):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not authorized to view verification photos.")
+        
+    photo = db.get(VoterPhoto, photo_id)
+    if not photo:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Photo not found.")
+        
+    if admin.role == Role.TEMP_ADMIN and photo.local_admin_id != str(admin.id):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You are not authorized to access this photo.")
+        
+    if not os.path.exists(photo.storage_path):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image file no longer exists on disk.")
+        
+    return FileResponse(photo.storage_path)

@@ -37,6 +37,7 @@ export const api = axios.create({
   baseURL: getApiBaseUrl(),
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
+  timeout: 60000, // 60 seconds to handle Render cold-start delays gracefully
 });
 
 // Automatic Request Interceptor to inject Authorization Bearer token and ensure production base URL
@@ -118,6 +119,9 @@ export function readable(error: unknown): string {
     }
     if (error.response?.status === 500) {
       return data?.detail || "Server error occurred. Please verify backend logs.";
+    }
+    if (error.code === "ECONNABORTED") {
+      return "Connection timed out. The server may be starting up from sleep (this can take up to 60 seconds). Please wait a moment and try again.";
     }
     if (error.code === "ERR_NETWORK") {
       return "Unable to connect to the election server. This may be a network issue, a CORS error, or the backend may be unreachable.";

@@ -42,6 +42,7 @@ import {
   UserCheck,
   TrendingUp,
   Percent,
+  Camera,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
@@ -63,7 +64,8 @@ type LocalAdminTab =
   | "candidates"
   | "qr"
   | "results"
-  | "audit";
+  | "audit"
+  | "photos";
 
 export default function LocalAdminPage() {
   const router = useRouter();
@@ -80,6 +82,9 @@ export default function LocalAdminPage() {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [results, setResults] = useState<any | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
+  const [photoBlobUrl, setPhotoBlobUrl] = useState<string | null>(null);
   const [voterSearch, setVoterSearch] = useState<string>("");
 
   // Control Center Confirmation Dialogs
@@ -225,18 +230,20 @@ export default function LocalAdminPage() {
 
   const loadTabData = async (electionId: string) => {
     try {
-      const [votersRes, candRes, resData, qrRes, auditRes] = await Promise.allSettled([
+      const [votersRes, candRes, resData, qrRes, auditRes, photosRes] = await Promise.allSettled([
         api.get(`/admin/voters?election_id=${electionId}`),
         api.get(`/admin/candidates?election_id=${electionId}`),
         api.get(`/admin/elections/${electionId}/results`),
         api.get(`/admin/elections/${electionId}/remote-voting`),
         api.get(`/admin/elections/${electionId}/audit-logs`),
+        api.get(`/admin/photos`),
       ]);
 
       if (votersRes.status === "fulfilled") setVoters(votersRes.value.data || []);
       if (candRes.status === "fulfilled") setCandidates(candRes.value.data || []);
       if (resData.status === "fulfilled") setResults(resData.value.data);
       if (auditRes.status === "fulfilled") setAuditLogs(auditRes.value.data || []);
+      if (photosRes.status === "fulfilled") setPhotos(photosRes.value.data || []);
       if (qrRes.status === "fulfilled") {
         const qrInfo = qrRes.value.data;
         setRemoteStatus(qrInfo);
@@ -615,7 +622,8 @@ export default function LocalAdminPage() {
             { id: "qr", label: "QR & Mobile Voting", icon: QrCode },
             { id: "results", label: "Live Results", icon: BarChart2 },
             { id: "audit", label: "Audit Logs", icon: ShieldAlert },
-          ].map((tab) => {
+            { id: "photos", label: "Verification Photos", icon: Camera },
+          ].map((tab: any) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -1623,7 +1631,148 @@ export default function LocalAdminPage() {
             </div>
           </div>
         )}
+
+        {/* ====================================================
+            TAB: VERIFICATION PHOTOS
+        ==================================================== */}
+        {activeTab === "photos" && election && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center">
+                  <Camera className="mr-2.5 h-6 w-6 text-indigo-500" />
+                  Voter Verification Photos
+                </h1>
+                <p className="text-sm text-slate-500 font-medium">
+                  Review identity verification captures for assigned elections.
+                </p>
+              </div>
+              <button
+                onClick={() => loadTabData(election.id)}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh Photos
+              </button>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              {photos.length === 0 ? (
+                <div className="py-16 flex flex-col items-center justify-center text-center px-4">
+                  <div className="h-16 w-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-4">
+                    <Camera className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <h3 className="text-slate-800 font-bold text-lg">No photos yet</h3>
+                  <p className="text-slate-500 text-sm mt-1 max-w-sm">
+                    No verification photos have been captured for this election.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  {photos.map((p) => (
+                    <div
+                      key={p.id}
+                      className="group bg-white border border-slate-200 rounded-2xl p-4 hover:border-indigo-200 hover:shadow-md transition-all space-y-3"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-xs font-bold text-slate-800 bg-slate-100 inline-block px-2 py-0.5 rounded uppercase tracking-wider mb-1">
+                            {p.photo_type}
+                          </div>
+                          <div className="font-bold text-sm text-slate-900 truncate">
+                            {p.voter_name || "Unknown Voter"}
+                          </div>
+                          <div className="text-xs text-slate-500 font-mono">
+                            {p.voter_reg_id || p.voter_id}
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                          {p.created_at ? new Date(p.created_at).toLocaleDateString() : ""}
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={async () => {
+                          setSelectedPhoto(p);
+                          setPhotoBlobUrl(null);
+                          try {
+                            const res = await api.get(`/admin/photos/${p.id}/view`, { responseType: 'blob' });
+                            const url = URL.createObjectURL(res.data);
+                            setPhotoBlobUrl(url);
+                          } catch (err: any) {
+                            toast.error("Failed to load photo image.");
+                          }
+                        }}
+                        className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold flex items-center justify-center transition-colors"
+                      >
+                        <Eye className="h-4 w-4 mr-1.5" /> View Photo
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* PHOTO VIEWER MODAL */}
+      {selectedPhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+              <div>
+                <h3 className="font-black text-slate-800">Verification Photo</h3>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">{selectedPhoto.id}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedPhoto(null);
+                  if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
+                  setPhotoBlobUrl(null);
+                }}
+                className="h-8 w-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-50">
+              {photoBlobUrl ? (
+                <img 
+                  src={photoBlobUrl} 
+                  alt="Voter Verification" 
+                  className="max-w-full max-h-[50vh] rounded-xl border border-slate-200 shadow-sm object-contain"
+                />
+              ) : (
+                <div className="h-48 w-full flex flex-col items-center justify-center text-slate-400">
+                  <RefreshCw className="h-8 w-8 animate-spin mb-3 text-indigo-300" />
+                  <p className="text-sm font-medium">Decrypting and loading image...</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-white grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="text-xs text-slate-500 font-medium mb-1">Voter Name</div>
+                <div className="font-bold text-slate-800">{selectedPhoto.voter_name || "Unknown"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 font-medium mb-1">Voter ID</div>
+                <div className="font-mono font-bold text-slate-800">{selectedPhoto.voter_reg_id || "Unknown"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 font-medium mb-1">Photo Type</div>
+                <div className="font-bold text-slate-800 bg-slate-100 inline-block px-2 py-0.5 rounded text-xs uppercase">{selectedPhoto.photo_type}</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 font-medium mb-1">Captured At</div>
+                <div className="font-bold text-slate-800">{selectedPhoto.created_at ? new Date(selectedPhoto.created_at).toLocaleString() : "—"}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CONFIRMATION DIALOG MODAL */}
       {confirmDialog.isOpen && (

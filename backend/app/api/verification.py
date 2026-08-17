@@ -2,18 +2,26 @@ import os
 import re
 import uuid
 import secrets
+import random
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models import AuthSession, AuthStage, AuthenticationLog, Voter, VoterElectionStatus
+from app.models import AuthSession, AuthStage, AuthenticationLog, Voter, VoterElectionStatus, VoterPhoto, Election
+from app.core.config import get_settings
 
 router = APIRouter(prefix="/verification", tags=["Verification"])
 
 from pathlib import Path
 
-DESKTOP_PHOTOS_DIR = Path.home() / "Desktop" / "Civitas_Voter_Photos"
+settings = get_settings()
+
+if settings.environment == "development":
+    DESKTOP_PHOTOS_DIR = Path.home() / "Desktop" / "Civitas_Voter_Photos"
+else:
+    DESKTOP_PHOTOS_DIR = Path(__file__).resolve().parent.parent.parent / "uploads" / "voter_photos"
+
 DESKTOP_PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
 VOTER_PHOTOS_DIR = str(DESKTOP_PHOTOS_DIR.resolve())
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
@@ -70,7 +78,8 @@ def save_voter_photo_file(db: Session, session: AuthSession, file: UploadFile) -
         f.write(contents)
 
     photo_id = str(uuid.uuid4())
-    challenge_choice = secrets.choice(["blink", "smile", "turn_left", "turn_right"])
+    available_challenges = ["smile", "turn_left", "turn_right", "open_mouth"]
+    challenge_choice = ",".join(random.sample(available_challenges, k=2))
     session.stage = AuthStage.FACE
     session.challenge = challenge_choice
     session.metrics = {**session.metrics, "face": 100.0, "photo_captured": True, "photo_filename": safe_filename}
@@ -85,6 +94,21 @@ def save_voter_photo_file(db: Session, session: AuthSession, file: UploadFile) -
             detail={"photo_saved": True, "photo_id": photo_id, "filename": safe_filename, "challenge": challenge_choice},
         )
     )
+    
+    # Save VoterPhoto record
+    election = db.get(Election, session.election_id)
+    local_admin_id = election.temp_admin_user_id if election else None
+    if local_admin_id:
+        voter_photo = VoterPhoto(
+            id=photo_id,
+            election_id=session.election_id,
+            voter_id=session.voter_id,
+            local_admin_id=local_admin_id,
+            photo_type="face_verification",
+            storage_path=target_path
+        )
+        db.add(voter_photo)
+
     db.commit()
 
     return {

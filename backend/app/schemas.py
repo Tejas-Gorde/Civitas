@@ -101,6 +101,19 @@ class TempAdminLoginRequest(BaseModel):
     temp_admin_id: str = Field(min_length=3, max_length=120)
     password: str = Field(min_length=4, max_length=128)
 
+class VoterPhotoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    election_id: str
+    voter_id: str
+    local_admin_id: str
+    photo_type: str
+    created_at: datetime
+    # Display fields
+    voter_reg_id: str | None = None
+    voter_name: str | None = None
+    election_name: str | None = None
+    
 
 
 class RemoteVotingStatusOut(BaseModel):

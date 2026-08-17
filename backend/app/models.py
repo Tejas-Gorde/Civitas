@@ -232,5 +232,14 @@ class SystemSetting(UUIDMixin, TimestampMixin, Base):
     value: Mapped[str] = mapped_column(Text)
 
 
+class VoterPhoto(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "voter_photos"
+    election_id: Mapped[str] = mapped_column(String(36), ForeignKey("elections.id", ondelete="CASCADE"), index=True)
+    voter_id: Mapped[str] = mapped_column(String(36), ForeignKey("voters.id", ondelete="CASCADE"), index=True)
+    local_admin_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    photo_type: Mapped[str] = mapped_column(String(80), default="face_verification")
+    storage_path: Mapped[str] = mapped_column(String(500))
+
+
 Index("ix_auth_voter_election_created", AuthenticationLog.voter_id, AuthenticationLog.election_id, AuthenticationLog.created_at)
 

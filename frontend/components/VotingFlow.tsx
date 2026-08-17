@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import SessionTimer from "./SessionTimer";
 import Camera, { CameraHandle } from "./Camera";
 import { api, readable } from "../lib/api";
+import { LivenessTracker, ChallengeType } from "../lib/liveness";
 import { authenticateTouchID, registerTouchID, isWebAuthnSupported } from "../lib/webauthn";
 import { isMobileDevice } from "../lib/device";
 import { useVoiceGuidance } from "../hooks/useVoiceGuidance";
@@ -108,6 +109,13 @@ export default function VotingFlow({
   const [voterInternalId, setVoterInternalId] = useState(initialVoterInternalId || "");
   const [session, setSession] = useState(initialSession || "");
   const [challenge, setChallenge] = useState("");
+
+  // Liveness Tracker State
+  const [livenessTracker, setLivenessTracker] = useState<LivenessTracker | null>(null);
+  const [challengesList, setChallengesList] = useState<ChallengeType[]>([]);
+  const [currentChallengeIdx, setCurrentChallengeIdx] = useState(0);
+  const [livenessMessage, setLivenessMessage] = useState<string>("Initializing face tracker...");
+
   const [grant, setGrant] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>("");
@@ -496,9 +504,12 @@ export default function VotingFlow({
           setCapturedUrl(null);
           setPhotoPhase("live");
           if (response.data.challenge) {
+            const arr = response.data.challenge.split(",") as ChallengeType[];
+            setChallengesList(arr);
+            setCurrentChallengeIdx(0);
             setChallenge(response.data.challenge);
           } else {
-            setChallenge("blink");
+            setChallenge("blink"); // fallback
           }
           toast.success("✓ Photo securely saved");
           voice.speak(FEEDBACK_MESSAGES[voice.language]?.photo_confirmed || FEEDBACK_MESSAGES.en.photo_confirmed);
@@ -527,44 +538,98 @@ export default function VotingFlow({
   };
 
   // Step 4: Guided Demonstration Challenge Handlers
-  const [challengeStepState, setChallengeStepState] = useState<"idle" | "counting" | "completed">("idle");
-  const [countdownVal, setCountdownVal] = useState<number>(3);
+  // Step 4: Active Liveness Challenge Handlers
+  const [challengeStepState, setChallengeStepState] = useState<"idle" | "tracking" | "completed">("idle");
 
   const startDemoChallenge = async () => {
     if (!session) {
-      toast.error("Your verification session has expired. Please restart verification.");
-      setSessionExpired(true);
+      toast.error("Your verification session has expired.");
       return;
     }
     setVerifyError(null);
-    setChallengeStepState("counting");
-    setCountdownVal(3);
+    setChallengeStepState("tracking");
+    setLivenessMessage("Loading face mesh model...");
 
-    // Play countdown voice: Three, Two, One
-    if (voice.adminVoiceEnabled && !voice.voterMuted) {
-      const getReadyText = voice.language === "hi" ? "तैयार हो जाइए। तीन, दो, एक।" : "Get ready. Three, two, one.";
-      voice.speak(getReadyText);
+    const videoElement = camera.current?.getVideoElement();
+    if (!videoElement) {
+      setVerifyError("Camera feed not found.");
+      setChallengeStepState("idle");
+      return;
     }
 
-    // 3-second countdown timer: 3 -> 2 -> 1
-    for (let i = 3; i >= 1; i--) {
-      setCountdownVal(i);
-      await new Promise((r) => setTimeout(r, 1000));
-    }
+    try {
+      const tracker = new LivenessTracker(videoElement);
+      await tracker.initialize();
+      setLivenessTracker(tracker);
 
+      tracker.onFaceLost = () => setLivenessMessage("Face lost! Please stay in frame.");
+      tracker.onFaceFound = () => setLivenessMessage("Face found! " + getInstructionFor(challengesList[currentChallengeIdx]));
+      tracker.onMultipleFaces = () => setLivenessMessage("Multiple faces detected! Please ensure you are alone.");
+      
+      tracker.onChallengePassed = () => {
+        handleChallengePassed(tracker);
+      };
+
+      // Start first challenge
+      const first = challengesList[0] || "smile";
+      setLivenessMessage(getInstructionFor(first));
+      tracker.setChallenge(first);
+      tracker.startTracking();
+
+    } catch (err) {
+      console.error(err);
+      setVerifyError("Failed to initialize Face Landmarker. Ensure hardware acceleration is enabled.");
+      setChallengeStepState("idle");
+    }
+  };
+
+  const getInstructionFor = (c: ChallengeType | undefined) => {
+    switch (c) {
+      case "smile": return "Please smile naturally.";
+      case "open_mouth": return "Please open your mouth.";
+      case "turn_left": return "Slowly turn your head LEFT.";
+      case "turn_right": return "Slowly turn your head RIGHT.";
+      default: return "Please look at the camera.";
+    }
+  };
+
+  const handleChallengePassed = (tracker: LivenessTracker) => {
+    tracker.stopTracking();
+    
+    // Check if there's another challenge
+    setCurrentChallengeIdx((prev) => {
+      const nextIdx = prev + 1;
+      if (nextIdx < challengesList.length) {
+        // Start next challenge
+        const nextChallenge = challengesList[nextIdx];
+        setLivenessMessage(`Great! Now, ${getInstructionFor(nextChallenge)}`);
+        tracker.setChallenge(nextChallenge);
+        setTimeout(() => {
+          tracker.startTracking();
+        }, 1500); // 1.5s pause between challenges
+        return nextIdx;
+      } else {
+        // All passed
+        completeLiveness(tracker);
+        return prev;
+      }
+    });
+  };
+
+  const completeLiveness = async (tracker: LivenessTracker) => {
     setChallengeStepState("completed");
-    toast.success("✓ Challenge completed");
-    if (voice.adminVoiceEnabled && !voice.voterMuted) {
-      const doneText = voice.language === "hi" ? "चैलेंज पूरा हुआ।" : "Challenge completed.";
-      voice.speak(doneText);
-    }
+    setLivenessMessage("✓ All challenges completed securely!");
+    toast.success("Active liveness passed.");
+    
+    tracker.dispose();
+    setLivenessTracker(null);
 
     // Finalize session challenge grant with backend
     try {
       setBusy(true);
-      await request("/biometric/challenge", {
+      await api.post("/biometric/challenge", {
         session_id: session,
-        observed_action: "shake_hand",
+        observed_action: "active_liveness_passed",
       });
       setTimeout(() => {
         advanceFromStage("challenge");
@@ -578,6 +643,15 @@ export default function VotingFlow({
       setBusy(false);
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (livenessTracker) {
+        livenessTracker.dispose();
+      }
+    };
+  }, [livenessTracker]);
 
   const forceProceedToBallot = async () => {
     await advanceFromStage("challenge");
@@ -1101,16 +1175,16 @@ export default function VotingFlow({
               </div>
             )}
 
-            {/* STAGE 4: DEMONSTRATION CHALLENGE */}
+            {/* STAGE 4: ACTIVE LIVENESS CHALLENGE */}
             {stage === "challenge" && (
               <div className="mx-auto max-w-xl text-center space-y-4 sm:space-y-6">
                 <div>
                   <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
-                    Challenge
+                    Step 4 — Liveness Check
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Demonstration Challenge</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Active Verification</h2>
                   <p className="mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    Complete the simple challenge to continue.
+                    Please perform the required head movements to verify you are a live person.
                   </p>
                 </div>
 
@@ -1120,29 +1194,36 @@ export default function VotingFlow({
                   </div>
                 )}
 
-                {/* Clean Demonstration Challenge Card */}
-                <div className="rounded-2xl bg-slate-900 text-white p-5 sm:p-8 border border-slate-800 shadow-lg space-y-4 sm:space-y-5">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-900/60 text-teal-300 border border-teal-700/50">
-                    CHALLENGE
+                <div className="rounded-2xl bg-slate-950 text-white p-1 overflow-hidden border border-slate-800 shadow-xl space-y-4 relative">
+                  {/* Camera must be rendered here for MediaPipe to read it */}
+                  <div className={challengeStepState === "completed" ? "opacity-50 pointer-events-none" : ""}>
+                    <Camera ref={camera} />
                   </div>
-
-                  <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-wide leading-snug">
-                    Please shake your hand in front of the camera.
-                  </h3>
-
-                  {/* Countdown or Completed Badge */}
-                  {challengeStepState === "counting" && (
-                    <div className="py-3 sm:py-4">
-                      <div className="inline-flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-teal-500/20 text-teal-400 text-3xl sm:text-4xl font-extrabold border-2 border-teal-400/40 animate-pulse">
-                        {countdownVal}
-                      </div>
+                  
+                  {challengeStepState === "tracking" && (
+                    <div className="absolute bottom-6 left-0 right-0 px-4 text-center z-30">
+                       <div className="bg-slate-900/90 backdrop-blur-md rounded-xl p-4 border border-slate-700 shadow-2xl inline-block max-w-sm w-full mx-auto animate-fade-in">
+                          <p className="text-sm sm:text-base font-extrabold text-teal-300">
+                            {livenessMessage}
+                          </p>
+                          <div className="flex justify-center gap-2 mt-3">
+                            {challengesList.map((c, i) => (
+                              <div key={i} className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                                i < currentChallengeIdx ? "bg-teal-400" :
+                                i === currentChallengeIdx ? "bg-amber-400 animate-pulse" : "bg-slate-700"
+                              }`} />
+                            ))}
+                          </div>
+                       </div>
                     </div>
                   )}
 
                   {challengeStepState === "completed" && (
-                    <div className="py-3 flex items-center justify-center gap-2 text-emerald-400 font-bold text-base sm:text-lg">
-                      <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
-                      <span>✓ Challenge completed</span>
+                    <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+                      <div className="bg-slate-900 rounded-2xl p-6 border border-slate-700 text-center space-y-3">
+                        <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto animate-bounce" />
+                        <h3 className="font-bold text-lg text-white">{livenessMessage}</h3>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1155,15 +1236,23 @@ export default function VotingFlow({
                       disabled={busy}
                       className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
                     >
-                      <span>Start Challenge</span>
+                      <ScanFace className="h-5 w-5" />
+                      <span>Start Liveness Check</span>
                     </button>
                   )}
 
-                  {challengeStepState === "counting" && (
-                    <div className="button bg-slate-100 text-slate-700 w-full min-h-[48px] text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
-                      <RefreshCw className="h-4 w-4 animate-spin text-teal-700" />
-                      <span>Challenge in progress ({countdownVal}s)...</span>
-                    </div>
+                  {challengeStepState === "tracking" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        livenessTracker?.dispose();
+                        setLivenessTracker(null);
+                        setChallengeStepState("idle");
+                      }}
+                      className="button bg-slate-800 text-slate-300 w-full min-h-[44px] text-xs font-bold"
+                    >
+                      Cancel / Retry
+                    </button>
                   )}
 
                   {challengeStepState === "completed" && (
@@ -1175,18 +1264,6 @@ export default function VotingFlow({
                     >
                       <CheckCircle2 className="h-5 w-5" />
                       <span>{busy ? "Unlocking Ballot..." : "Challenge Completed — Proceed to Ballot"}</span>
-                    </button>
-                  )}
-
-                  {/* Fallback button so voter is never stuck */}
-                  {challengeStepState !== "idle" && (
-                    <button
-                      type="button"
-                      onClick={forceProceedToBallot}
-                      disabled={busy}
-                      className="button button-outline w-full text-xs py-3 text-slate-600 font-semibold min-h-[44px]"
-                    >
-                      Continue
                     </button>
                   )}
                 </div>

@@ -7,6 +7,7 @@ export type CameraHandle = {
   snapshotBlob: () => Promise<Blob>;
   stopStream: () => void;
   restartStream: () => Promise<void>;
+  getVideoElement: () => HTMLVideoElement | null;
 };
 
 const Camera = forwardRef<CameraHandle>(function Camera(_, ref) {
@@ -103,6 +104,7 @@ const Camera = forwardRef<CameraHandle>(function Camera(_, ref) {
     },
     stopStream,
     restartStream: startStream,
+    getVideoElement: () => video.current,
   }));
 
 
