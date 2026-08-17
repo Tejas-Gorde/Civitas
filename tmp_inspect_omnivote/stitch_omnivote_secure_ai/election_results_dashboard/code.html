@@ -1,0 +1,273 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","on-tertiary-fixed":"#001a42","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#004395","secondary-fixed-dim":"#bcc7de","on-background":"#191c1e","on-primary-container":"#dad7ff","on-primary":"#ffffff","tertiary-container":"#005cc6","surface-container":"#eceef0","surface-variant":"#e0e3e5","secondary-container":"#d5e0f8","on-primary-fixed-variant":"#3323cc","surface-container-lowest":"#ffffff","primary":"#3525cd","secondary":"#545f73","background":"#f7f9fb","surface-container-highest":"#e0e3e5","outline":"#777587","outline-variant":"#c7c4d8","inverse-primary":"#c3c0ff","primary-fixed-dim":"#c3c0ff","surface":"#f7f9fb","tertiary":"#004598","on-surface":"#191c1e","error":"#ba1a1a","on-secondary-container":"#586377","inverse-surface":"#2d3133","surface-dim":"#d8dadc","on-secondary":"#ffffff","on-primary-fixed":"#0f0069","on-secondary-fixed":"#111c2d","on-error-container":"#93000a","surface-container-high":"#e6e8ea","surface-bright":"#f7f9fb","tertiary-fixed-dim":"#adc6ff","surface-container-low":"#f2f4f6","on-tertiary-container":"#cedbff","on-secondary-fixed-variant":"#3c475a","inverse-on-surface":"#eff1f3","tertiary-fixed":"#d8e2ff","primary-fixed":"#e2dfff","on-error":"#ffffff","on-surface-variant":"#464555","primary-container":"#4f46e5","surface-tint":"#4d44e3"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter":"24px","sm":"1rem","md":"1.5rem","max-width-content":"1200px","xs":"0.5rem","base":"4px","xl":"4rem","margin-mobile":"16px","lg":"2.5rem"},"fontFamily":{"body-lg":["Inter"],"headline-lg-mobile":["Inter"],"label-md":["Inter"],"label-sm":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"]},"fontSize":{"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-md":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"500"}],"label-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"></head><body class="bg-background font-body-md text-on-background"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/30 overflow-y-auto"><div class="p-md flex items-center gap-xs mb-sm"><span class="material-symbols-outlined text-primary">verified_user</span><div class="flex flex-col"><span class="font-headline-md text-label-md text-primary font-bold">Sovereign Ledger</span><span class="text-[10px] uppercase tracking-[2px] text-on-surface-variant font-bold">Admin Panel</span></div></div><nav class="flex-1 px-sm space-y-1" data-active-classes="bg-primary-container text-on-primary-container font-bold"><a aria-current="page" class="flex items-center px-md py-3 rounded-xl transition-all bg-primary-container text-on-primary-container font-bold" data-path="admin-dashboard" href="#"><span class="material-symbols-outlined mr-md">dashboard</span><span class="font-label-md text-label-md">Dashboard</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-elections" href="#"><span class="material-symbols-outlined mr-md">how_to_vote</span><span class="font-label-md text-label-md">Elections</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-voters" href="#"><span class="material-symbols-outlined mr-md">group</span><span class="font-label-md text-label-md">Voters</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-live-monitoring" href="#"><span class="material-symbols-outlined mr-md">monitoring</span><span class="font-label-md text-label-md">Live Monitoring</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-ai-security" href="#"><span class="material-symbols-outlined mr-md">psychology</span><span class="font-label-md text-label-md">AI Security</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-audit-logs" href="#"><span class="material-symbols-outlined mr-md">history_edu</span><span class="font-label-md text-label-md">Audit Logs</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-settings" href="#"><span class="material-symbols-outlined mr-md">settings</span><span class="font-label-md text-label-md">Settings</span></a></nav></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 z-40 flex items-center px-gutter justify-between gap-md"><div class="flex items-center gap-md flex-1 max-w-xl"><div class="relative flex-1"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span><input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-label-md text-label-md focus:ring-2 focus:ring-primary/20" placeholder="Search records..." type="text"></div><select class="bg-surface-container-high rounded-lg px-sm py-2 font-label-sm text-label-sm text-on-surface-variant outline-none"><option>2026 General Election</option><option>2024 Primary</option></select></div><div class="flex items-center gap-md"><button class="relative p-2 rounded-full hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-on-surface-variant">notifications</span><span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span></button><div class="flex items-center gap-sm pl-sm border-l border-outline-variant/30"><div class="flex flex-col items-end"><span class="font-label-sm text-label-sm text-on-surface font-bold">Admin Root</span><span class="font-label-sm text-[10px] text-tertiary">Security Clearance: L5</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full relative min-h-[calc(100vh-64px)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-surface via-surface-container-low to-surface-container -z-10 pointer-events-none"></div>
+<!-- Decorative ambient elements -->
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3 mix-blend-multiply"></div>
+<div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-tertiary/5 rounded-full blur-3xl -z-10 pointer-events-none -translate-x-1/3 translate-y-1/3 mix-blend-multiply"></div>
+<div class="px-gutter py-xl flex-1 max-w-[1400px] mx-auto w-full space-y-xl">
+<!-- Header & Meta Data -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-lg border-b border-surface-container-high pb-xl">
+<div class="space-y-sm max-w-2xl">
+<div class="inline-flex items-center gap-xs px-md py-xs rounded-full bg-error-container text-on-error-container animate-pulse shadow-sm">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest font-bold">Live Results - Updated Real-Time</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-background tracking-tighter">National General Election</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">Real-time vote counting and preliminary results across all districts. Data is cryptographically verified upon receipt.</p>
+</div>
+<div class="grid grid-cols-2 md:flex gap-md">
+<div class="bg-surface-container-highest p-md rounded-2xl shadow-sm hover:shadow-md transition-shadow min-w-[160px]">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Precincts Reporting</span>
+<span class="font-headline-lg text-headline-lg text-primary tracking-tight">87.4%</span>
+<span class="font-label-sm text-label-sm text-tertiary mt-1">4,370 / 5,000</span>
+</div>
+</div>
+<div class="bg-surface-container p-md rounded-2xl shadow-sm hover:shadow-md transition-shadow min-w-[160px]">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Estimated Turnout</span>
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-tight">64.2%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">15.2M Voters</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl items-start">
+<!-- Primary Column (Bar Charts) -->
+<div class="lg:col-span-8 space-y-xl">
+<!-- Presidential Race -->
+<section class="bg-surface-container-lowest rounded-3xl p-xl shadow-md space-y-lg relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+<header class="flex justify-between items-center relative z-10">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                Presidential Race
+              </h2>
+<p class="font-label-md text-label-md text-on-surface-variant mt-1">98% expected vote reporting</p>
+</div>
+<button class="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant transition-colors flex items-center gap-1 group/btn">
+              View Map Detail
+              <span class="material-symbols-outlined text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</header>
+<div class="space-y-md relative z-10">
+<!-- Candidate 1 -->
+<div class="relative">
+<div class="flex justify-between items-end mb-2">
+<div class="flex items-center gap-sm">
+<div class="w-12 h-12 rounded-full overflow-hidden shadow-sm shrink-0 border-2 border-surface">
+<img alt="Candidate 1" class="w-full h-full object-cover" data-alt="Professional headshot of a female political candidate in her 50s, wearing a dark navy blazer, smiling confidently against a neutral studio background. Soft lighting, high resolution, trustworthy appearance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYvxc5L61pH2HGBhwD2SMxzfRqVT3VDr3mFrUbzMZqgoSqH_ndEiHwrJ33h98VyaMYOW2F2bxnjOxDnd9mbB3HapPYCOjR5IQ3S1oVz5dcrZtmPoh4MYxoQveyFEvWR96ljVJu_8BtNzK1Klxq_d8fCJ7hs2BPmH6HKn4aYN1Ro6hOqB-CuoOZ5r32eup8zo1vj11PCRoG33YoTgbxUmGXe8bvCP-LNUxU2lFPhpnYlpGfoqKpH4lh">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[20px] text-on-surface leading-tight">Sarah Chen</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Progressive Alliance</span>
+</div>
+</div>
+<div class="text-right flex flex-col items-end">
+<span class="font-headline-lg text-[28px] text-primary tracking-tight font-bold">51.2%</span>
+<span class="font-label-md text-label-md text-on-surface-variant">7,782,144 votes</span>
+</div>
+</div>
+<div class="h-4 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full relative overflow-hidden" style="width: 51.2%">
+<div class="absolute inset-0 bg-white/20 w-1/2 -skew-x-12 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
+</div>
+</div>
+</div>
+<!-- Candidate 2 -->
+<div class="relative mt-lg">
+<div class="flex justify-between items-end mb-2">
+<div class="flex items-center gap-sm">
+<div class="w-12 h-12 rounded-full overflow-hidden shadow-sm shrink-0 border-2 border-surface">
+<img alt="Candidate 2" class="w-full h-full object-cover" data-alt="Professional headshot of a male political candidate in his 60s, wearing a grey suit and blue tie, serious but approachable expression, plain background. Sharp focus, corporate portrait style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBF-tpZLAzrPa1u7cFdEFjc5P-h-3CGArzm9rXhjPhhZ80X5buX1I9eXns_6xOvuUR19oVltaTayk_Al9OSO7HzcsyR5evbzLAfWqEE__zfTuE5OVyjym_hMLT8ZIhgU5iuN-rtN5jaby3LF6DU_hf3b0B-ip2zk5k0wvHuD4KFDk1Ezkt7z5p6VTs0ZU1oc9BnZDgpVbrXL-eedo8VbWi5IEv7fbcQeALF-D7QFf9TmHP7zHK3BwVX">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[20px] text-on-surface leading-tight">Marcus Thorne</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Conservative Union</span>
+</div>
+</div>
+<div class="text-right flex flex-col items-end">
+<span class="font-headline-lg text-[28px] text-secondary tracking-tight">46.8%</span>
+<span class="font-label-md text-label-md text-on-surface-variant">7,113,490 votes</span>
+</div>
+</div>
+<div class="h-4 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 46.8%"></div>
+</div>
+</div>
+<!-- Other Candidates -->
+<div class="pt-sm border-t border-surface-container-high mt-md flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Other Candidates (3)</span>
+<span class="font-label-md text-label-md text-on-surface-variant">2.0% (304,112 votes)</span>
+</div>
+</div>
+</section>
+<!-- Vice Presidential Race -->
+<section class="bg-surface-container-lowest rounded-3xl p-xl shadow-md space-y-lg">
+<header class="flex justify-between items-center">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface flex items-center gap-xs">
+                Vice Presidential Race
+              </h2>
+</div>
+</header>
+<div class="space-y-md">
+<!-- VP Candidate 1 -->
+<div class="relative">
+<div class="flex justify-between items-end mb-2">
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Elena Rodriguez</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Progressive Alliance</span>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md text-primary font-bold tracking-tight">50.8%</span>
+</div>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000 ease-out" style="width: 50.8%"></div>
+</div>
+</div>
+<!-- VP Candidate 2 -->
+<div class="relative">
+<div class="flex justify-between items-end mb-2">
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface font-medium">James Sterling</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Conservative Union</span>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md text-secondary tracking-tight">47.1%</span>
+</div>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full transition-all duration-1000 ease-out" style="width: 47.1%"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Secondary Column (Stats & Visuals) -->
+<div class="lg:col-span-4 space-y-xl">
+<!-- Turnout Gauge -->
+<div class="bg-primary text-on-primary p-xl rounded-3xl shadow-xl relative overflow-hidden group">
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-50"></div>
+<h3 class="font-label-md text-label-md uppercase tracking-widest opacity-80 mb-lg relative z-10">Turnout Progress</h3>
+<div class="relative flex justify-center items-center py-md z-10">
+<!-- Circular Progress SVG -->
+<svg class="w-48 h-48 -rotate-90 transform" viewBox="0 0 100 100">
+<circle class="opacity-20" cx="50" cy="50" fill="none" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="transition-all duration-1500 ease-out" cx="50" cy="50" fill="none" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="font-display-lg text-[40px] tracking-tighter font-bold leading-none mb-1">75%</span>
+<span class="font-label-sm text-label-sm opacity-80">of Target</span>
+</div>
+</div>
+<div class="mt-lg pt-lg border-t border-on-primary/20 flex justify-between relative z-10">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm opacity-80">Current Total</span>
+<span class="font-headline-md text-headline-md">15.2M</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm opacity-80">Target</span>
+<span class="font-headline-md text-headline-md">20.2M</span>
+</div>
+</div>
+</div>
+<!-- Ballot Integrity (Valid vs Invalid) -->
+<div class="bg-surface-container-lowest p-xl rounded-3xl shadow-md">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+            Ballot Integrity
+          </h3>
+<div class="space-y-lg">
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
+<svg class="w-8 h-8 text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1">
+<span class="font-body-md text-body-md text-on-surface font-medium">Valid Votes</span>
+<span class="font-label-md text-label-md text-on-surface">99.1%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 99.1%"></div>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant mt-1 block">15,063,212 processed</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-2xl bg-error-container/50 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1">
+<span class="font-body-md text-body-md text-on-surface font-medium">Invalid/Spoiled</span>
+<span class="font-label-md text-label-md text-error">0.9%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 0.9%"></div>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant mt-1 block">136,788 pending review</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Feed Mini -->
+<div class="bg-surface-container-low rounded-3xl p-lg shadow-sm border border-outline-variant/20 h-64 overflow-hidden flex flex-col relative">
+<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-md flex items-center gap-xs sticky top-0 bg-surface-container-low z-10 pb-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+              Audit Log Feed
+           </h3>
+<div class="flex-1 overflow-y-auto space-y-md pr-2 mask-image: linear-gradient(to bottom, black 50%, transparent 100%);">
+<!-- Log Items -->
+<div class="flex gap-sm items-start">
+<span class="font-label-sm text-[10px] text-on-surface-variant font-mono mt-1 w-12 shrink-0">14:02:11</span>
+<p class="font-label-md text-[13px] text-on-surface leading-snug">Batch #4891 verified cryptographically in District 7.</p>
+</div>
+<div class="flex gap-sm items-start">
+<span class="font-label-sm text-[10px] text-on-surface-variant font-mono mt-1 w-12 shrink-0">14:01:45</span>
+<p class="font-label-md text-[13px] text-on-surface leading-snug">Turnout threshold passed for Metro Area sector B.</p>
+</div>
+<div class="flex gap-sm items-start">
+<span class="font-label-sm text-[10px] text-error font-mono mt-1 w-12 shrink-0">14:00:22</span>
+<p class="font-label-md text-[13px] text-on-surface leading-snug">Anomaly detected: Spiked submission rate Precinct 112. Auto-flagged.</p>
+</div>
+<div class="flex gap-sm items-start">
+<span class="font-label-sm text-[10px] text-on-surface-variant font-mono mt-1 w-12 shrink-0">13:58:04</span>
+<p class="font-label-md text-[13px] text-on-surface leading-snug">Blockchain sync completed for node group Alpha.</p>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-container-low to-transparent pointer-events-none"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<style>
+  @keyframes shimmer {
+    100% {
+      transform: translateX(200%);
+    }
+  }
+</style>
+<script>
+  // Simple script to slightly animate the bars on load for a "live" feel
+  document.addEventListener("DOMContentLoaded", () => {
+    const bars = document.querySelectorAll('.bg-primary, .bg-secondary');
+    bars.forEach(bar => {
+      if(bar.style.width) {
+        const targetWidth = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+          bar.style.width = targetWidth;
+        }, 100);
+      }
+    });
+  });
+</script></main></div></body></html>

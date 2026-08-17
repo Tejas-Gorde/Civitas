@@ -1,0 +1,278 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","on-tertiary-fixed":"#001a42","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#004395","secondary-fixed-dim":"#bcc7de","on-background":"#191c1e","on-primary-container":"#dad7ff","on-primary":"#ffffff","tertiary-container":"#005cc6","surface-container":"#eceef0","surface-variant":"#e0e3e5","secondary-container":"#d5e0f8","on-primary-fixed-variant":"#3323cc","surface-container-lowest":"#ffffff","primary":"#3525cd","secondary":"#545f73","background":"#f7f9fb","surface-container-highest":"#e0e3e5","outline":"#777587","outline-variant":"#c7c4d8","inverse-primary":"#c3c0ff","primary-fixed-dim":"#c3c0ff","surface":"#f7f9fb","tertiary":"#004598","on-surface":"#191c1e","error":"#ba1a1a","on-secondary-container":"#586377","inverse-surface":"#2d3133","surface-dim":"#d8dadc","on-secondary":"#ffffff","on-primary-fixed":"#0f0069","on-secondary-fixed":"#111c2d","on-error-container":"#93000a","surface-container-high":"#e6e8ea","surface-bright":"#f7f9fb","tertiary-fixed-dim":"#adc6ff","surface-container-low":"#f2f4f6","on-tertiary-container":"#cedbff","on-secondary-fixed-variant":"#3c475a","inverse-on-surface":"#eff1f3","tertiary-fixed":"#d8e2ff","primary-fixed":"#e2dfff","on-error":"#ffffff","on-surface-variant":"#464555","primary-container":"#4f46e5","surface-tint":"#4d44e3"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter":"24px","sm":"1rem","md":"1.5rem","max-width-content":"1200px","xs":"0.5rem","base":"4px","xl":"4rem","margin-mobile":"16px","lg":"2.5rem"},"fontFamily":{"body-lg":["Inter"],"headline-lg-mobile":["Inter"],"label-md":["Inter"],"label-sm":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"]},"fontSize":{"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-md":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"500"}],"label-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"></head><body class="bg-background font-body-md text-on-background"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/30 overflow-y-auto"><div class="p-md flex items-center gap-xs mb-sm"><span class="material-symbols-outlined text-primary">verified_user</span><div class="flex flex-col"><span class="font-headline-md text-label-md text-primary font-bold">Sovereign Ledger</span><span class="text-[10px] uppercase tracking-[2px] text-on-surface-variant font-bold">Admin Panel</span></div></div><nav class="flex-1 px-sm space-y-1" data-active-classes="bg-primary-container text-on-primary-container font-bold"><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-dashboard" href="#"><span class="material-symbols-outlined mr-md">dashboard</span><span class="font-label-md text-label-md">Dashboard</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-elections" href="#"><span class="material-symbols-outlined mr-md">how_to_vote</span><span class="font-label-md text-label-md">Elections</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-voters" href="#"><span class="material-symbols-outlined mr-md">group</span><span class="font-label-md text-label-md">Voters</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-live-monitoring" href="#"><span class="material-symbols-outlined mr-md">monitoring</span><span class="font-label-md text-label-md">Live Monitoring</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-ai-security" href="#"><span class="material-symbols-outlined mr-md">psychology</span><span class="font-label-md text-label-md">AI Security</span></a><a aria-current="page" class="flex items-center px-md py-3 rounded-xl transition-all bg-primary-container text-on-primary-container font-bold" data-path="admin-audit-logs" href="#"><span class="material-symbols-outlined mr-md">history_edu</span><span class="font-label-md text-label-md">Audit Logs</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-settings" href="#"><span class="material-symbols-outlined mr-md">settings</span><span class="font-label-md text-label-md">Settings</span></a></nav></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 z-40 flex items-center px-gutter justify-between gap-md"><div class="flex items-center gap-md flex-1 max-w-xl"><div class="relative flex-1"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span><input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-label-md text-label-md focus:ring-2 focus:ring-primary/20" placeholder="Search records..." type="text"></div><select class="bg-surface-container-high rounded-lg px-sm py-2 font-label-sm text-label-sm text-on-surface-variant outline-none"><option>2026 General Election</option><option>2024 Primary</option></select></div><div class="flex items-center gap-md"><button class="relative p-2 rounded-full hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-on-surface-variant">notifications</span><span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span></button><div class="flex items-center gap-sm pl-sm border-l border-outline-variant/30"><div class="flex flex-col items-end"><span class="font-label-sm text-label-sm text-on-surface font-bold">Admin Root</span><span class="font-label-sm text-[10px] text-tertiary">Security Clearance: L5</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter pb-xl gap-xl max-w-max-width-content mx-auto">
+<!-- Header / Title -->
+<div class="flex flex-col gap-sm pt-xl md:pt-16">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-tertiary text-[20px]">history_edu</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-tertiary">Cryptographic Audit</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div class="flex flex-col gap-xs max-w-2xl">
+<h1 class="font-display-lg text-display-lg text-on-background">Immutable Audit Logs</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Complete, cryptographically secured historical record of all system events, identity verifications, and ballot transactions. Each entry is hashed and anchored to the ledger.
+        </p>
+</div>
+<div class="flex items-center gap-md shrink-0">
+<button class="flex items-center gap-2 px-md py-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-all shadow-sm">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span class="font-label-md text-label-md">Export CSV</span>
+</button>
+<button class="flex items-center gap-2 px-md py-3 rounded-lg bg-primary hover:bg-primary-container hover:text-on-primary-container text-on-primary transition-all shadow-md">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+<span class="font-label-md text-label-md">Export PDF Report</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Key Metrics / Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Total Log Entries</span>
+<span class="material-symbols-outlined text-outline text-[16px]">database</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">1,492,034</div>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+<span class="font-label-sm text-label-sm">4.2k today</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Failed Validations</span>
+<span class="material-symbols-outlined text-error text-[16px]">gpp_bad</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">23</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Requires review</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Current Block Height</span>
+<span class="material-symbols-outlined text-tertiary text-[16px]">layers</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">#489,102</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Updated 12s ago</span>
+</div>
+</div>
+<div class="bg-primary rounded-xl p-md shadow-md flex flex-col justify-between overflow-hidden relative">
+<div class="absolute inset-0 bg-gradient-to-br from-transparent to-black/20 pointer-events-none"></div>
+<div class="flex items-center justify-between relative z-10">
+<span class="font-label-sm text-label-sm text-on-primary/80">Ledger Status</span>
+<span class="material-symbols-outlined text-on-primary text-[16px]">verified</span>
+</div>
+<div class="flex flex-col relative z-10">
+<div class="font-headline-md text-headline-md text-on-primary">Synchronized</div>
+<div class="font-label-sm text-label-sm text-on-primary/80 mt-1">All nodes consensus</div>
+</div>
+</div>
+</div>
+<!-- Main Log Table Area -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-lg flex flex-col overflow-hidden">
+<!-- Toolbar -->
+<div class="p-md flex flex-col sm:flex-row items-center gap-md bg-surface-container-low border-b border-outline-variant/30">
+<div class="relative w-full sm:max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-surface-container-lowest border-none rounded-lg py-2.5 pl-10 pr-4 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary/20 shadow-sm transition-shadow" placeholder="Search hash, resource ID, or actor..." type="text">
+</div>
+<div class="flex items-center gap-sm w-full sm:w-auto ml-auto">
+<select class="bg-surface-container-lowest rounded-lg px-3 py-2.5 font-label-md text-label-md text-on-surface shadow-sm outline-none w-full sm:w-auto">
+<option>All Actors</option>
+<option>System</option>
+<option>Admin</option>
+<option>Voter</option>
+</select>
+<select class="bg-surface-container-lowest rounded-lg px-3 py-2.5 font-label-md text-label-md text-on-surface shadow-sm outline-none w-full sm:w-auto">
+<option>All Events</option>
+<option>Vote Recorded</option>
+<option>Identity Verified</option>
+<option>Access Denied</option>
+</select>
+<button class="p-2.5 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-primary shadow-sm transition-colors" title="Filter Settings">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant/30">
+<th class="p-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Proof</th>
+<th class="p-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Timestamp (UTC)</th>
+<th class="p-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Actor</th>
+<th class="p-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Action</th>
+<th class="p-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Resource ID / Hash</th>
+<th class="p-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Result</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer">
+<td class="p-md align-middle">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container" title="Cryptographically Verified">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">2026-11-03</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:22:05.192</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-xs">
+<span class="px-2 py-1 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">System</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="font-label-md text-label-md text-on-surface">Vote Recorded</span>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-sm">
+<span class="font-mono text-[13px] text-on-surface-variant tracking-tight truncate max-w-[200px]">0x7a2b9...f3e1</span>
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Copy Hash">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container/20 text-on-primary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  Success
+               </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer">
+<td class="p-md align-middle">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container" title="Cryptographically Verified">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">2026-11-03</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:21:44.801</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-xs">
+<span class="px-2 py-1 rounded-md bg-tertiary-container/20 text-tertiary font-label-sm text-[10px] uppercase tracking-wider">Voter</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="font-label-md text-label-md text-on-surface">Identity Verified</span>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-sm">
+<span class="font-mono text-[13px] text-on-surface-variant tracking-tight truncate max-w-[200px]">req_992x441_auth</span>
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Copy Hash">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container/20 text-on-primary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  Success
+               </span>
+</td>
+</tr>
+<!-- Row 3 - Error state -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer bg-error-container/10">
+<td class="p-md align-middle">
+<div class="w-8 h-8 rounded-full bg-error-container flex items-center justify-center text-on-error-container" title="Signature Mismatch">
+<span class="material-symbols-outlined text-[18px]">gpp_maybe</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">2026-11-03</span>
+<span class="font-label-sm text-label-sm text-error">14:19:12.004</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-xs">
+<span class="px-2 py-1 rounded-md bg-tertiary-container/20 text-tertiary font-label-sm text-[10px] uppercase tracking-wider">Voter</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="font-label-md text-label-md text-on-surface">Auth Attempt</span>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-sm">
+<span class="font-mono text-[13px] text-on-surface-variant tracking-tight truncate max-w-[200px]">ip_192.168.x.x_err</span>
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Copy Hash">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Failed (Sig Invalid)
+               </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer">
+<td class="p-md align-middle">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container" title="Cryptographically Verified">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">2026-11-03</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:15:00.000</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-xs">
+<span class="px-2 py-1 rounded-md bg-primary-container text-on-primary-container font-label-sm text-[10px] uppercase tracking-wider">Admin</span>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="font-label-md text-label-md text-on-surface">Config Updated</span>
+</td>
+<td class="p-md align-middle">
+<div class="flex items-center gap-sm">
+<span class="font-mono text-[13px] text-on-surface-variant tracking-tight truncate max-w-[200px]">cfg_node_sync_interval</span>
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Copy Hash">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="p-md align-middle">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container/20 text-on-primary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  Success
+               </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-md bg-surface-container-lowest border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface-variant">Showing 1-4 of 1,492,034 entries</span>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-primary text-on-primary font-label-sm flex items-center justify-center">1</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface font-label-sm flex items-center justify-center transition-colors">2</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface font-label-sm flex items-center justify-center transition-colors">3</button>
+<span class="text-on-surface-variant">...</span>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

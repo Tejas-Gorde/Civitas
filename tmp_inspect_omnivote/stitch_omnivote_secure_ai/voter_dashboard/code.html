@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","on-tertiary-fixed":"#001a42","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#004395","secondary-fixed-dim":"#bcc7de","on-background":"#191c1e","on-primary-container":"#dad7ff","on-primary":"#ffffff","tertiary-container":"#005cc6","surface-container":"#eceef0","surface-variant":"#e0e3e5","secondary-container":"#d5e0f8","on-primary-fixed-variant":"#3323cc","surface-container-lowest":"#ffffff","primary":"#3525cd","secondary":"#545f73","background":"#f7f9fb","surface-container-highest":"#e0e3e5","outline":"#777587","outline-variant":"#c7c4d8","inverse-primary":"#c3c0ff","primary-fixed-dim":"#c3c0ff","surface":"#f7f9fb","tertiary":"#004598","on-surface":"#191c1e","error":"#ba1a1a","on-secondary-container":"#586377","inverse-surface":"#2d3133","surface-dim":"#d8dadc","on-secondary":"#ffffff","on-primary-fixed":"#0f0069","on-secondary-fixed":"#111c2d","on-error-container":"#93000a","surface-container-high":"#e6e8ea","surface-bright":"#f7f9fb","tertiary-fixed-dim":"#adc6ff","surface-container-low":"#f2f4f6","on-tertiary-container":"#cedbff","on-secondary-fixed-variant":"#3c475a","inverse-on-surface":"#eff1f3","tertiary-fixed":"#d8e2ff","primary-fixed":"#e2dfff","on-error":"#ffffff","on-surface-variant":"#464555","primary-container":"#4f46e5","surface-tint":"#4d44e3"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter":"24px","sm":"1rem","md":"1.5rem","max-width-content":"1200px","xs":"0.5rem","base":"4px","xl":"4rem","margin-mobile":"16px","lg":"2.5rem"},"fontFamily":{"body-lg":["Inter"],"headline-lg-mobile":["Inter"],"label-md":["Inter"],"label-sm":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"]},"fontSize":{"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-md":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"500"}],"label-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"></head><body class="bg-background font-body-md text-on-background"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-max-width-content mx-auto px-gutter flex items-center justify-between"><div class="flex items-center gap-xs"><span class="material-symbols-outlined text-primary">account_balance</span><span class="font-headline-md text-headline-md text-on-background tracking-tight">Sovereign Ledger</span></div><nav class="hidden md:flex items-center gap-md" data-active-classes="text-primary font-bold"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="home" href="#">Home</a><a aria-current="page" class="transition-colors text-primary font-bold" data-path="my-ballot" href="#">My Ballot</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="election-info" href="#">Election Info</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="help-support" href="#">Help/Support</a></nav><div class="flex items-center gap-sm"><div class="hidden lg:flex items-center gap-xs bg-surface-container-low px-sm py-xs rounded-full"><span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Secure Session</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface"><div class="flex flex-col w-full">
+<section class="w-full relative py-xl">
+<div class="max-w-max-width-content mx-auto px-gutter">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg">
+<div class="flex flex-col gap-xs">
+<div class="flex items-center gap-xs">
+<span class="w-3 h-3 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgba(186,26,26,0.6)]"></span>
+<span class="font-label-sm text-label-sm text-error uppercase tracking-wider">Live Election</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-background tracking-tight">2026 College General Election</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mt-sm">Review candidates and cast your ballot. Your selections are securely encrypted and stored on the Sovereign Ledger.</p>
+</div>
+<div class="bg-surface-container rounded-xl p-sm flex items-center gap-md shadow-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ballot Status</span>
+<span class="font-headline-md text-headline-md text-primary">Incomplete</span>
+</div>
+<div class="w-12 h-12 rounded-full border-4 border-surface-variant flex items-center justify-center relative">
+<svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
+<circle class="text-primary" cx="24" cy="24" fill="none" r="20" stroke="currentColor" stroke-dasharray="125.6" stroke-dashoffset="94.2" stroke-width="4"></circle>
+</svg>
+<span class="font-label-sm text-label-sm text-on-surface">1/4</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full sticky top-[64px] z-40 bg-surface/95 backdrop-blur-md pb-md">
+<div class="max-w-max-width-content mx-auto px-gutter">
+<div class="flex flex-col md:flex-row items-center gap-md bg-surface-container-low rounded-lg p-sm shadow-sm">
+<div class="relative w-full md:w-auto md:flex-1">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-xl pr-sm py-xs bg-surface-container-lowest rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md text-on-surface transition-shadow shadow-sm" placeholder="Search candidates..." type="text">
+</div>
+<div class="flex items-center gap-sm w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+<select class="px-md py-xs bg-surface-container-lowest rounded-md font-label-md text-label-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary shadow-sm appearance-none cursor-pointer">
+<option value="all">All Positions</option>
+<option value="president">President</option>
+<option value="vp">Vice President</option>
+<option value="secretary">Secretary</option>
+<option value="treasurer">Treasurer</option>
+</select>
+<select class="px-md py-xs bg-surface-container-lowest rounded-md font-label-md text-label-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary shadow-sm appearance-none cursor-pointer">
+<option value="all">All Departments</option>
+<option value="engineering">Engineering</option>
+<option value="arts">Arts &amp; Sciences</option>
+<option value="business">Business</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full py-xl relative">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-surface-container-low/50 pointer-events-none"></div>
+<div class="max-w-max-width-content mx-auto px-gutter relative z-10">
+<div class="mb-xl">
+<div class="flex items-center gap-sm mb-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-background">President</h2>
+<span class="bg-primary/10 text-primary px-xs py-base rounded-sm font-label-sm text-label-sm">Select 1</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Candidate Card 1 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+<div class="h-32 bg-surface-variant relative">
+<div class="w-24 h-24 rounded-full border-4 border-surface-container-lowest absolute -bottom-12 left-sm bg-cover bg-center shadow-sm" data-alt="Professional headshot of a confident college student running for president, modern lighting, clear background, sharp focus, corporate fintech color palette." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEhJo7rzye3yB-q6PJ9Z_6SOQ7BlprH9HMBo-SzK14brnOG_4Y0zRWQycIOMJO-07tbn5Am7r7tb9jNoLn0yEKeD3eCRIR3uCmKdbM2D_lGEjUun5uVefmouPUbN_nNuNP2AwahPgn-9Skqy2a8oUaGEJDafJ_dmkyk2FVeAMUEVtsIMuUKyje4ZmMGyCLsfjq4tKejSe0FWfJsaNKHc2XDiiyj6t1Bt2iD9KRWEFAdHZf7AnZUMJd')"></div>
+</div>
+<div class="pt-16 p-md flex flex-col h-full">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Alex Mercer</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Engineering Dept.</p>
+</div>
+<button class="text-primary hover:bg-primary/5 p-xs rounded-full transition-colors" title="View Profile">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-lg flex-grow">
+                "Committed to building a more transparent student union. My focus is on upgrading campus facilities and ensuring every voice is heard through digital town halls."
+              </p>
+<button class="w-full bg-surface-container text-on-surface font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs font-bold" onclick="toggleSelection(this)">
+<span>Select Candidate</span>
+</button>
+</div>
+</div>
+<!-- Candidate Card 2 (Selected State Example) -->
+<div class="group bg-primary-fixed rounded-xl overflow-hidden shadow-md transition-all duration-300 relative border-2 border-primary">
+<div class="absolute top-sm right-sm bg-primary text-on-primary rounded-full p-xs shadow-sm z-10">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="h-32 bg-primary/20 relative">
+<div class="w-24 h-24 rounded-full border-4 border-primary-fixed absolute -bottom-12 left-sm bg-cover bg-center shadow-sm" data-alt="Professional headshot of an approachable female college student running for president, bright academic setting, friendly smile, corporate fintech aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBOywjq0DJ22J3chreZXRYjlnVajdrimTaj3YUcPaj5Ewkr3gI3TwiPGTJ8ngW4akxl7JewhHDlys7wHRqC7m4X6I6DjiMTjn4S6YxgWUVb4YK8gmPbZ2n1J9syxTYeWG-BPFGMYPNkUd_vDDZiLtzGnLVlSe421uNlpZEYnYqLXtZrykEeGQVkDrS2viXMM-tCTin641tT4gdzcN8VMs6xCdnANh1XML0wkas1hHBANkaVuBnwmhYH')"></div>
+</div>
+<div class="pt-16 p-md flex flex-col h-full">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Sarah Jenkins</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Arts &amp; Sciences</p>
+</div>
+<button class="text-primary hover:bg-primary/5 p-xs rounded-full transition-colors" title="View Profile">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-lg flex-grow">
+                "Bridging the gap between administration and students. I pledge to allocate more funding to student mental health resources and diverse campus events."
+              </p>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg shadow-sm flex items-center justify-center gap-xs font-bold" onclick="toggleSelection(this)">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Selected</span>
+</button>
+</div>
+</div>
+<!-- Candidate Card 3 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+<div class="h-32 bg-surface-variant relative">
+<div class="w-24 h-24 rounded-full border-4 border-surface-container-lowest absolute -bottom-12 left-sm bg-cover bg-center shadow-sm" data-alt="Professional headshot of a serious college student running for president, business attire, modern campus background, corporate fintech vibe." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQ7WXNZ3QQqyXdy0fjDyx_SHkiUHvp8LCWJjlLFG_yehVuQajTM-4MRmTlPVk6XOpzhQQs9x-wFNK5DMqEMCsoohLiqtLHjGXeJyRDdof3laKXc_ovRgbTIjeHgNQABVftfB608u9pzaqGuk9BCtw1KY1FTuaCxf6BGSHZ1eqLRaLYP34ta4VC7qyeGPfi1bMILeu3nadKFUFBAQsoCwQk7pxqZKdR9tBMdmwQ11AdWGbaQn3K3JhZ')"></div>
+</div>
+<div class="pt-16 p-md flex flex-col h-full">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">David Chen</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Business Dept.</p>
+</div>
+<button class="text-primary hover:bg-primary/5 p-xs rounded-full transition-colors" title="View Profile">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-lg flex-grow">
+                "Fiscal responsibility and career readiness. I will implement a student-led career networking program and optimize the student union budget."
+              </p>
+<button class="w-full bg-surface-container text-on-surface font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs font-bold" onclick="toggleSelection(this)">
+<span>Select Candidate</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Vice President Section -->
+<div class="mb-xl">
+<div class="flex items-center gap-sm mb-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Vice President</h2>
+<span class="bg-primary/10 text-primary px-xs py-base rounded-sm font-label-sm text-label-sm">Select 1</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- VP Card 1 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+<div class="p-md flex items-start gap-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shadow-sm shrink-0" data-alt="Headshot of student running for VP, confident, modern academic setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDaybzhrhNxQ-alTyGN9qJ_XiO3yEXL4vBAnrCt7N8vdVSI-CVoNTaMwxTOjL5lDbIp7CFlqqMTjhHllfKlPJiGRYcPoF5yMPlyqv0_FltFAOHelZM8Lw9iZ_19hIuRJR7yCCzxMrBd6SUqlTtUN5sAZVTDMQOWAK6sSQ4xcj6tGS_jMXHh1dU-JNbYi3NGKKuHUHsOCy1SsbSeVdGXkrGKX9mrad89dsAfdbCApBjdPgoWZDUXgOU0')"></div>
+<div class="flex-grow">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[20px]">Marcus Thorne</h3>
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm">Engineering Dept.</p>
+<button class="text-primary font-label-sm text-label-sm hover:underline">View Full Profile</button>
+</div>
+</div>
+<div class="px-md pb-md">
+<button class="w-full bg-surface-container text-on-surface font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs font-bold">
+<span>Select Candidate</span>
+</button>
+</div>
+</div>
+<!-- VP Card 2 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+<div class="p-md flex items-start gap-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shadow-sm shrink-0" data-alt="Headshot of student running for VP, approachable, modern academic setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAdagmPJza2dNqD9yXbcpl_sLMHdHE2IbmsPWBo5g1x2RbqIvOzCcbpioh75klxJ78rfhK7PjSPswuL1Dq3So_FG_0vvRpPc3PdX69EL11xY4UqszUjwT51uFYKH-LnemZQYtJgz8OidGTMJ4RMytW-5tyz7ob6WwH8bxq6_22QiOjRyPoZSduWROG3xHD29Jz9iXUxA9o_orNnnhjwCwAWBTRRIPqSJvvOXA06ItWzO_sX2LKgkBoH')"></div>
+<div class="flex-grow">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[20px]">Elena Rodriguez</h3>
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm">Arts &amp; Sciences</p>
+<button class="text-primary font-label-sm text-label-sm hover:underline">View Full Profile</button>
+</div>
+</div>
+<div class="px-md pb-md">
+<button class="w-full bg-surface-container text-on-surface font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs font-bold">
+<span>Select Candidate</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Fixed Bottom Bar for Progression -->
+<div class="fixed bottom-0 left-0 w-full bg-surface/95 backdrop-blur-lg border-t border-surface-variant z-50 py-sm shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+<div class="max-w-max-width-content mx-auto px-gutter flex items-center justify-between">
+<div class="hidden md:flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">security</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Selections are auto-saved and encrypted locally.</span>
+</div>
+<div class="flex items-center gap-md w-full md:w-auto justify-end">
+<button class="px-lg py-sm font-label-md text-label-md text-on-surface hover:bg-surface-container rounded-lg transition-colors">Clear Ballot</button>
+<button class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md shadow-sm hover:shadow-md hover:-translate-y-[1px] transition-all flex items-center gap-xs">
+<span>Review Ballot</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function toggleSelection(btn) {
+    const card = btn.closest('.group');
+    const isSelected = card.classList.contains('bg-primary-fixed');
+    
+    // In a real app, you'd unselect other candidates in the same category first
+    
+    if (isSelected) {
+      // Revert to unselected state
+      card.classList.remove('bg-primary-fixed', 'border-2', 'border-primary');
+      card.classList.add('bg-surface-container-lowest');
+      
+      const badge = card.querySelector('.absolute.top-sm.right-sm');
+      if(badge) badge.remove();
+      
+      const headerDiv = card.querySelector('.h-32');
+      headerDiv.classList.remove('bg-primary/20');
+      headerDiv.classList.add('bg-surface-variant');
+      
+      const imgBorder = card.querySelector('.rounded-full');
+      imgBorder.classList.remove('border-primary-fixed');
+      imgBorder.classList.add('border-surface-container-lowest');
+
+      btn.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+      btn.classList.add('bg-surface-container', 'text-on-surface');
+      btn.innerHTML = '<span>Select Candidate</span>';
+    } else {
+       alert("Selection logic handled by framework in production.");
+    }
+  }
+</script></main><footer class="w-full bg-surface-container py-xl border-t border-outline-variant/30"><div class="max-w-max-width-content mx-auto px-gutter grid grid-cols-1 md:grid-cols-2 gap-md"><div class="text-on-surface-variant font-label-sm text-label-sm">© 2024 Sovereign Ledger. Institutional Trust Voting.</div><div class="flex flex-wrap gap-md md:justify-end"><a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" href="#">Privacy Policy</a><a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" href="#">Security</a><a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" href="#">Terms</a><a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" href="#">Contact</a></div></div></footer></body></html>

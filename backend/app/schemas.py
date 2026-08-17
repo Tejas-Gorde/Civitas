@@ -1,0 +1,358 @@
+from datetime import datetime
+from uuid import UUID
+from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
+class ElectionCreate(BaseModel):
+    election_id: str | None = Field(default=None, min_length=3, max_length=64)
+    name: str = Field(min_length=3, max_length=200)
+    description: str = Field(default="", max_length=3000)
+    starts_at: datetime
+    ends_at: datetime
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    show_voter_names_in_results: bool = False
+    temp_admin_id: str | None = None
+    temp_admin_password: str | None = None
+
+
+class OnboardingCandidateItem(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    party: str = Field(min_length=2, max_length=160)
+    manifesto: str = Field(default="", max_length=5000)
+
+
+class OnboardingVoterItem(BaseModel):
+    voter_id: str = Field(min_length=2, max_length=64)
+    full_name: str = Field(min_length=2, max_length=200)
+    voter_password: str | None = Field(default=None, min_length=4, max_length=128)
+
+
+class ElectionOnboardingCreate(BaseModel):
+    temp_admin_id: str = Field(min_length=3, max_length=120)
+    temp_admin_password: str = Field(min_length=4, max_length=128)
+    election_id: str | None = Field(default=None, min_length=3, max_length=64)
+    name: str = Field(min_length=3, max_length=200)
+    description: str = Field(default="", max_length=3000)
+    starts_at: datetime
+    ends_at: datetime
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    show_voter_names_in_results: bool = False
+    candidates: list[OnboardingCandidateItem] = Field(default_factory=list)
+    voters: list[OnboardingVoterItem] = Field(default_factory=list)
+
+
+class ElectionUpdate(BaseModel):
+    election_id: str | None = Field(default=None, min_length=3, max_length=64)
+    name: str | None = Field(default=None, min_length=3, max_length=200)
+    description: str | None = Field(default=None, max_length=3000)
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    voting_flow_mode: str | None = None
+    enable_step_2: bool | None = None
+    enable_step_3: bool | None = None
+    enable_step_4: bool | None = None
+    enable_step_5: bool | None = None
+    show_voter_names_in_results: bool | None = None
+    temp_admin_id: str | None = None
+    temp_admin_password: str | None = None
+
+
+class ElectionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    election_id: str | None = None
+    name: str
+    description: str
+    starts_at: datetime
+    ends_at: datetime
+    state: str
+    remote_voting_enabled: bool = False
+    has_active_token: bool = False
+    token_created_at: datetime | None = None
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    show_voter_names_in_results: bool = False
+    temp_admin_username: str | None = None
+    candidate_count: int = 0
+
+
+class TempAdminLoginRequest(BaseModel):
+    temp_admin_id: str = Field(min_length=3, max_length=120)
+    password: str = Field(min_length=4, max_length=128)
+
+
+
+class RemoteVotingStatusOut(BaseModel):
+    election_id: UUID
+    election_name: str
+    election_state: str
+    remote_voting_enabled: bool
+    secure_voting_token: str | None = None
+    public_base_url: str | None = None
+    voting_url: str | None = None
+    is_configured: bool = False
+    is_https: bool = False
+    is_online: bool = False
+    warning_message: str | None = None
+    token_created_at: datetime | None = None
+    token_revoked_at: datetime | None = None
+
+
+class PublicUrlConfigIn(BaseModel):
+    public_base_url: str
+
+
+class PublicUrlConfigOut(BaseModel):
+    public_base_url: str
+    is_configured: bool
+    is_https: bool
+    is_online: bool = False
+    warning_message: str | None = None
+
+
+class RemoteVotingUrlUpdateIn(BaseModel):
+    public_url: str = Field(..., min_length=1, max_length=500)
+
+
+
+class CandidateCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    party: str = Field(min_length=2, max_length=160)
+    manifesto: str = Field(min_length=1, max_length=5000)
+    photo_url: str | None = Field(default=None, max_length=500)
+    symbol_url: str | None = Field(default=None, max_length=500)
+
+
+class CandidateUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=200)
+    party: str | None = Field(default=None, min_length=2, max_length=160)
+    manifesto: str | None = Field(default=None, max_length=5000)
+    photo_url: str | None = Field(default=None, max_length=500)
+    symbol_url: str | None = Field(default=None, max_length=500)
+
+
+class CandidateOut(CandidateCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    election_id: UUID
+
+
+class VoterRegistration(BaseModel):
+    full_name: str = Field(min_length=2, max_length=200)
+    date_of_birth: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    gender: str = Field(min_length=1, max_length=40)
+    mobile: str = Field(pattern=r"^\+?[0-9]{10,15}$")
+    email: EmailStr
+    address: str = Field(min_length=5, max_length=1000)
+    aadhaar_number: str = Field(pattern=r"^\d{12}$")
+    voter_id: str = Field(pattern=r"^[A-Za-z0-9-]{4,64}$")
+    fingerprint_template_id: int = Field(ge=0, le=65535)
+    fingerprint_template: str = Field(min_length=8, max_length=4000)
+    sensor_serial: str = Field(min_length=3, max_length=100)
+    face_frames: list[str] = Field(min_length=3, max_length=5)
+
+    @field_validator("face_frames")
+    @classmethod
+    def unique_angles(cls, value: list[str]) -> list[str]:
+        if len(set(value)) < 3:
+            raise ValueError("Capture three distinct live face frames")
+        return value
+
+
+class AdminVoterCreate(BaseModel):
+    full_name: str = Field(min_length=2, max_length=200)
+    voter_id: str = Field(min_length=2, max_length=64)
+    voter_password: str | None = Field(default=None, min_length=4, max_length=128)
+    election_id: str | None = None
+    email: EmailStr | None = None
+    mobile: str | None = None
+    is_eligible: bool = True
+
+
+class VoterSetPasswordRequest(BaseModel):
+    voter_password: str = Field(min_length=4, max_length=128)
+
+
+class VoterUpdate(BaseModel):
+    full_name: str | None = None
+    email: EmailStr | None = None
+    mobile: str | None = None
+    is_active: bool | None = None
+
+
+class VoterOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    voter_id: str
+    full_name: str
+    email: str
+    mobile: str
+    is_active: bool
+    has_voted: bool = False
+    has_webauthn: bool = False
+    created_at: datetime
+
+
+class VoterVerifyRequest(BaseModel):
+    election_id: str = Field(..., validation_alias=AliasChoices("election_id", "electionId"))
+    voter_registration_id: str = Field(..., validation_alias=AliasChoices("voter_registration_id", "voterId", "voter_id"), min_length=1, max_length=64)
+    voter_password: str = Field(..., validation_alias=AliasChoices("voter_password", "password"), min_length=1, max_length=128)
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class VoterVerifyResponse(BaseModel):
+    eligible: bool
+    message: str
+    voter_id: str | None = None
+    voter_internal_id: UUID | None = None
+    session_id: UUID | None = None
+
+
+class WebAuthnRegisterOptionsRequest(BaseModel):
+    voter_id: str
+
+
+class WebAuthnRegisterVerifyRequest(BaseModel):
+    voter_id: str
+    credential: str
+
+
+class WebAuthnAuthOptionsRequest(BaseModel):
+    voter_id: str
+    session_id: UUID
+
+
+class WebAuthnAuthVerifyRequest(BaseModel):
+    session_id: UUID
+    credential: str
+
+
+class BiometricStart(BaseModel):
+    voter_id: str = Field(min_length=4, max_length=64)
+    election_id: UUID
+    full_name: str | None = None
+
+
+class CandidateTally(BaseModel):
+    id: UUID
+    name: str
+    party: str
+    votes: int
+
+
+class ResultSummaryOut(BaseModel):
+    election_id: UUID
+    election_name: str
+    state: str
+    total_voters: int
+    total_votes_cast: int
+    turnout_percent: float
+    candidates: list[CandidateTally]
+
+
+class FingerprintResult(BaseModel):
+    session_id: UUID
+    sensor_template_id: int = Field(ge=0, le=65535)
+    sensor_score: float = Field(ge=0, le=100)
+    sensor_serial: str = Field(min_length=3, max_length=100)
+
+
+class FramePayload(BaseModel):
+    session_id: UUID
+    image: str = Field(min_length=100, max_length=10_000_000)
+
+
+class ChallengePayload(BaseModel):
+    session_id: UUID
+    observed_action: str = Field(default="shake_hand", min_length=1, max_length=40)
+    image: str = ""
+
+
+class VoiceGuidanceSettingsOut(BaseModel):
+    enabled: bool
+    language: str = "en-US"
+
+
+class VoiceGuidanceSettingsUpdate(BaseModel):
+    enabled: bool
+
+
+class VoterAssistanceSettingsOut(BaseModel):
+    voice_guidance_enabled: bool
+    chat_assistant_enabled: bool
+    default_voice_language: str = "en"
+    chat_read_aloud_enabled: bool
+    mobile_device_verification_enabled: bool = False
+    session_timeout_minutes: int = 30
+    inactivity_timeout_minutes: int = 15
+    step_timeout_minutes: int = 10
+    photo_upload_max_retries: int = 5
+    photo_max_attempts: int | None = None
+    liveness_max_attempts: int | None = None
+    supported_languages: list[str] = ["en", "hi"]
+
+
+class VoterAssistanceSettingsUpdate(BaseModel):
+    voice_guidance_enabled: bool | None = None
+    chat_assistant_enabled: bool | None = None
+    default_voice_language: str | None = None
+    chat_read_aloud_enabled: bool | None = None
+    mobile_device_verification_enabled: bool | None = None
+    session_timeout_minutes: int | None = None
+    inactivity_timeout_minutes: int | None = None
+    step_timeout_minutes: int | None = None
+    photo_upload_max_retries: int | None = None
+    photo_max_attempts: int | None = None
+    liveness_max_attempts: int | None = None
+
+
+class HelpChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+    language: str = Field(default="en", pattern="^(en|hi)$")
+
+
+class HelpChatResponse(BaseModel):
+    answer: str
+    language: str = "en"
+
+
+
+class AuthProgress(BaseModel):
+    session_id: UUID
+    stage: str
+    challenge: str | None = None
+    metrics: dict = {}
+    voting_grant: str | None = None
+
+
+class CastVote(BaseModel):
+    election_id: UUID
+    candidate_id: UUID
+    voting_grant: str = Field(min_length=64, max_length=4096)
+
+
+class VoteReceipt(BaseModel):
+    receipt_id: str
+    cast_at: datetime

@@ -1,0 +1,59 @@
+2026-08-17T11:45:31Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2026-08-17T11:45:31Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-08-17T11:45:36Z INF +--------------------------------------------------------------------------------------------+
+2026-08-17T11:45:36Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-08-17T11:45:36Z INF |  https://focused-shown-settled-stadium.trycloudflare.com                                   |
+2026-08-17T11:45:36Z INF +--------------------------------------------------------------------------------------------+
+2026-08-17T11:45:36Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
+2026-08-17T11:45:36Z INF Version 2026.7.3 (Checksum 8e8a9d5fd3e30334773745982a9088e20109ccbd4003472a766d20ab9c1c1024)
+2026-08-17T11:45:36Z INF GOOS: darwin, GOVersion: go1.26.5, GoArch: arm64
+2026-08-17T11:45:36Z INF Settings: map[ha-connections:1 protocol:quic url:http://localhost:3000]
+2026-08-17T11:45:36Z INF cloudflared will not automatically update if installed by a package manager.
+2026-08-17T11:45:41Z INF Generated Connector ID: 157b8de7-af37-4945-8d47-bfe81111e91d
+2026-08-17T11:45:46Z INF Initial protocol quic
+2026-08-17T11:45:46Z INF ICMP proxy will use 10.20.30.151 as source for IPv4
+2026-08-17T11:45:46Z INF ICMP proxy will use fe80::1005:742:5daa:ab56 in zone en0 as source for IPv6
+2026-08-17T11:45:46Z INF Created ICMP proxy listening on 10.20.30.151:0
+2026-08-17T11:45:51Z INF ICMP proxy will use 10.20.30.151 as source for IPv4
+2026-08-17T11:45:51Z INF ICMP proxy will use fe80::1005:742:5daa:ab56 in zone en0 as source for IPv6
+2026-08-17T11:45:51Z INF Starting metrics server on 127.0.0.1:20242/metrics
+2026-08-17T11:45:56Z INF +-------------------------------------------------------------------------------------+
+2026-08-17T11:45:56Z INF |                               CONNECTIVITY PRE-CHECKS                               |
+2026-08-17T11:45:56Z INF +-------------------------------------------------------------------------------------+
+2026-08-17T11:45:56Z INF |  COMPONENT         TARGET                     STATUS  DETAILS                       |
+2026-08-17T11:45:56Z INF |  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully     |
+2026-08-17T11:45:56Z INF |  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully     |
+2026-08-17T11:45:56Z INF |  UDP Connectivity  region1.v2.argotunnel.com  PASS    QUIC connection successful    |
+2026-08-17T11:45:56Z INF |  UDP Connectivity  region2.v2.argotunnel.com  PASS    QUIC connection successful    |
+2026-08-17T11:45:56Z INF |  TCP Connectivity  region1.v2.argotunnel.com  PASS    HTTP/2 connection successful  |
+2026-08-17T11:45:56Z INF |  TCP Connectivity  region2.v2.argotunnel.com  PASS    HTTP/2 connection successful  |
+2026-08-17T11:45:56Z INF |  Cloudflare API    api.cloudflare.com:443     PASS    API is reachable              |
+2026-08-17T11:45:56Z INF |                                                                                     |
+2026-08-17T11:45:56Z INF |  SUMMARY: Environment is healthy. cloudflared will use 'quic' as primary protocol.  |
+2026-08-17T11:45:56Z INF +-------------------------------------------------------------------------------------+
+2026-08-17T11:45:56Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=region1.v2.argotunnel.com
+2026-08-17T11:45:56Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=region2.v2.argotunnel.com
+2026-08-17T11:45:56Z INF precheck component="UDP Connectivity" details="QUIC connection successful" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=region1.v2.argotunnel.com
+2026-08-17T11:45:56Z INF precheck component="UDP Connectivity" details="QUIC connection successful" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=region2.v2.argotunnel.com
+2026-08-17T11:45:56Z INF precheck component="TCP Connectivity" details="HTTP/2 connection successful" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=region1.v2.argotunnel.com
+2026-08-17T11:45:56Z INF precheck component="TCP Connectivity" details="HTTP/2 connection successful" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=region2.v2.argotunnel.com
+2026-08-17T11:45:56Z INF precheck component="Cloudflare API" details="API is reachable" run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 status=pass target=api.cloudflare.com:443
+2026-08-17T11:45:56Z INF precheck complete hard_fail=false run_id=db492c0e-cd5e-4520-8ab6-c979de90c925 suggested_protocol=quic
+2026-08-17T11:45:56Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=198.41.192.107
+2026-08-17T11:45:57Z INF Registered tunnel connection connIndex=0 connection=8ed99e73-863d-4c2a-b984-674ec193b20c event=0 ip=198.41.192.107 location=bom03 protocol=quic
+2026-08-17T11:46:01Z ERR Failed to initialize DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T11:51:06Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T11:56:11Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:01:16Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:06:21Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:11:26Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:16:31Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:21:36Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:26:41Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:31:46Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:36:51Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:41:56Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:47:01Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:52:06Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:57:11Z ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"
+2026-08-17T12:58:48Z INF Initiating graceful shutdown due to signal terminated ...

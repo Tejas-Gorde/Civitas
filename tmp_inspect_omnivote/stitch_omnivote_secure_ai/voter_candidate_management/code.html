@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","on-tertiary-fixed":"#001a42","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#004395","secondary-fixed-dim":"#bcc7de","on-background":"#191c1e","on-primary-container":"#dad7ff","on-primary":"#ffffff","tertiary-container":"#005cc6","surface-container":"#eceef0","surface-variant":"#e0e3e5","secondary-container":"#d5e0f8","on-primary-fixed-variant":"#3323cc","surface-container-lowest":"#ffffff","primary":"#3525cd","secondary":"#545f73","background":"#f7f9fb","surface-container-highest":"#e0e3e5","outline":"#777587","outline-variant":"#c7c4d8","inverse-primary":"#c3c0ff","primary-fixed-dim":"#c3c0ff","surface":"#f7f9fb","tertiary":"#004598","on-surface":"#191c1e","error":"#ba1a1a","on-secondary-container":"#586377","inverse-surface":"#2d3133","surface-dim":"#d8dadc","on-secondary":"#ffffff","on-primary-fixed":"#0f0069","on-secondary-fixed":"#111c2d","on-error-container":"#93000a","surface-container-high":"#e6e8ea","surface-bright":"#f7f9fb","tertiary-fixed-dim":"#adc6ff","surface-container-low":"#f2f4f6","on-tertiary-container":"#cedbff","on-secondary-fixed-variant":"#3c475a","inverse-on-surface":"#eff1f3","tertiary-fixed":"#d8e2ff","primary-fixed":"#e2dfff","on-error":"#ffffff","on-surface-variant":"#464555","primary-container":"#4f46e5","surface-tint":"#4d44e3"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter":"24px","sm":"1rem","md":"1.5rem","max-width-content":"1200px","xs":"0.5rem","base":"4px","xl":"4rem","margin-mobile":"16px","lg":"2.5rem"},"fontFamily":{"body-lg":["Inter"],"headline-lg-mobile":["Inter"],"label-md":["Inter"],"label-sm":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"]},"fontSize":{"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-md":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"500"}],"label-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"></head><body class="bg-background font-body-md text-on-background"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/30 overflow-y-auto"><div class="p-md flex items-center gap-xs mb-sm"><span class="material-symbols-outlined text-primary">verified_user</span><div class="flex flex-col"><span class="font-headline-md text-label-md text-primary font-bold">Sovereign Ledger</span><span class="text-[10px] uppercase tracking-[2px] text-on-surface-variant font-bold">Admin Panel</span></div></div><nav class="flex-1 px-sm space-y-1" data-active-classes="bg-primary-container text-on-primary-container font-bold"><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-dashboard" href="#"><span class="material-symbols-outlined mr-md">dashboard</span><span class="font-label-md text-label-md">Dashboard</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-elections" href="#"><span class="material-symbols-outlined mr-md">how_to_vote</span><span class="font-label-md text-label-md">Elections</span></a><a aria-current="page" class="flex items-center px-md py-3 rounded-xl transition-all bg-primary-container text-on-primary-container font-bold" data-path="admin-voters" href="#"><span class="material-symbols-outlined mr-md">group</span><span class="font-label-md text-label-md">Voters</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-live-monitoring" href="#"><span class="material-symbols-outlined mr-md">monitoring</span><span class="font-label-md text-label-md">Live Monitoring</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-ai-security" href="#"><span class="material-symbols-outlined mr-md">psychology</span><span class="font-label-md text-label-md">AI Security</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-audit-logs" href="#"><span class="material-symbols-outlined mr-md">history_edu</span><span class="font-label-md text-label-md">Audit Logs</span></a><a class="flex items-center px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="admin-settings" href="#"><span class="material-symbols-outlined mr-md">settings</span><span class="font-label-md text-label-md">Settings</span></a></nav></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 z-40 flex items-center px-gutter justify-between gap-md"><div class="flex items-center gap-md flex-1 max-w-xl"><div class="relative flex-1"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span><input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-label-md text-label-md focus:ring-2 focus:ring-primary/20" placeholder="Search records..." type="text"></div><select class="bg-surface-container-high rounded-lg px-sm py-2 font-label-sm text-label-sm text-on-surface-variant outline-none"><option>2026 General Election</option><option>2024 Primary</option></select></div><div class="flex items-center gap-md"><button class="relative p-2 rounded-full hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-on-surface-variant">notifications</span><span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span></button><div class="flex items-center gap-sm pl-sm border-l border-outline-variant/30"><div class="flex flex-col items-end"><span class="font-label-sm text-label-sm text-on-surface font-bold">Admin Root</span><span class="font-label-sm text-[10px] text-tertiary">Security Clearance: L5</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full relative">
+<div class="px-gutter pb-xl flex flex-col gap-xl">
+<!-- Dashboard Header Context -->
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-surface mb-xs">Voter &amp; Candidate Management</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Oversee voter verification status, review candidate credentials, and access detailed audit trails for the current election cycle.</p>
+</div>
+<div class="flex gap-sm">
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md px-md py-3 rounded-lg flex items-center gap-xs transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                    Filter Records
+                </button>
+<button class="bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md px-md py-3 rounded-lg flex items-center gap-xs transition-colors shadow-md">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+                    Register New
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Voter Data Table Section -->
+<div class="lg:col-span-8 flex flex-col gap-md">
+<div class="flex justify-between items-center bg-surface-container px-md py-sm rounded-t-xl shadow-sm">
+<h2 class="font-headline-md text-headline-md text-on-surface">Voter Directory</h2>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Live Sync Active</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-b-xl shadow-md overflow-hidden relative">
+<!-- Subtle background decoration -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none"></div>
+<div class="overflow-x-auto relative z-10">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant">
+<th class="font-label-sm text-label-sm py-4 px-md font-semibold tracking-wide uppercase">Voter ID</th>
+<th class="font-label-sm text-label-sm py-4 px-md font-semibold tracking-wide uppercase">Name &amp; Dept</th>
+<th class="font-label-sm text-label-sm py-4 px-md font-semibold tracking-wide uppercase">Verification</th>
+<th class="font-label-sm text-label-sm py-4 px-md font-semibold tracking-wide uppercase">Voting Status</th>
+<th class="font-label-sm text-label-sm py-4 px-md font-semibold tracking-wide uppercase text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-on-surface font-body-md text-body-md">
+<tr class="hover:bg-surface-container-lowest/80 transition-colors group">
+<td class="py-4 px-md font-mono text-sm text-primary">VID-9824-A</td>
+<td class="py-4 px-md">
+<div class="flex flex-col">
+<span class="font-bold">Eleanor Vance</span>
+<span class="text-sm text-on-surface-variant">Engineering</span>
+</div>
+</td>
+<td class="py-4 px-md">
+<span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-2 py-1 rounded-md font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span> Verified
+                                        </span>
+</td>
+<td class="py-4 px-md">
+<span class="text-on-surface-variant">Pending</span>
+</td>
+<td class="py-4 px-md text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 bg-surface-container-high rounded-full hover:bg-surface-variant text-on-surface-variant" title="View Audit Trail"><span class="material-symbols-outlined text-[18px]">history</span></button>
+<button class="p-2 bg-error-container rounded-full hover:bg-error text-on-error-container hover:text-on-error" title="Flag Voter"><span class="material-symbols-outlined text-[18px]">flag</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest/80 transition-colors group bg-error-container/10">
+<td class="py-4 px-md font-mono text-sm text-primary">VID-1042-B</td>
+<td class="py-4 px-md">
+<div class="flex flex-col">
+<span class="font-bold">Marcus Thorne</span>
+<span class="text-sm text-on-surface-variant">Operations</span>
+</div>
+</td>
+<td class="py-4 px-md">
+<span class="inline-flex items-center gap-1 bg-error-container text-on-error-container px-2 py-1 rounded-md font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">warning</span> Flagged
+                                        </span>
+</td>
+<td class="py-4 px-md">
+<span class="text-error font-semibold">Locked</span>
+</td>
+<td class="py-4 px-md text-right">
+<div class="flex justify-end gap-2 opacity-100 transition-opacity">
+<button class="px-3 py-1 bg-primary text-on-primary rounded-md font-label-sm text-label-sm hover:bg-primary-fixed-dim shadow-sm">Resolve</button>
+<button class="p-2 bg-surface-container-high rounded-full hover:bg-surface-variant text-on-surface-variant" title="View Audit Trail"><span class="material-symbols-outlined text-[18px]">history</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest/80 transition-colors group">
+<td class="py-4 px-md font-mono text-sm text-primary">VID-7731-C</td>
+<td class="py-4 px-md">
+<div class="flex flex-col">
+<span class="font-bold">Sarah Jenkins</span>
+<span class="text-sm text-on-surface-variant">Human Resources</span>
+</div>
+</td>
+<td class="py-4 px-md">
+<span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-2 py-1 rounded-md font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span> Verified
+                                        </span>
+</td>
+<td class="py-4 px-md">
+<span class="text-tertiary font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Voted</span>
+</td>
+<td class="py-4 px-md text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 bg-surface-container-high rounded-full hover:bg-surface-variant text-on-surface-variant" title="View Audit Trail"><span class="material-symbols-outlined text-[18px]">history</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-md py-4 bg-surface-container-low flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Showing 1-3 of 1,245 Records</span>
+<div class="flex gap-2">
+<button class="p-2 bg-surface-container-lowest rounded-md text-on-surface shadow-sm disabled:opacity-50"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-2 bg-surface-container-lowest rounded-md text-on-surface shadow-sm"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Candidates Section -->
+<div class="lg:col-span-4 flex flex-col gap-md">
+<div class="flex justify-between items-center bg-primary px-md py-sm rounded-t-xl shadow-md">
+<h2 class="font-headline-md text-headline-md text-on-primary">Approved Candidates</h2>
+<span class="material-symbols-outlined text-on-primary">how_to_reg</span>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Candidate Card 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-2 z-10">
+<span class="bg-tertiary-container text-on-tertiary-container text-[10px] uppercase font-bold px-2 py-1 rounded-full shadow-sm">Approved</span>
+</div>
+<div class="flex gap-4 items-center">
+<div class="w-16 h-16 rounded-full overflow-hidden bg-surface-container-high shadow-inner">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a confident woman in her 40s with short dark hair, wearing a navy blue blazer against a neutral light grey background. Corporate, high-trust aesthetic, bright and even lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCy3DqbOBxN_lbl19PtWe5nTzazNuwfVYflbNkR6iWVQ4nEeMP_0GT8movceGyhxJDzD6Jzw6b9XiZh_kqbh19GR7iimyp8n3uT96XZJDBWNQTshFM6ROrK00vg0gwQvgLSsrDNmiWN7SqDXLDHQbbfTPATcAtFZ0P0hmVQNRovC3y2A3hUovvwNmy5biNQgbHCNbv_hc5TvrwZ7VpS-DyZDJuwQ5pq4-D2A88UZaDfDfUYiQRTFMyW">
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface leading-tight group-hover:text-primary transition-colors">Dr. Alyssa Chen</h3>
+<span class="font-label-md text-label-md text-on-surface-variant">Presidential Candidate</span>
+<span class="font-mono text-xs text-outline mt-1">CID-4492-X</span>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/30 flex justify-between items-center">
+<button class="text-primary font-label-sm text-label-sm hover:underline">View Credentials</button>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</div>
+<!-- Candidate Card 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-2 z-10">
+<span class="bg-tertiary-container text-on-tertiary-container text-[10px] uppercase font-bold px-2 py-1 rounded-full shadow-sm">Approved</span>
+</div>
+<div class="flex gap-4 items-center">
+<div class="w-16 h-16 rounded-full overflow-hidden bg-surface-container-high shadow-inner">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a mature man in his 50s with silver hair and a neat beard, wearing a charcoal suit and light blue tie against a neutral background. Authoritative yet approachable, corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlRNp4QwmYW2DGcgXaBKXSmbX61KeJoAsD68PRp-oBgBRUD8NEdzYkUmZCggSYvB4AHOlNQebsNlU-ww5FWHWrNmrzcf6OgFcVPqrh-TleH7Jd21dhLCFJPP4SQFUzxH5GvI8m1ecPKCBxyG4FcxhuzsiWRrpXqnwsblI4dVSFZcjge4xfSoSTjgb-KfDUjfrxe9Za2hZlZHOj5UsyrxcuREQWbQz5U_LHsrucxoxFmrRUKYxDnq_9">
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface leading-tight group-hover:text-primary transition-colors">Robert MacAllister</h3>
+<span class="font-label-md text-label-md text-on-surface-variant">Presidential Candidate</span>
+<span class="font-mono text-xs text-outline mt-1">CID-8110-Y</span>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/30 flex justify-between items-center">
+<button class="text-primary font-label-sm text-label-sm hover:underline">View Credentials</button>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

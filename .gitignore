@@ -1,0 +1,28 @@
+# Environment
+.env
+.env.local
+*.env
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.pytest_cache/
+*.db
+*.sqlite
+*.sqlite3
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Sensitive Voter Photos Storage (FEATURE 1)
+voter_photos/
+backend/voter_photos/
+uploads/voter_photos/
+
