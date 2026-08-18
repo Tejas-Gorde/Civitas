@@ -4,7 +4,9 @@ import { Toaster } from "sonner";
 import HeaderNav from "../components/HeaderNav";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://civitas-frontend.onrender.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_PUBLIC_APP_URL || "https://civitas-frontend-nvp6.onrender.com"
+  ),
   title: "Civitas \u2013 Secure Digital Voting System",
   description:
     "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
@@ -35,12 +37,12 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://civitas-frontend.onrender.com",
+    canonical: "https://civitas-frontend-nvp6.onrender.com",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://civitas-frontend.onrender.com",
+    url: "https://civitas-frontend-nvp6.onrender.com",
     siteName: "Civitas",
     title: "Civitas \u2013 Secure Digital Voting System",
     description:
@@ -51,6 +53,9 @@ export const metadata: Metadata = {
     title: "Civitas \u2013 Secure Digital Voting System",
     description:
       "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+  },
+  verification: {
+    google: "-V0qciSSJoLVrcZdmDGlkPrSA6wEn4C2yyvSXy-qctM",
   },
 };
 
