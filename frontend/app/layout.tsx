@@ -1,10 +1,57 @@
+import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import HeaderNav from "../components/HeaderNav";
 
-export const metadata = {
-  title: "Civitas — Secure Digital Voting",
-  description: "Multimodal verification & secure digital election platform",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://civitas-frontend.onrender.com"),
+  title: "Civitas \u2013 Secure Digital Voting System",
+  description:
+    "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+  keywords: [
+    "Civitas",
+    "secure digital voting",
+    "biometric authentication",
+    "face verification",
+    "digital election platform",
+    "multiple voting modes",
+    "tamper-evident voting",
+    "voter authentication",
+    "liveness detection",
+  ],
+  authors: [{ name: "Civitas" }],
+  creator: "Civitas",
+  publisher: "Civitas",
+  applicationName: "Civitas Secure Digital Voting System",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://civitas-frontend.onrender.com",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://civitas-frontend.onrender.com",
+    siteName: "Civitas",
+    title: "Civitas \u2013 Secure Digital Voting System",
+    description:
+      "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Civitas \u2013 Secure Digital Voting System",
+    description:
+      "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+  },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
