@@ -102,6 +102,19 @@ class WebAuthnCredential(UUIDMixin, TimestampMixin, Base):
     voter: Mapped[Voter] = relationship(back_populates="webauthn_credentials")
 
 
+class VotingType(str, enum.Enum):
+    REGULAR = "regular"
+    POLL = "poll"
+    MULTIPLE_CHOICE = "multiple_choice"
+    YES_NO = "yes_no"
+    RATING = "rating"
+
+
+class VoterRegistrationMode(str, enum.Enum):
+    PRE_REGISTERED = "pre_registered"
+    QUICK_ENTRY = "quick_entry"
+
+
 class Election(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "elections"
     election_id: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)
@@ -110,6 +123,8 @@ class Election(UUIDMixin, TimestampMixin, Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     state: Mapped[ElectionState] = mapped_column(Enum(ElectionState), default=ElectionState.DRAFT, index=True)
+    voting_type: Mapped[str] = mapped_column(String(40), default="regular", nullable=False)
+    voter_registration_mode: Mapped[str] = mapped_column(String(40), default="pre_registered", nullable=False)
     remote_voting_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     custom_public_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     secure_voting_token: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
@@ -125,6 +140,25 @@ class Election(UUIDMixin, TimestampMixin, Base):
     temp_admin_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     temp_admin_user: Mapped["User | None"] = relationship("User", foreign_keys=[temp_admin_user_id])
     candidates: Mapped[list["Candidate"]] = relationship(back_populates="election", cascade="all, delete-orphan")
+
+
+class QuickVoterRecord(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "quick_voter_records"
+    election_id: Mapped[str] = mapped_column(String(36), ForeignKey("elections.id", ondelete="CASCADE"), index=True)
+    voter_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    prn: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    candidate_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("candidates.id", ondelete="SET NULL"), nullable=True)
+    candidate_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    receipt_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    cast_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    election: Mapped["Election"] = relationship("Election")
+    candidate: Mapped["Candidate | None"] = relationship("Candidate")
+
+    __table_args__ = (
+        UniqueConstraint("election_id", "prn", name="uq_quick_voter_election_prn"),
+        Index("ix_quick_voter_election_prn", "election_id", "prn"),
+    )
 
 
 class Candidate(UUIDMixin, TimestampMixin, Base):

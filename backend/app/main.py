@@ -52,6 +52,28 @@ def run_auto_migrations(target_engine):
                 conn.execute(text("ALTER TABLE elections ADD COLUMN election_id VARCHAR(64)"))
             if "custom_public_url" not in columns:
                 conn.execute(text("ALTER TABLE elections ADD COLUMN custom_public_url VARCHAR(500)"))
+            if "voting_type" not in columns:
+                conn.execute(text("ALTER TABLE elections ADD COLUMN voting_type VARCHAR(40) DEFAULT 'regular'"))
+            if "voter_registration_mode" not in columns:
+                conn.execute(text("ALTER TABLE elections ADD COLUMN voter_registration_mode VARCHAR(40) DEFAULT 'pre_registered'"))
+    if "quick_voter_records" not in tables:
+        with target_engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS quick_voter_records (
+                    id VARCHAR(36) PRIMARY KEY,
+                    election_id VARCHAR(36) NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+                    voter_name VARCHAR(200) NOT NULL,
+                    prn VARCHAR(10) NOT NULL,
+                    candidate_id VARCHAR(36) REFERENCES candidates(id) ON DELETE SET NULL,
+                    candidate_ids_json JSON,
+                    receipt_id VARCHAR(80) NOT NULL,
+                    cast_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT uq_quick_voter_election_prn UNIQUE (election_id, prn)
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_quick_voter_election_prn ON quick_voter_records (election_id, prn)"))
     if "authentication_sessions" in tables:
         columns = [c["name"] for c in inspector.get_columns("authentication_sessions")]
         with target_engine.begin() as conn:

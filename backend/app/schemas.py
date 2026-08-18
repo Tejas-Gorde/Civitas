@@ -19,6 +19,8 @@ class ElectionCreate(BaseModel):
     description: str = Field(default="", max_length=3000)
     starts_at: datetime
     ends_at: datetime
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
     voting_flow_mode: str = "full"
     enable_step_2: bool = True
     enable_step_3: bool = True
@@ -49,6 +51,8 @@ class ElectionOnboardingCreate(BaseModel):
     description: str = Field(default="", max_length=3000)
     starts_at: datetime
     ends_at: datetime
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
     voting_flow_mode: str = "full"
     enable_step_2: bool = True
     enable_step_3: bool = True
@@ -65,6 +69,8 @@ class ElectionUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=3000)
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    voting_type: str | None = None
+    voter_registration_mode: str | None = None
     voting_flow_mode: str | None = None
     enable_step_2: bool | None = None
     enable_step_3: bool | None = None
@@ -84,6 +90,8 @@ class ElectionOut(BaseModel):
     starts_at: datetime
     ends_at: datetime
     state: str
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
     remote_voting_enabled: bool = False
     has_active_token: bool = False
     token_created_at: datetime | None = None
@@ -360,10 +368,62 @@ class AuthProgress(BaseModel):
     voting_grant: str | None = None
 
 
+class QuickVoterVerifyRequest(BaseModel):
+    election_id: str = Field(..., validation_alias=AliasChoices("election_id", "electionId"))
+    full_name: str = Field(..., validation_alias=AliasChoices("full_name", "name", "voter_name"), min_length=2, max_length=200)
+    prn: str = Field(..., validation_alias=AliasChoices("prn", "voter_prn", "prn_number"))
+
+    @field_validator("prn")
+    @classmethod
+    def validate_and_normalize_prn(cls, v: str) -> str:
+        import re
+        normalized = re.sub(r"\s+", "", str(v).strip())
+        if not re.match(r"^\d{10}$", normalized):
+            raise ValueError("PRN must contain exactly 10 digits.")
+        return normalized
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        cleaned = str(v).strip()
+        if len(cleaned) < 2:
+            raise ValueError("Full Name must be at least 2 characters.")
+        return cleaned
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class QuickVoterVerifyResponse(BaseModel):
+    eligible: bool
+    message: str
+    voter_name: str
+    prn: str
+    session_id: UUID
+    voting_type: str = "regular"
+    voter_registration_mode: str = "quick_entry"
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+
+
+class QuickVoterRecordOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    voter_name: str
+    prn: str
+    vote_given_to: str
+    cast_at: datetime
+
+
 class CastVote(BaseModel):
     election_id: UUID
-    candidate_id: UUID
+    candidate_id: UUID | None = None
+    candidate_ids: list[UUID] | None = None
     voting_grant: str = Field(min_length=64, max_length=4096)
+    voter_name: str | None = None
+    prn: str | None = None
 
 
 class VoteReceipt(BaseModel):

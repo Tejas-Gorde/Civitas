@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, readable } from "../../lib/api";
 import { toast } from "sonner";
-import { Activity, Calendar, Users, ArrowRight, RefreshCw, AlertTriangle, Vote, Info, CheckCircle2, X } from "lucide-react";
+import { Activity, Calendar, Users, ArrowRight, RefreshCw, AlertTriangle, Vote, Info, CheckCircle2, X, Search } from "lucide-react";
 
 export default function LiveElectionsPage() {
   const router = useRouter();
   const [elections, setElections] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [detailsModal, setDetailsModal] = useState<any | null>(null);
@@ -33,6 +34,12 @@ export default function LiveElectionsPage() {
   useEffect(() => {
     fetchLiveElections();
   }, []);
+
+  const filteredElections = elections.filter((e) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase().trim();
+    return e.name && e.name.toLowerCase().includes(term);
+  });
 
   const handleOpenDetails = async (election: any) => {
     setDetailsModal(election);
@@ -76,6 +83,47 @@ export default function LiveElectionsPage() {
         </div>
       </div>
 
+      {/* Search Elections Bar */}
+      {!loading && !error && elections.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="relative flex items-center">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by election name..."
+              className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 shadow-xs transition"
+              aria-label="Search by election name"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md transition"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 font-medium">
+              <span>
+                Showing {filteredElections.length} of {elections.length} live elections
+              </span>
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="text-teal-700 hover:text-teal-900 font-bold underline cursor-pointer"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Loading Skeleton */}
       {loading && (
         <div className="space-y-3 sm:space-y-4">
@@ -106,7 +154,7 @@ export default function LiveElectionsPage() {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State (No Active Elections at all) */}
       {!loading && !error && elections.length === 0 && (
         <div className="card p-8 sm:p-12 text-center space-y-3">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
@@ -123,10 +171,30 @@ export default function LiveElectionsPage() {
         </div>
       )}
 
+      {/* Search No Matches State */}
+      {!loading && !error && elections.length > 0 && filteredElections.length === 0 && (
+        <div className="card p-8 sm:p-10 text-center space-y-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <Search className="h-6 w-6" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900">No live elections found.</h3>
+          <p className="max-w-md mx-auto text-xs text-slate-500">
+            No active elections matched &ldquo;{searchTerm}&rdquo;. Try searching with a different keyword or clear the search filter.
+          </p>
+          <button
+            type="button"
+            onClick={() => setSearchTerm("")}
+            className="button button-secondary text-xs py-2 px-4"
+          >
+            Clear Search Filter
+          </button>
+        </div>
+      )}
+
       {/* Elections List */}
-      {!loading && !error && elections.length > 0 && (
+      {!loading && !error && filteredElections.length > 0 && (
         <div className="space-y-3 sm:space-y-4">
-          {elections.map((e) => (
+          {filteredElections.map((e) => (
             <div
               key={e.id}
               className="card p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 border-l-4 border-l-teal-600"

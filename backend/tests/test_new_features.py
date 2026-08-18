@@ -131,16 +131,16 @@ def test_election_results_api_and_excel_export(client, db_session):
     # Parse Excel workbook binary and check worksheets
     wb = openpyxl.load_workbook(filename=io.BytesIO(res_excel.content))
     sheet_names = wb.sheetnames
-    assert "Election Summary" in sheet_names
+    assert "Cover" in sheet_names
+    assert "Results Dashboard" in sheet_names
     assert "Candidate Results" in sheet_names
-    assert "Voting Statistics" in sheet_names
-    assert "Results Charts" in sheet_names or "Charts" in sheet_names
-
+    assert "Vote Details" in sheet_names
+    assert "Voter Statistics" in sheet_names
 
     ws_cand = wb["Candidate Results"]
     assert ws_cand.cell(row=1, column=1).value == "Rank"
-    assert ws_cand.cell(row=2, column=3).value == "Candidate Alpha"
-    assert ws_cand.cell(row=2, column=5).value == 2
+    assert ws_cand.cell(row=2, column=2).value == "Candidate Alpha"
+    assert ws_cand.cell(row=2, column=4).value == 2
 
 
 def test_election_specific_voter_management(client, db_session):

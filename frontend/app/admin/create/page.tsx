@@ -38,6 +38,8 @@ export default function CreateElectionWizardPage() {
   const [name, setName] = useState("");
   const [electionCustomId, setElectionCustomId] = useState("");
   const [description, setDescription] = useState("");
+  const [votingType, setVotingType] = useState("regular");
+  const [voterRegistrationMode, setVoterRegistrationMode] = useState("pre_registered");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [showVoterNames, setShowVoterNames] = useState(false);
@@ -47,6 +49,24 @@ export default function CreateElectionWizardPage() {
   const [candName, setCandName] = useState("");
   const [candParty, setCandParty] = useState("");
   const [candManifesto, setCandManifesto] = useState("");
+
+  const handleSelectVotingType = (type: string) => {
+    setVotingType(type);
+    if (type === "yes_no" && candidateList.length === 0) {
+      setCandidateList([
+        { name: "YES / APPROVE", party: "Approve Proposal", manifesto: "Vote in favor of the measure." },
+        { name: "NO / REJECT", party: "Reject Proposal", manifesto: "Vote against the measure." },
+      ]);
+    } else if (type === "rating" && candidateList.length === 0) {
+      setCandidateList([
+        { name: "5 Stars", party: "5", manifesto: "Excellent / Strongly Agree" },
+        { name: "4 Stars", party: "4", manifesto: "Good / Agree" },
+        { name: "3 Stars", party: "3", manifesto: "Neutral / Average" },
+        { name: "2 Stars", party: "2", manifesto: "Fair / Disagree" },
+        { name: "1 Star", party: "1", manifesto: "Poor / Strongly Disagree" },
+      ]);
+    }
+  };
 
   // STEP 4: Voters / Members
   const [voterList, setVoterList] = useState<Array<{ voter_id: string; full_name: string; voter_password?: string }>>([]);
@@ -73,18 +93,45 @@ export default function CreateElectionWizardPage() {
 
   // Handlers for Adding Candidates & Voters
   const handleAddCandidate = () => {
-    if (!candName.trim() || !candParty.trim()) {
-      toast.error("Please provide Candidate Name and Party.");
+    if (!candName.trim()) {
+      toast.error(
+        votingType === "poll"
+          ? "Please provide an Option title."
+          : votingType === "multiple_choice"
+          ? "Please provide a Choice name."
+          : "Please provide Candidate Name."
+      );
       return;
     }
+    const defaultParty =
+      votingType === "poll"
+        ? "Poll Option"
+        : votingType === "multiple_choice"
+        ? "Multi-Choice Option"
+        : votingType === "yes_no"
+        ? "Proposal Decision"
+        : votingType === "rating"
+        ? "Scale"
+        : "Independent";
+
     setCandidateList((prev) => [
       ...prev,
-      { name: candName.trim(), party: candParty.trim(), manifesto: candManifesto.trim() || "No manifesto provided." },
+      {
+        name: candName.trim(),
+        party: candParty.trim() || defaultParty,
+        manifesto: candManifesto.trim() || "",
+      },
     ]);
     setCandName("");
     setCandParty("");
     setCandManifesto("");
-    toast.success("Candidate added to setup list.");
+    toast.success(
+      votingType === "poll"
+        ? "Poll option added."
+        : votingType === "multiple_choice"
+        ? "Choice added."
+        : "Candidate added to setup list."
+    );
   };
 
   const handleRemoveCandidate = (index: number) => {
@@ -106,6 +153,11 @@ export default function CreateElectionWizardPage() {
     }
     if (voterPassword !== voterConfirmPassword) {
       toast.error("Passwords do not match.");
+      return;
+    }
+
+    if (voterList.some((v) => v.voter_id.toLowerCase() === voterRegId.trim().toLowerCase())) {
+      toast.error("Voter Registration ID already exists in setup list.");
       return;
     }
 
@@ -176,6 +228,8 @@ export default function CreateElectionWizardPage() {
         name: name.trim(),
         election_id: electionCustomId.trim(),
         description: description.trim(),
+        voting_type: votingType,
+        voter_registration_mode: voterRegistrationMode,
         starts_at: new Date(startsAt).toISOString(),
         ends_at: new Date(endsAt).toISOString(),
         show_voter_names_in_results: showVoterNames,
@@ -493,7 +547,144 @@ export default function CreateElectionWizardPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* VOTING TYPE SELECTOR */}
+            <div className="space-y-2 pt-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Voting Type <span className="text-rose-500">*</span>
+              </label>
+              <p className="text-xs text-slate-500">
+                Select the format of the ballot and election decision mechanics:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                {[
+                  {
+                    id: "regular",
+                    title: "1. Regular Election",
+                    badge: "Candidate Ballot",
+                    desc: "Single-choice candidate election with leaderboard ranking, vote totals, and winner determination.",
+                    color: "border-sky-500 bg-sky-50/50",
+                  },
+                  {
+                    id: "poll",
+                    title: "2. Poll",
+                    badge: "Opinion Survey",
+                    desc: "Single-question poll with top option ranking and response distribution metrics.",
+                    color: "border-teal-500 bg-teal-50/50",
+                  },
+                  {
+                    id: "multiple_choice",
+                    title: "3. Multiple Choice",
+                    badge: "Multi-Selection",
+                    desc: "Voters can select multiple options simultaneously. Tally shows % of participating voters per option.",
+                    color: "border-indigo-500 bg-indigo-50/50",
+                  },
+                  {
+                    id: "yes_no",
+                    title: "4. Yes / No",
+                    badge: "Binary Referendum",
+                    desc: "Approve vs Reject decision for motions or policy referendums with margin calculation.",
+                    color: "border-emerald-500 bg-emerald-50/50",
+                  },
+                  {
+                    id: "rating",
+                    title: "5. Rating",
+                    badge: "5-Star Scale",
+                    desc: "1 to 5 star rating scale evaluation with calculated average scores and distribution.",
+                    color: "border-amber-500 bg-amber-50/50",
+                  },
+                ].map((type) => {
+                  const isSelected = votingType === type.id;
+                  return (
+                    <div
+                      key={type.id}
+                      onClick={() => handleSelectVotingType(type.id)}
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all space-y-1.5 ${
+                        isSelected
+                          ? `${type.color} shadow-xs`
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-xs text-slate-900">
+                          {type.title}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                            isSelected ? "bg-white text-slate-800 border" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {type.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {type.desc}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* VOTER REGISTRATION MODE SELECTOR */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Voter Registration Mode <span className="text-rose-500">*</span>
+              </label>
+              <p className="text-xs text-slate-500">
+                Choose how voters qualify and authenticate to access their ballot:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {[
+                  {
+                    id: "pre_registered",
+                    title: "Option A: Pre-Registered Voters",
+                    badge: "Admin Enrolled",
+                    desc: "Admin adds and assigns voters before the election. Voters sign in with their assigned Voter ID and Password.",
+                    color: "border-teal-600 bg-teal-50/70",
+                  },
+                  {
+                    id: "quick_entry",
+                    title: "Option B: Quick Voter Entry",
+                    badge: "Open PRN Enrollment",
+                    desc: "Any eligible person enters their Full Name + 10-digit PRN during voting. Database strictly guarantees 1-person-1-vote per election.",
+                    color: "border-teal-600 bg-teal-50/70",
+                  },
+                ].map((mode) => {
+                  const isSelected = voterRegistrationMode === mode.id;
+                  return (
+                    <div
+                      key={mode.id}
+                      onClick={() => setVoterRegistrationMode(mode.id)}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all space-y-1.5 ${
+                        isSelected
+                          ? `${mode.color} ring-2 ring-teal-600/30 shadow-xs`
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-xs text-slate-900">
+                          {mode.title}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            isSelected ? "bg-teal-100 text-teal-800 border border-teal-300" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {mode.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {mode.desc}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   Start Date & Time <span className="text-rose-500">*</span>
@@ -572,41 +763,79 @@ export default function CreateElectionWizardPage() {
               }}
               className="button button-teal text-xs py-2.5 px-6"
             >
-              Continue to Candidates
+              Continue to Options/Candidates
               <ArrowRight className="h-4 w-4 ml-1.5 inline" />
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 3: CANDIDATES SETUP */}
+      {/* STEP 3: CANDIDATES / OPTIONS SETUP */}
       {currentStep === 3 && (
         <div className="card p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
               STEP 3 OF 6
             </span>
-            <h2 className="text-xl font-bold text-slate-900">CONFIGURE CANDIDATES</h2>
+            <h2 className="text-xl font-bold text-slate-900">
+              {votingType === "poll"
+                ? "CONFIGURE POLL OPTIONS"
+                : votingType === "multiple_choice"
+                ? "CONFIGURE MULTIPLE CHOICE OPTIONS"
+                : votingType === "yes_no"
+                ? "CONFIGURE YES / NO PROPOSAL OPTIONS"
+                : votingType === "rating"
+                ? "CONFIGURE 5-STAR RATING SCALE"
+                : "CONFIGURE CANDIDATES"}
+            </h2>
             <p className="text-xs text-slate-600 mt-1">
-              Add candidates for voters to select on their ballot.
+              {votingType === "poll"
+                ? "Add poll options for voters to choose from."
+                : votingType === "multiple_choice"
+                ? "Add options that voters can select one or more of on their ballot."
+                : votingType === "yes_no"
+                ? "Set up the affirmative (YES) and negative (NO) voting options for the proposal."
+                : votingType === "rating"
+                ? "Configure the 5-star rating levels (5 Stars down to 1 Star)."
+                : "Add candidates for voters to select on their ballot."}
             </p>
           </div>
 
-          {/* Candidate Form */}
+          {/* Candidate / Option Form */}
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="text"
                 value={candName}
                 onChange={(e) => setCandName(e.target.value)}
-                placeholder="Candidate Full Name"
+                placeholder={
+                  votingType === "poll"
+                    ? "Option Title (e.g. 24/7 Study Rooms)"
+                    : votingType === "multiple_choice"
+                    ? "Choice Title (e.g. Badminton Club)"
+                    : votingType === "yes_no"
+                    ? "Option Label (e.g. YES / APPROVE)"
+                    : votingType === "rating"
+                    ? "Rating Level (e.g. 5 Stars)"
+                    : "Candidate Full Name"
+                }
                 className="input text-xs"
               />
               <input
                 type="text"
                 value={candParty}
                 onChange={(e) => setCandParty(e.target.value)}
-                placeholder="Party / Alliance Name"
+                placeholder={
+                  votingType === "poll"
+                    ? "Category / Note (Optional)"
+                    : votingType === "multiple_choice"
+                    ? "Category / Group (Optional)"
+                    : votingType === "yes_no"
+                    ? "Meaning (e.g. Approve Proposal)"
+                    : votingType === "rating"
+                    ? "Numeric Score (1 to 5)"
+                    : "Party / Alliance Name"
+                }
                 className="input text-xs"
               />
             </div>
@@ -614,28 +843,44 @@ export default function CreateElectionWizardPage() {
               rows={2}
               value={candManifesto}
               onChange={(e) => setCandManifesto(e.target.value)}
-              placeholder="Candidate manifesto..."
+              placeholder={
+                votingType === "poll" || votingType === "multiple_choice"
+                  ? "Option description / explanation (Optional)..."
+                  : votingType === "yes_no"
+                  ? "Details on voting for this option..."
+                  : votingType === "rating"
+                  ? "Description (e.g. Excellent / Strongly Agree)..."
+                  : "Candidate manifesto / background..."
+              }
               className="input text-xs"
             />
             <button
               type="button"
               onClick={handleAddCandidate}
-              className="button button-teal text-xs py-2 px-4"
+              className="button button-teal text-xs py-2 px-4 font-bold"
             >
               <Plus className="h-3.5 w-3.5 mr-1 inline" />
-              Add Candidate to List
+              {votingType === "poll"
+                ? "Add Poll Option"
+                : votingType === "multiple_choice"
+                ? "Add Choice Option"
+                : votingType === "yes_no"
+                ? "Add Decision Option"
+                : votingType === "rating"
+                ? "Add Rating Level"
+                : "Add Candidate to List"}
             </button>
           </div>
 
           {/* Added Candidate List */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Added Candidates ({candidateList.length})
+              Configured {votingType === "poll" || votingType === "multiple_choice" ? "Options" : votingType === "rating" ? "Scale Levels" : "Candidates"} ({candidateList.length})
             </h4>
 
             {candidateList.length === 0 && (
               <p className="text-xs text-slate-500 italic p-3 bg-white border border-slate-200 rounded-lg">
-                No candidates added yet. You can also add candidates later from the Election Admin panel.
+                No items added yet. You can also add options later from the Election Admin panel.
               </p>
             )}
 
@@ -643,9 +888,14 @@ export default function CreateElectionWizardPage() {
               <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
                 <div>
                   <h5 className="font-bold text-slate-900">{c.name}</h5>
-                  <span className="text-[10px] text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                    {c.party}
-                  </span>
+                  {c.party && (
+                    <span className="text-[10px] text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                      {c.party}
+                    </span>
+                  )}
+                  {c.manifesto && (
+                    <p className="text-[11px] text-slate-500 mt-0.5">{c.manifesto}</p>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -692,6 +942,29 @@ export default function CreateElectionWizardPage() {
               Add eligible voters for this election.
             </p>
           </div>
+
+          {voterRegistrationMode === "quick_entry" && (
+            <div className="p-4 bg-teal-50/80 border border-teal-200 rounded-xl space-y-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-teal-900 uppercase tracking-wider text-[11px]">
+                  ⚡ Quick Voter Entry Mode Active
+                </span>
+                <span className="badge badge-open text-[10px]">Open PRN Enrollment</span>
+              </div>
+              <p className="text-teal-950 leading-relaxed">
+                Voters do not need to be manually added here. Any eligible voter can simply enter their <strong>Full Name + 10-digit PRN</strong> directly on the voting page. The database strictly enforces 1-person-1-vote per election.
+              </p>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(5)}
+                  className="button button-teal text-xs py-1.5 px-4 font-bold"
+                >
+                  Skip to Step 5: Verification Security →
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Voter Form */}
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
@@ -906,6 +1179,30 @@ export default function CreateElectionWizardPage() {
             <div>
               <span className="text-slate-500 font-bold uppercase block text-[10px]">ELECTION NAME</span>
               <p className="font-bold text-slate-900 text-sm">{name}</p>
+            </div>
+
+            <div>
+              <span className="text-slate-500 font-bold uppercase block text-[10px]">VOTING TYPE</span>
+              <p className="font-extrabold text-teal-800 text-sm capitalize">
+                {votingType.replace("_", " ")} ({
+                  {
+                    regular: "Single-Choice Candidate Ballot",
+                    poll: "Opinion Survey",
+                    multiple_choice: "Multi-Selection Ballot",
+                    yes_no: "Yes / No Referendum",
+                    rating: "1–5 Star Rating Scale",
+                  }[votingType] || votingType
+                })
+              </p>
+            </div>
+
+            <div>
+              <span className="text-slate-500 font-bold uppercase block text-[10px]">VOTER REGISTRATION MODE</span>
+              <p className="font-extrabold text-slate-900 text-sm">
+                {voterRegistrationMode === "quick_entry"
+                  ? "⚡ Quick Voter Entry (Open PRN Enrollment)"
+                  : "🛡️ Pre-Registered Voters (Admin Enrolled)"}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

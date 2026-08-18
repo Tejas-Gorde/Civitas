@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -7,15 +8,80 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.core.security import decode_token
-from app.models import AuditLog, AuthSession, AuthStage, Candidate, Election, ElectionState, SystemSetting, User, Vote, Voter, VoterElectionStatus
-from app.schemas import CandidateOut, CastVote, ElectionOut, VoteReceipt, VoterVerifyRequest, VoterVerifyResponse, VoiceGuidanceSettingsOut, VoterAssistanceSettingsOut
+from app.core.security import decode_token, password_hash
+from app.models import (
+    AuditLog,
+    AuthSession,
+    AuthStage,
+    Candidate,
+    Election,
+    ElectionState,
+    QuickVoterRecord,
+    Role,
+    SystemSetting,
+    User,
+    Vote,
+    Voter,
+    VoterElectionStatus,
+)
+from app.schemas import (
+    CandidateOut,
+    CastVote,
+    ElectionOut,
+    QuickVoterVerifyRequest,
+    QuickVoterVerifyResponse,
+    VoteReceipt,
+    VoterVerifyRequest,
+    VoterVerifyResponse,
+    VoiceGuidanceSettingsOut,
+    VoterAssistanceSettingsOut,
+)
 
 router = APIRouter(prefix="/voting", tags=["Voting"])
 settings = get_settings()
+
+
+def get_or_create_quick_voter(db: Session, full_name: str, prn: str) -> Voter:
+    clean_prn = re.sub(r"\s+", "", prn.strip())
+    quick_voter_id = f"QUICK_{clean_prn}"
+    voter = db.scalar(select(Voter).where(Voter.voter_id == quick_voter_id))
+    if voter:
+        if full_name and voter.full_name != full_name.strip():
+            voter.full_name = full_name.strip()
+            db.flush()
+        return voter
+
+    email = f"quick_{clean_prn}@civitas.internal"
+    user = db.scalar(select(User).where(User.email == email))
+    if not user:
+        user = User(
+            email=email,
+            password_hash=password_hash(clean_prn),
+            role=Role.VOTER,
+            is_active=True,
+        )
+        db.add(user)
+        db.flush()
+
+    aadhaar_hash = hashlib.sha256(f"QUICK_PRN_{clean_prn}".encode()).hexdigest()
+    voter = Voter(
+        user_id=user.id,
+        voter_id=quick_voter_id,
+        full_name=full_name.strip(),
+        date_of_birth="2000-01-01",
+        gender="Unspecified",
+        mobile=clean_prn,
+        address_ciphertext="Quick Voter Entry",
+        aadhaar_last_four=clean_prn[-4:],
+        aadhaar_digest=aadhaar_hash,
+    )
+    db.add(voter)
+    db.flush()
+    return voter
 
 
 @router.get("/settings/voice-guidance", response_model=VoiceGuidanceSettingsOut)
@@ -166,6 +232,89 @@ def verify_public_election(election_identifier: str, db: Session = Depends(get_d
     return out
 
 
+@router.post("/verify-quick-voter", response_model=QuickVoterVerifyResponse)
+def verify_quick_voter(data: QuickVoterVerifyRequest, db: Session = Depends(get_db)):
+    current = datetime.now(timezone.utc)
+    clean_id = str(data.election_id).strip()
+    election = db.scalar(
+        select(Election).where(
+            (func.lower(Election.id) == clean_id.lower()) |
+            (func.lower(Election.election_id) == clean_id.lower())
+        )
+    )
+    if not election:
+        raise HTTPException(404, "Election not found.")
+    if election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)):
+        raise HTTPException(400, "Election is not currently active.")
+
+    if getattr(election, "voter_registration_mode", "pre_registered") != "quick_entry":
+        raise HTTPException(400, "This election is configured for Pre-Registered Voters.")
+
+    normalized_prn = re.sub(r"\s+", "", data.prn.strip())
+    if not re.match(r"^\d{10}$", normalized_prn):
+        raise HTTPException(422, "PRN must contain exactly 10 digits.")
+
+    clean_name = data.full_name.strip()
+    if len(clean_name) < 2:
+        raise HTTPException(422, "Full Name must be at least 2 characters.")
+
+    # Check if this PRN has already voted in THIS election
+    existing_quick_vote = db.scalar(
+        select(QuickVoterRecord).where(
+            QuickVoterRecord.election_id == election.id,
+            QuickVoterRecord.prn == normalized_prn,
+        )
+    )
+    if existing_quick_vote:
+        raise HTTPException(
+            409,
+            "Vote already recorded. This PRN has already participated in this election."
+        )
+
+    # Get or create backing Voter record for session and foreign key compliance
+    voter = get_or_create_quick_voter(db, clean_name, normalized_prn)
+
+    # Ensure VoterElectionStatus is eligible
+    status_row = db.scalar(
+        select(VoterElectionStatus).where(
+            VoterElectionStatus.voter_id == voter.id,
+            VoterElectionStatus.election_id == election.id,
+        )
+    )
+    if not status_row:
+        status_row = VoterElectionStatus(voter_id=voter.id, election_id=election.id, eligible=True)
+        db.add(status_row)
+        db.flush()
+    elif status_row.voted_at:
+        raise HTTPException(409, "Vote already recorded. This PRN has already participated in this election.")
+
+    # Start authentication session
+    session = AuthSession(
+        voter_id=voter.id,
+        election_id=election.id,
+        stage=AuthStage.IDENTIFIED,
+        expires_at=current + timedelta(minutes=settings.max_authentication_minutes),
+        metrics={"voter_name": clean_name, "prn": normalized_prn, "mode": "quick_entry"},
+    )
+    db.add(session)
+    db.commit()
+
+    return QuickVoterVerifyResponse(
+        eligible=True,
+        message="Quick voter verification successful",
+        voter_name=clean_name,
+        prn=normalized_prn,
+        session_id=session.id,
+        voting_type=getattr(election, "voting_type", "regular") or "regular",
+        voter_registration_mode="quick_entry",
+        voting_flow_mode=getattr(election, "voting_flow_mode", "full") or "full",
+        enable_step_2=bool(election.enable_step_2),
+        enable_step_3=bool(election.enable_step_3),
+        enable_step_4=bool(election.enable_step_4),
+        enable_step_5=bool(election.enable_step_5),
+    )
+
+
 @router.post("/verify-voter", response_model=VoterVerifyResponse)
 def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
     current = datetime.now(timezone.utc)
@@ -180,6 +329,10 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
         raise HTTPException(404, "Election not found.")
     if election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)):
         raise HTTPException(400, "Election is not currently active.")
+
+    # If election is quick_entry mode, suggest quick voter entry
+    if getattr(election, "voter_registration_mode", "pre_registered") == "quick_entry":
+        raise HTTPException(400, "This election uses Quick Voter Entry (Name + 10-digit PRN).")
 
     voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == data.voter_registration_id.strip().lower()))
     if not voter:
@@ -240,28 +393,104 @@ def cast_vote(data: CastVote, db: Session = Depends(get_db)):
         raise HTTPException(401, "Invalid or already-consumed voting grant")
 
     election = db.get(Election, str(data.election_id))
-    candidate = db.get(Candidate, str(data.candidate_id))
     current = datetime.now(timezone.utc)
-    if not election or election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)) or not candidate or candidate.election_id != election.id:
+    if not election or election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)):
         raise HTTPException(409, "This ballot is no longer available")
 
-    # Lock identity status, then sever identity from the actual ballot record.
-    status_row = db.scalar(select(VoterElectionStatus).where(VoterElectionStatus.voter_id == session.voter_id, VoterElectionStatus.election_id == election.id).with_for_update())
-    if status_row and status_row.voted_at:
-        raise HTTPException(409, "A ballot was already cast for this election")
-    if not status_row:
-        status_row = VoterElectionStatus(voter_id=session.voter_id, election_id=election.id)
-        db.add(status_row)
+    # Determine candidate IDs to cast
+    candidate_id_list = []
+    if data.candidate_ids:
+        candidate_id_list = [str(cid) for cid in data.candidate_ids if cid]
+    elif data.candidate_id:
+        candidate_id_list = [str(data.candidate_id)]
 
-    receipt = secrets.token_urlsafe(24)
-    vote = Vote(election_id=election.id, candidate_id=candidate.id, receipt_id=receipt)
-    db.add(vote)
-    status_row.voted_at = current
-    session.closed_at = current
-    session.issued_grant_hash = None
-    db.commit()
-    db.refresh(vote)
-    return VoteReceipt(receipt_id=vote.receipt_id, cast_at=vote.cast_at)
+    if not candidate_id_list:
+        raise HTTPException(422, "At least one candidate or option must be selected")
+
+    # Verify all candidates belong to this election
+    for cid in candidate_id_list:
+        cand = db.get(Candidate, cid)
+        if not cand or str(cand.election_id) != str(election.id):
+            raise HTTPException(404, f"Selected candidate/option '{cid}' is not valid for this election")
+
+    reg_mode = getattr(election, "voter_registration_mode", "pre_registered") or "pre_registered"
+    primary_receipt = secrets.token_urlsafe(24)
+
+    if reg_mode == "quick_entry":
+        # Extract PRN and voter name from session metrics or voter record
+        metrics = session.metrics or {}
+        voter = db.get(Voter, session.voter_id)
+        voter_name = metrics.get("voter_name") or (voter.full_name if voter else data.voter_name) or "Anonymous Voter"
+        prn = metrics.get("prn") or (voter.mobile if voter else data.prn) or "0000000000"
+        normalized_prn = re.sub(r"\s+", "", str(prn).strip())
+
+        if not re.match(r"^\d{10}$", normalized_prn):
+            raise HTTPException(422, "PRN must contain exactly 10 digits.")
+
+        # Check existing QuickVoterRecord first
+        existing_rec = db.scalar(
+            select(QuickVoterRecord).where(
+                QuickVoterRecord.election_id == election.id,
+                QuickVoterRecord.prn == normalized_prn,
+            )
+        )
+        if existing_rec:
+            raise HTTPException(409, "Vote already recorded. This PRN has already participated in this election.")
+
+        # Atomic insert of QuickVoterRecord with UNIQUE(election_id, prn)
+        try:
+            quick_record = QuickVoterRecord(
+                election_id=election.id,
+                voter_name=voter_name,
+                prn=normalized_prn,
+                candidate_id=candidate_id_list[0] if candidate_id_list else None,
+                candidate_ids_json=candidate_id_list,
+                receipt_id=primary_receipt,
+                cast_at=current,
+            )
+            db.add(quick_record)
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(409, "Vote already recorded. This PRN has already participated in this election.")
+
+        # Also insert standard Vote rows for standard count calculations
+        for idx, cid in enumerate(candidate_id_list):
+            rec_id = primary_receipt if len(candidate_id_list) == 1 else f"{primary_receipt[:20]}_{idx + 1}"
+            vote = Vote(election_id=election.id, candidate_id=cid, receipt_id=rec_id)
+            db.add(vote)
+
+        # Update status if voter row exists
+        if session.voter_id:
+            status_row = db.scalar(select(VoterElectionStatus).where(VoterElectionStatus.voter_id == session.voter_id, VoterElectionStatus.election_id == election.id))
+            if status_row:
+                status_row.voted_at = current
+
+        session.closed_at = current
+        session.issued_grant_hash = None
+        db.commit()
+
+        return VoteReceipt(receipt_id=primary_receipt, cast_at=current)
+    else:
+        # Pre-registered mode
+        status_row = db.scalar(select(VoterElectionStatus).where(VoterElectionStatus.voter_id == session.voter_id, VoterElectionStatus.election_id == election.id).with_for_update())
+        if status_row and status_row.voted_at:
+            raise HTTPException(409, "A ballot was already cast for this election")
+        if not status_row:
+            status_row = VoterElectionStatus(voter_id=session.voter_id, election_id=election.id)
+            db.add(status_row)
+
+        for idx, cid in enumerate(candidate_id_list):
+            rec_id = primary_receipt if len(candidate_id_list) == 1 else f"{primary_receipt[:20]}_{idx + 1}"
+            vote = Vote(election_id=election.id, candidate_id=cid, receipt_id=rec_id)
+            db.add(vote)
+
+        status_row.voted_at = current
+        session.closed_at = current
+        session.issued_grant_hash = None
+        db.commit()
+
+        return VoteReceipt(receipt_id=primary_receipt, cast_at=current)
 
 
 @router.post("/sessions/{session_id}/photo")

@@ -22,6 +22,14 @@ import {
   RefreshCw,
   Key,
   Clock,
+  Star,
+  ThumbsUp,
+  ThumbsDown,
+  CheckSquare,
+  Square,
+  XCircle,
+  Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import SessionTimer from "./SessionTimer";
@@ -91,6 +99,9 @@ export default function VotingFlow({
     id: string;
     name: string;
     election_id?: string;
+    voting_type?: string;
+    voter_registration_mode?: string;
+    description?: string;
     voting_flow_mode?: string;
     enable_step_2?: boolean;
     enable_step_3?: boolean;
@@ -106,6 +117,9 @@ export default function VotingFlow({
   const [stage, setStage] = useState<Stage>("identify");
   const [voterId, setVoterId] = useState(initialVoterId || "");
   const [voterPassword, setVoterPassword] = useState("");
+  const [quickFullName, setQuickFullName] = useState("");
+  const [quickPrn, setQuickPrn] = useState("");
+  const [duplicateVotedError, setDuplicateVotedError] = useState(false);
   const [voterInternalId, setVoterInternalId] = useState(initialVoterInternalId || "");
   const [session, setSession] = useState(initialSession || "");
   const [challenge, setChallenge] = useState("");
@@ -119,6 +133,8 @@ export default function VotingFlow({
   const [grant, setGrant] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>("");
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState<string[]>([]);
+  const [hoveredStar, setHoveredStar] = useState<number>(0);
   const [receipt, setReceipt] = useState("");
   const [castTimestamp, setCastTimestamp] = useState<string>("");
   const [busy, setBusy] = useState(false);
@@ -287,39 +303,95 @@ export default function VotingFlow({
   const startSession = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setVerifyError(null);
+    setDuplicateVotedError(false);
 
-    if (!voterId.trim()) {
-      toast.error("Please enter your Voter Registration ID");
-      return;
-    }
-    if (!voterPassword.trim()) {
-      toast.error("Please enter your Voter Password");
-      return;
-    }
+    const isQuickEntry = election.voter_registration_mode === "quick_entry";
 
-    try {
-      setBusy(true);
-      const vRes = await request("/voting/verify-voter", {
-        electionId: election.id,
-        voterId: voterId.trim(),
-        password: voterPassword.trim(),
-      });
-      setVoterInternalId(vRes.voter_internal_id);
-      setSession(vRes.session_id);
-      
-      // Calculate initial 30m / 15m expiration client fallback if not in progress
-      const defaultExp = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-      setSessionExpiresAt(vRes.expires_at || defaultExp);
+    if (isQuickEntry) {
+      const cleanName = quickFullName.trim();
+      const cleanPrn = quickPrn.replace(/\s+/g, "");
 
-      toast.success("Voter eligibility verified successfully");
-      await advanceFromStage("identify", vRes.session_id);
-    } catch (err) {
-      const msg = readable(err);
-      setVerifyError(msg);
-      toast.error(msg);
-      voice.speak(FEEDBACK_MESSAGES[voice.language]?.verify_failed || FEEDBACK_MESSAGES.en.verify_failed);
-    } finally {
-      setBusy(false);
+      if (!cleanName || cleanName.length < 2) {
+        toast.error("Please enter your Full Name (minimum 2 characters)");
+        return;
+      }
+      if (!/^\d{10}$/.test(cleanPrn)) {
+        toast.error("PRN must contain exactly 10 digits.");
+        return;
+      }
+
+      try {
+        setBusy(true);
+        const vRes = await request("/voting/verify-quick-voter", {
+          election_id: election.id,
+          full_name: cleanName,
+          prn: cleanPrn,
+        });
+        setVoterId(`QUICK_${cleanPrn}`);
+        setSession(vRes.session_id);
+        const defaultExp = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        setSessionExpiresAt(defaultExp);
+        toast.success("Voter eligibility verified successfully");
+        await advanceFromStage("identify", vRes.session_id);
+      } catch (err: any) {
+        const msg = readable(err);
+        if (
+          msg.toLowerCase().includes("already participated") ||
+          msg.toLowerCase().includes("already recorded") ||
+          msg.toLowerCase().includes("already cast") ||
+          err?.status === 409
+        ) {
+          setDuplicateVotedError(true);
+        } else {
+          setVerifyError(msg);
+          toast.error(msg);
+        }
+      } finally {
+        setBusy(false);
+      }
+    } else {
+      if (!voterId.trim()) {
+        toast.error("Please enter your Voter Registration ID");
+        return;
+      }
+      if (!voterPassword.trim()) {
+        toast.error("Please enter your Voter Password");
+        return;
+      }
+
+      try {
+        setBusy(true);
+        const vRes = await request("/voting/verify-voter", {
+          electionId: election.id,
+          voterId: voterId.trim(),
+          password: voterPassword.trim(),
+        });
+        setVoterInternalId(vRes.voter_internal_id);
+        setSession(vRes.session_id);
+        
+        // Calculate initial 30m / 15m expiration client fallback if not in progress
+        const defaultExp = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        setSessionExpiresAt(vRes.expires_at || defaultExp);
+
+        toast.success("Voter eligibility verified successfully");
+        await advanceFromStage("identify", vRes.session_id);
+      } catch (err: any) {
+        const msg = readable(err);
+        if (
+          msg.toLowerCase().includes("already cast") ||
+          msg.toLowerCase().includes("already participated") ||
+          msg.toLowerCase().includes("already recorded") ||
+          err?.status === 409
+        ) {
+          setDuplicateVotedError(true);
+        } else {
+          setVerifyError(msg);
+          toast.error(msg);
+          voice.speak(FEEDBACK_MESSAGES[voice.language]?.verify_failed || FEEDBACK_MESSAGES.en.verify_failed);
+        }
+      } finally {
+        setBusy(false);
+      }
     }
   };
 
@@ -658,28 +730,56 @@ export default function VotingFlow({
   };
 
 
+  const votingType = election?.voting_type || "regular";
+
   // Step 6 -> 7: Proceed to Review Stage
   const proceedToReview = () => {
-    if (!selectedCandidateId) {
-      toast.error("Please select a candidate before proceeding.");
-      return;
+    if (votingType === "multiple_choice") {
+      if (selectedCandidateIds.length === 0) {
+        toast.error("Please select at least one option before proceeding.");
+        return;
+      }
+    } else {
+      if (!selectedCandidateId) {
+        toast.error(
+          votingType === "rating"
+            ? "Please select a star rating before proceeding."
+            : votingType === "yes_no"
+            ? "Please choose YES or NO before proceeding."
+            : "Please select an option before proceeding."
+        );
+        return;
+      }
     }
     setStage("review");
   };
 
   // Step 7 -> 8: Submit Vote
   const submitFinalVote = async () => {
-    if (!selectedCandidateId) {
-      toast.error("No candidate selected.");
-      return;
+    if (votingType === "multiple_choice") {
+      if (selectedCandidateIds.length === 0) {
+        toast.error("No option selected.");
+        return;
+      }
+    } else {
+      if (!selectedCandidateId) {
+        toast.error("No option selected.");
+        return;
+      }
     }
     try {
       setBusy(true);
-      const r = await request("/voting/cast", {
+      const payload: any = {
         election_id: election.id,
-        candidate_id: selectedCandidateId,
         voting_grant: grant,
-      });
+      };
+      if (votingType === "multiple_choice") {
+        payload.candidate_ids = selectedCandidateIds;
+      } else {
+        payload.candidate_id = selectedCandidateId;
+      }
+
+      const r = await request("/voting/cast", payload);
       setReceipt(r.receipt_id);
       setCastTimestamp(r.cast_at || new Date().toISOString());
       setStage("receipt");
@@ -692,6 +792,7 @@ export default function VotingFlow({
   };
 
   const selectedCandidate = candidates.find((c) => c.id === selectedCandidateId);
+  const selectedCandidatesList = candidates.filter((c) => selectedCandidateIds.includes(c.id));
   const currentStageIdx = STAGE_ORDER.indexOf(stage);
 
   const downloadReceiptTxt = () => {
@@ -1002,58 +1103,173 @@ export default function VotingFlow({
             {/* STAGE 1: IDENTIFY */}
             {stage === "identify" && (
               <div className="mx-auto max-w-xl space-y-4 sm:space-y-6">
-                <div>
-                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
-                    Step 1 — Eligibility Check
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Voter Identification</h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {currentInstruction?.display}
-                  </p>
-                </div>
-
-                <form onSubmit={startSession} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      VOTER REGISTRATION ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      className="field font-mono"
-                      required
-                      placeholder="e.g. VOTER-1001"
-                      value={voterId}
-                      onChange={(e) => setVoterId(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      VOTER PASSWORD / SECURITY KEY <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      className="field"
-                      required
-                      placeholder="Enter password"
-                      value={voterPassword}
-                      onChange={(e) => setVoterPassword(e.target.value)}
-                    />
-                  </div>
-
-                  {verifyError && (
-                    <div className="rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200">
-                      {verifyError}
+                {duplicateVotedError ? (
+                  <div className="p-6 sm:p-8 bg-rose-50 border-2 border-rose-300 rounded-2xl text-center space-y-4 shadow-sm">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                      <AlertCircle className="h-8 w-8 text-rose-600" />
                     </div>
-                  )}
 
-                  <button
-                    type="submit"
-                    className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold"
-                    disabled={busy}
-                  >
-                    {busy ? "Verifying Record..." : "Verify Voter Eligibility"}
-                  </button>
-                </form>
+                    <div>
+                      <span className="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-rose-700">
+                        SINGLE-VOTE SECURITY POLICY
+                      </span>
+                      <h2 className="text-xl sm:text-2xl font-black text-rose-950 mt-1">
+                        Vote Already Recorded
+                      </h2>
+                      <p className="text-xs sm:text-sm text-rose-800 mt-2 leading-relaxed">
+                        This PRN has already participated in this election. In accordance with strict cryptographic election rules, multiple ballots cannot be submitted for the same PRN.
+                      </p>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDuplicateVotedError(false);
+                          if (onReset) onReset();
+                          else window.location.reload();
+                        }}
+                        className="button button-outline border-rose-300 text-rose-900 hover:bg-rose-100 w-full min-h-[46px] font-bold text-xs sm:text-sm"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-1.5 inline" />
+                        Return to Election Start
+                      </button>
+                    </div>
+                  </div>
+                ) : election.voter_registration_mode === "quick_entry" ? (
+                  <>
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
+                          Step 1 — Eligibility Check
+                        </span>
+                        <span className="badge badge-open text-[10px]">Quick Voter Entry</span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">ENTER VOTER DETAILS</h2>
+                      <p className="mt-1 text-xs text-slate-600">
+                        Enter your Full Name and 10-digit PRN to access the official ballot.
+                      </p>
+                    </div>
+
+                    <form onSubmit={startSession} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          FULL NAME <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="field text-sm"
+                          required
+                          placeholder="e.g. Rahul Sharma"
+                          value={quickFullName}
+                          onChange={(e) => setQuickFullName(e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          10-DIGIT PRN <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={10}
+                          className="field font-mono text-sm tracking-wider"
+                          required
+                          placeholder="Enter exactly 10 digits (e.g. 1234567890)"
+                          value={quickPrn}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setQuickPrn(val);
+                          }}
+                        />
+
+                        {quickPrn.length > 0 && quickPrn.length < 10 && (
+                          <p className="text-[11px] font-semibold text-amber-700 mt-1.5 flex items-center gap-1">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                            PRN must contain exactly 10 digits ({quickPrn.length}/10 entered).
+                          </p>
+                        )}
+                        {quickPrn.length === 10 && (
+                          <p className="text-[11px] font-semibold text-emerald-700 mt-1.5 flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                            ✓ 10-digit PRN format verified
+                          </p>
+                        )}
+                      </div>
+
+                      {verifyError && (
+                        <div className="rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200">
+                          {verifyError}
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold shadow-md shadow-teal-700/10"
+                        disabled={busy || !quickFullName.trim() || quickPrn.length !== 10}
+                      >
+                        {busy ? "Verifying Eligibility..." : "Continue →"}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
+                        Step 1 — Eligibility Check
+                      </span>
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Voter Identification</h2>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {currentInstruction?.display}
+                      </p>
+                    </div>
+
+                    <form onSubmit={startSession} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          VOTER REGISTRATION ID <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          className="field font-mono"
+                          required
+                          placeholder="e.g. VOTER-1001"
+                          value={voterId}
+                          onChange={(e) => setVoterId(e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          VOTER PASSWORD / SECURITY KEY <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          className="field"
+                          required
+                          placeholder="Enter password"
+                          value={voterPassword}
+                          onChange={(e) => setVoterPassword(e.target.value)}
+                        />
+                      </div>
+
+                      {verifyError && (
+                        <div className="rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200">
+                          {verifyError}
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold"
+                        disabled={busy}
+                      >
+                        {busy ? "Verifying Record..." : "Verify Voter Eligibility"}
+                      </button>
+                    </form>
+                  </>
+                )}
               </div>
             )}
 
@@ -1270,15 +1486,31 @@ export default function VotingFlow({
               </div>
             )}
 
-            {/* STAGE 5: BALLOT CANDIDATE SELECTION */}
+            {/* STAGE 5: BALLOT SELECTION (DYNAMIC BY VOTING TYPE) */}
             {stage === "ballot" && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
-                      Official Secret Ballot
+                      {votingType === "poll"
+                        ? "Community Opinion Poll"
+                        : votingType === "multiple_choice"
+                        ? "Multiple Choice Ballot"
+                        : votingType === "yes_no"
+                        ? "Proposal Referendum Ballot"
+                        : votingType === "rating"
+                        ? "Satisfaction Evaluation Scale"
+                        : "Official Secret Ballot"}
                     </span>
-                    <span className="badge badge-open text-[10px] sm:text-xs">Single Choice Allowed</span>
+                    <span className="badge badge-open text-[10px] sm:text-xs">
+                      {votingType === "multiple_choice"
+                        ? `Multiple Selections (${selectedCandidateIds.length} Selected)`
+                        : votingType === "yes_no"
+                        ? "Binary Decision"
+                        : votingType === "rating"
+                        ? "1–5 Star Rating"
+                        : "Single Choice Allowed"}
+                    </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{election.name}</h2>
                   <p className="mt-1 text-xs sm:text-sm text-slate-600">
@@ -1286,84 +1518,371 @@ export default function VotingFlow({
                   </p>
                 </div>
 
-                {/* Candidate Selection List */}
-                <div className="space-y-2.5 sm:space-y-3">
-                  {candidates.map((c) => {
-                    const isSelected = selectedCandidateId === c.id;
-                    const handleSelectCandidate = () => {
-                      setSelectedCandidateId(c.id);
-                      const msg =
-                        voice.language === "hi"
-                          ? `आपने ${c.name} का चयन किया है। आगे बढ़ने से पहले कृपया अपनी पसंद की समीक्षा करें।`
-                          : `You have selected ${c.name}. Please review your choice before continuing.`;
-                      voice.speak(msg);
-                    };
+                {/* 1. YES / NO DECISION BALLOT */}
+                {votingType === "yes_no" && (
+                  <div className="space-y-4">
+                    <div className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+                      <span className="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                        <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
+                        Proposal Statement / Measure
+                      </span>
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                        "{election.description || election.name}"
+                      </h3>
+                    </div>
 
-                    return (
-                      <div
-                        key={c.id}
-                        onClick={handleSelectCandidate}
-                        role="radio"
-                        aria-checked={isSelected}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === " " || e.key === "Enter") {
-                            e.preventDefault();
-                            handleSelectCandidate();
-                          }
-                        }}
-                        className={`card-interactive cursor-pointer p-4 sm:p-5 transition-all duration-150 rounded-xl sm:rounded-2xl select-none ${
-                          isSelected
-                            ? "border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/30 shadow-md"
-                            : "hover:border-slate-300 active:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3 sm:gap-4">
-                          <div className="pt-0.5">
-                            <input
-                              type="radio"
-                              name="candidate"
-                              checked={isSelected}
-                              onChange={handleSelectCandidate}
-                              className="h-5 w-5 accent-teal-700 cursor-pointer"
-                            />
-                          </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      {candidates.map((c) => {
+                        const isYes = c.name.toLowerCase().includes("yes") || c.name.toLowerCase().includes("approve");
+                        const isSelected = selectedCandidateId === c.id;
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center justify-between gap-1.5">
-                              <h3 className={`text-base font-extrabold transition-colors ${
-                                isSelected ? "text-teal-950" : "text-slate-900"
-                              }`}>
-                                {c.name}
-                              </h3>
-                              <span className={`rounded-lg px-2.5 py-0.5 text-xs font-bold border ${
-                                isSelected
-                                  ? "bg-teal-100 text-teal-800 border-teal-300"
-                                  : "bg-slate-100 text-slate-700 border-slate-200"
-                              }`}>
-                                {c.party}
+                        const handleSelectOption = () => {
+                          setSelectedCandidateId(c.id);
+                          const msg =
+                            voice.language === "hi"
+                              ? `आपने ${c.name} का चयन किया है।`
+                              : `You have selected ${c.name}.`;
+                          voice.speak(msg);
+                        };
+
+                        return (
+                          <div
+                            key={c.id}
+                            onClick={handleSelectOption}
+                            className={`p-5 sm:p-6 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex flex-col justify-between space-y-3 ${
+                              isSelected
+                                ? isYes
+                                  ? "border-emerald-500 bg-emerald-50/80 ring-2 ring-emerald-500/30 shadow-md"
+                                  : "border-rose-500 bg-rose-50/80 ring-2 ring-rose-500/30 shadow-md"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold text-white shadow-xs ${
+                                  isYes ? "bg-emerald-600" : "bg-rose-600"
+                                }`}
+                              >
+                                {isYes ? (
+                                  <ThumbsUp className="h-5 w-5" />
+                                ) : (
+                                  <ThumbsDown className="h-5 w-5" />
+                                )}
+                              </div>
+                              <span
+                                className={`h-5 w-5 rounded-full border flex items-center justify-center ${
+                                  isSelected
+                                    ? isYes
+                                      ? "border-emerald-600 bg-emerald-600 text-white"
+                                      : "border-rose-600 bg-rose-600 text-white"
+                                    : "border-slate-300 bg-white"
+                                }`}
+                              >
+                                {isSelected && <CheckCircle2 className="h-4 w-4" />}
                               </span>
                             </div>
-                            {c.manifesto && (
-                              <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
-                                {c.manifesto}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
 
+                            <div>
+                              <h4
+                                className={`text-lg sm:text-xl font-black ${
+                                  isSelected
+                                    ? isYes
+                                      ? "text-emerald-950"
+                                      : "text-rose-950"
+                                    : "text-slate-900"
+                                }`}
+                              >
+                                {c.name}
+                              </h4>
+                              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                                {c.manifesto || (isYes ? "Vote in favor of the proposal." : "Vote in opposition to the proposal.")}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. RATING SCALE BALLOT */}
+                {votingType === "rating" && (
+                  <div className="space-y-4">
+                    <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl space-y-1.5 shadow-xs">
+                      <span className="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                        <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
+                        Evaluated Topic / Question
+                      </span>
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                        "{election.description || election.name}"
+                      </h3>
+                    </div>
+
+                    {/* Interactive 5-Star Row */}
+                    <div className="card p-6 sm:p-8 bg-gradient-to-r from-amber-50/70 via-yellow-50/40 to-white border border-amber-200 rounded-2xl text-center space-y-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                        Select Your Rating
+                      </span>
+                      <div className="flex items-center justify-center gap-2 sm:gap-4 py-2">
+                        {[1, 2, 3, 4, 5].map((starVal) => {
+                          const matchingCand = candidates.find(
+                            (c) =>
+                              c.name.includes(String(starVal)) ||
+                              c.party === String(starVal) ||
+                              candidates.indexOf(c) === 5 - starVal
+                          ) || candidates[5 - starVal] || candidates[starVal - 1];
+
+                          const activeRating = candidates.findIndex((c) => c.id === selectedCandidateId);
+                          const selectedStarNum = activeRating >= 0 ? 5 - activeRating : 0;
+                          const isHighlighted = hoveredStar ? starVal <= hoveredStar : starVal <= selectedStarNum;
+
+                          return (
+                            <button
+                              key={starVal}
+                              type="button"
+                              onMouseEnter={() => setHoveredStar(starVal)}
+                              onMouseLeave={() => setHoveredStar(0)}
+                              onClick={() => {
+                                if (matchingCand) {
+                                  setSelectedCandidateId(matchingCand.id);
+                                  voice.speak(`You rated ${starVal} out of 5 stars.`);
+                                }
+                              }}
+                              className="p-1 sm:p-2 transition-transform hover:scale-125 focus:outline-none"
+                            >
+                              <Star
+                                className={`h-9 w-9 sm:h-12 sm:w-12 transition-colors ${
+                                  isHighlighted
+                                    ? "fill-amber-400 text-amber-500 drop-shadow-sm"
+                                    : "text-slate-300 hover:text-amber-300"
+                                }`}
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {selectedCandidateId ? (
+                        <p className="text-xs sm:text-sm font-extrabold text-amber-900">
+                          Selected: {candidates.find((c) => c.id === selectedCandidateId)?.name || "Rated"}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-500">
+                          Click a star above or choose a level below to rate
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Star Level Option Cards */}
+                    <div className="space-y-2">
+                      {candidates.map((c) => {
+                        const isSelected = selectedCandidateId === c.id;
+                        return (
+                          <div
+                            key={c.id}
+                            onClick={() => setSelectedCandidateId(c.id)}
+                            className={`p-3.5 sm:p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                              isSelected
+                                ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs"
+                                : "border-slate-200 bg-white hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-900 font-extrabold text-xs">
+                                ★
+                              </span>
+                              <div>
+                                <h4 className="font-extrabold text-slate-900 text-sm">{c.name}</h4>
+                                {c.manifesto && (
+                                  <p className="text-[11px] text-slate-500">{c.manifesto}</p>
+                                )}
+                              </div>
+                            </div>
+                            <span
+                              className={`h-5 w-5 rounded-full border flex items-center justify-center ${
+                                isSelected
+                                  ? "border-amber-600 bg-amber-600 text-white"
+                                  : "border-slate-300 bg-white"
+                              }`}
+                            >
+                              {isSelected && <CheckCircle2 className="h-4 w-4" />}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. MULTIPLE CHOICE BALLOT */}
+                {votingType === "multiple_choice" && (
+                  <div className="space-y-4">
+                    <div className="p-3.5 bg-indigo-50/80 border border-indigo-200 rounded-xl text-xs text-indigo-950 flex items-start gap-2.5">
+                      <CheckSquare className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+                      <span>
+                        <strong>Multi-Selection Enabled:</strong> You may select one or more options that you support. Check each option you wish to vote for.
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {candidates.map((c) => {
+                        const isChecked = selectedCandidateIds.includes(c.id);
+
+                        const toggleChoice = () => {
+                          if (isChecked) {
+                            setSelectedCandidateIds((prev) => prev.filter((id) => id !== c.id));
+                          } else {
+                            setSelectedCandidateIds((prev) => [...prev, c.id]);
+                            voice.speak(`Selected ${c.name}.`);
+                          }
+                        };
+
+                        return (
+                          <div
+                            key={c.id}
+                            onClick={toggleChoice}
+                            className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3.5 ${
+                              isChecked
+                                ? "border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-600/30 shadow-xs"
+                                : "border-slate-200 bg-white hover:border-slate-300 active:bg-slate-50"
+                            }`}
+                          >
+                            <div className="pt-0.5">
+                              {isChecked ? (
+                                <CheckSquare className="h-5 w-5 text-indigo-600" />
+                              ) : (
+                                <Square className="h-5 w-5 text-slate-400" />
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <h3 className={`text-base font-extrabold ${isChecked ? "text-indigo-950" : "text-slate-900"}`}>
+                                  {c.name}
+                                </h3>
+                                {c.party && (
+                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                                    {c.party}
+                                  </span>
+                                )}
+                              </div>
+                              {c.manifesto && (
+                                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                                  {c.manifesto}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. POLL & 5. REGULAR ELECTION (SINGLE CHOICE) */}
+                {(votingType === "regular" || votingType === "poll") && (
+                  <div className="space-y-4">
+                    {votingType === "poll" && election.description && (
+                      <div className="p-4 bg-teal-50/60 border border-teal-200 rounded-xl space-y-1 text-xs">
+                        <span className="font-bold text-teal-900 uppercase tracking-wider text-[10px]">
+                          Survey Question
+                        </span>
+                        <p className="text-slate-900 font-bold text-sm">
+                          "{election.description}"
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2.5 sm:space-y-3">
+                      {candidates.map((c) => {
+                        const isSelected = selectedCandidateId === c.id;
+                        const handleSelectCandidate = () => {
+                          setSelectedCandidateId(c.id);
+                          const msg =
+                            voice.language === "hi"
+                              ? `आपने ${c.name} का चयन किया है।`
+                              : `You have selected ${c.name}.`;
+                          voice.speak(msg);
+                        };
+
+                        return (
+                          <div
+                            key={c.id}
+                            onClick={handleSelectCandidate}
+                            role="radio"
+                            aria-checked={isSelected}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === " " || e.key === "Enter") {
+                                e.preventDefault();
+                                handleSelectCandidate();
+                              }
+                            }}
+                            className={`card-interactive cursor-pointer p-4 sm:p-5 transition-all duration-150 rounded-xl sm:rounded-2xl select-none ${
+                              isSelected
+                                ? "border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/30 shadow-md"
+                                : "hover:border-slate-300 active:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3 sm:gap-4">
+                              <div className="pt-0.5">
+                                <input
+                                  type="radio"
+                                  name="candidate"
+                                  checked={isSelected}
+                                  onChange={handleSelectCandidate}
+                                  className="h-5 w-5 accent-teal-700 cursor-pointer"
+                                />
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                  <h3
+                                    className={`text-base font-extrabold transition-colors ${
+                                      isSelected ? "text-teal-950" : "text-slate-900"
+                                    }`}
+                                  >
+                                    {c.name}
+                                  </h3>
+                                  {c.party && (
+                                    <span
+                                      className={`rounded-lg px-2.5 py-0.5 text-xs font-bold border ${
+                                        isSelected
+                                          ? "bg-teal-100 text-teal-800 border-teal-300"
+                                          : "bg-slate-100 text-slate-700 border-slate-200"
+                                      }`}
+                                    >
+                                      {c.party}
+                                    </span>
+                                  )}
+                                </div>
+                                {c.manifesto && (
+                                  <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
+                                    {c.manifesto}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Action Button */}
                 <div className="flex items-center justify-end gap-3 pt-3 sm:pt-4 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={proceedToReview}
-                    disabled={!selectedCandidateId}
+                    disabled={
+                      votingType === "multiple_choice"
+                        ? selectedCandidateIds.length === 0
+                        : !selectedCandidateId
+                    }
                     className="button button-teal w-full sm:w-auto min-h-[48px] text-xs sm:text-sm font-bold shadow-md shadow-indigo-600/10"
                   >
-                    Proceed to Review Selection →
+                    <span>Proceed to Review Selection →</span>
                   </button>
                 </div>
               </div>
@@ -1386,19 +1905,50 @@ export default function VotingFlow({
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 space-y-3 sm:space-y-4 shadow-xs">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Target Election</span>
-                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 text-right">{election.name}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Selected Choice</span>
-                    <span className="text-xs sm:text-sm font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 shadow-xs">
-                      {selectedCandidate?.name || "None Selected"}
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Target Election
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 text-right">
+                      {election.name}
                     </span>
                   </div>
 
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Voting Type
+                    </span>
+                    <span className="text-xs font-bold uppercase text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
+                      {votingType.replace("_", " ")}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-slate-100 pb-2.5 sm:pb-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Selected {votingType === "multiple_choice" ? `Choices (${selectedCandidateIds.length})` : "Choice"}
+                    </span>
+
+                    {votingType === "multiple_choice" ? (
+                      <div className="flex flex-wrap gap-1.5 sm:justify-end">
+                        {selectedCandidatesList.map((c) => (
+                          <span
+                            key={c.id}
+                            className="text-xs font-extrabold text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 shadow-xs"
+                          >
+                            {c.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs sm:text-sm font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 shadow-xs">
+                        {selectedCandidate?.name || "None Selected"}
+                      </span>
+                    )}
+                  </div>
+
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Security Token Status</span>
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Security Token Status
+                    </span>
                     <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold">
                       <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                       <span>Single-Use Grant Active</span>

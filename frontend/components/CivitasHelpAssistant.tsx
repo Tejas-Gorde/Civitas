@@ -97,15 +97,35 @@ export default function CivitasHelpAssistant() {
     },
   ]);
   const [inputVal, setInputVal] = useState<string>("");
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [targetScrollId, setTargetScrollId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll to bottom of messages
+  // Smooth scroll specifically to the newly rendered answer message
   useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isOpen]);
+    if (!targetScrollId) return;
+
+    const timer = setTimeout(() => {
+      const el = messageRefs.current.get(targetScrollId);
+      const container = scrollContainerRef.current;
+      if (el && container) {
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = el.getBoundingClientRect();
+        const relativeTop = elementRect.top - containerRect.top + container.scrollTop;
+
+        // Position the answer comfortably in the viewport (with room for question above)
+        const targetTop = Math.max(0, relativeTop - 36);
+        container.scrollTo({
+          top: targetTop,
+          behavior: "smooth",
+        });
+      }
+      setTargetScrollId(null);
+    }, 60);
+
+    return () => clearTimeout(timer);
+  }, [targetScrollId, messages]);
 
   // Handle Escape key to close
   useEffect(() => {
@@ -119,17 +139,21 @@ export default function CivitasHelpAssistant() {
   }, [isOpen]);
 
   const handleSelectQuestion = (item: FAQItem) => {
+    const userMsgId = `user-${Date.now()}`;
+    const botMsgId = `bot-${Date.now() + 1}`;
+
     const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: userMsgId,
       sender: "user",
       text: item.question,
     };
     const botMsg: ChatMessage = {
-      id: `bot-${Date.now() + 1}`,
+      id: botMsgId,
       sender: "assistant",
       text: item.answer,
     };
 
+    setTargetScrollId(botMsgId);
     setMessages((prev) => [...prev, userMsg, botMsg]);
   };
 
@@ -138,8 +162,11 @@ export default function CivitasHelpAssistant() {
     const query = inputVal.trim();
     if (!query) return;
 
+    const userMsgId = `user-${Date.now()}`;
+    const botMsgId = `bot-${Date.now() + 1}`;
+
     const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: userMsgId,
       sender: "user",
       text: query,
     };
@@ -161,16 +188,18 @@ export default function CivitasHelpAssistant() {
     }
 
     const botMsg: ChatMessage = {
-      id: `bot-${Date.now() + 1}`,
+      id: botMsgId,
       sender: "assistant",
       text: replyText,
     };
 
+    setTargetScrollId(botMsgId);
     setMessages((prev) => [...prev, userMsg, botMsg]);
     setInputVal("");
   };
 
   const handleResetConversation = () => {
+    setTargetScrollId(null);
     setMessages([
       {
         id: "welcome",
@@ -178,6 +207,9 @@ export default function CivitasHelpAssistant() {
         text: "Welcome to CIVITAS 👋\nI can help you understand how voting works or guide you through creating and managing an election.",
       },
     ]);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   return (
@@ -252,12 +284,19 @@ export default function CivitasHelpAssistant() {
           </div>
 
           {/* Panel Scrollable Messages Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs custom-scrollbar bg-slate-50/30">
+          <div
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto p-4 space-y-4 text-xs custom-scrollbar bg-slate-50/30"
+          >
             {messages.map((m) => {
               const isAssistant = m.sender === "assistant";
               return (
                 <div
                   key={m.id}
+                  ref={(el) => {
+                    if (el) messageRefs.current.set(m.id, el);
+                    else messageRefs.current.delete(m.id);
+                  }}
                   className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}
                 >
                   <div
@@ -292,8 +331,6 @@ export default function CivitasHelpAssistant() {
                 ))}
               </div>
             </div>
-
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Footer Controls & Input Bar */}

@@ -16,6 +16,8 @@ from app.api.deps import admin_only, big_admin_only, current_user, verify_electi
 from app.core.config import get_settings, set_runtime_public_base_url
 from app.core.database import get_db
 from app.core.security import encrypt_biometric, password_hash, password_verify
+from app.services.results import calculate_election_results
+from app.services.excel_exporter import generate_election_excel
 from app.models import (
     AuditLog,
     Candidate,
@@ -1155,84 +1157,11 @@ def election_results_detail(election_id: str, admin: User = Depends(admin_only),
     if not election:
         raise HTTPException(404, "Election not found")
 
-    registered_voters = db.scalar(
-        select(func.count(VoterElectionStatus.id)).where(VoterElectionStatus.election_id == election.id)
-    ) or 0
-    eligible_voters = (
-        db.scalar(
-            select(func.count(VoterElectionStatus.id))
-            .join(Voter, VoterElectionStatus.voter_id == Voter.id)
-            .join(User, Voter.user_id == User.id)
-            .where(VoterElectionStatus.election_id == election.id, User.is_active.is_(True), VoterElectionStatus.eligible.is_(True))
-        )
-        or registered_voters
+    return calculate_election_results(
+        election_id=str(election.id),
+        db=db,
+        show_voter_names=bool(election.show_voter_names_in_results),
     )
-    votes_cast = db.scalar(select(func.count(Vote.id)).where(Vote.election_id == election.id)) or 0
-
-    turnout_pct = round(100.0 * votes_cast / eligible_voters, 2) if eligible_voters > 0 else 0.0
-
-    raw_candidates = db.scalars(select(Candidate).where(Candidate.election_id == election.id)).all()
-    candidate_list = []
-    for c in raw_candidates:
-        c_votes = (
-            db.scalar(select(func.count(Vote.id)).where(Vote.election_id == election.id, Vote.candidate_id == c.id))
-            or 0
-        )
-        pct = round(100.0 * c_votes / votes_cast, 2) if votes_cast > 0 else 0.0
-        candidate_list.append(
-            {
-                "id": str(c.id),
-                "name": c.name,
-                "party": c.party,
-                "votes": c_votes,
-                "percentage": pct,
-            }
-        )
-
-    candidate_list.sort(key=lambda item: item["votes"], reverse=True)
-
-    for idx, c in enumerate(candidate_list):
-        c["rank"] = idx + 1
-
-    # Fetch voter participation records
-    statuses = db.scalars(
-        select(VoterElectionStatus)
-        .where(VoterElectionStatus.election_id == election.id, VoterElectionStatus.voted_at.is_not(None))
-        .order_by(VoterElectionStatus.voted_at.desc())
-    ).all()
-
-    participation_log = []
-    for st in statuses:
-        voter_item: dict[str, str] = {
-            "voter_id": db.scalar(select(Voter.voter_id).where(Voter.id == st.voter_id)) or "VOTER",
-            "voted_at": st.voted_at.isoformat() if st.voted_at else "",
-        }
-        if election.show_voter_names_in_results:
-            v_name = db.scalar(select(Voter.full_name).where(Voter.id == st.voter_id)) or ""
-            voter_item["voter_name"] = v_name
-        participation_log.append(voter_item)
-
-    return {
-        "election": {
-            "id": str(election.id),
-            "election_id": election.election_id or str(election.id),
-            "name": election.name,
-            "status": election.state.value.upper(),
-            "starts_at": election.starts_at.isoformat() if election.starts_at else "",
-            "ends_at": election.ends_at.isoformat() if election.ends_at else "",
-            "show_voter_names_in_results": bool(election.show_voter_names_in_results),
-        },
-        "statistics": {
-            "registered_voters": registered_voters,
-            "eligible_voters": eligible_voters,
-            "votes_cast": votes_cast,
-            "turnout_percentage": turnout_pct,
-            "invalid_abstained_votes": 0,
-        },
-        "candidates": candidate_list,
-        "voter_participation_log": participation_log,
-        "last_updated": datetime.now(timezone.utc).isoformat(),
-    }
 
 
 @router.get("/elections/{election_id}/audit-logs")
@@ -1265,279 +1194,23 @@ def election_audit_logs(election_id: str, admin: User = Depends(admin_only), db:
 @router.get("/elections/{election_id}/export/excel")
 @router.get("/elections/{election_id}/export-excel")
 def export_election_results_excel(election_id: str, admin: User = Depends(admin_only), db: Session = Depends(get_db)):
-    import os
     import re
-    import openpyxl
-    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
-    from openpyxl.utils import get_column_letter
-    from openpyxl.chart import BarChart, PieChart, Reference
 
-    election = db.get(Election, election_id)
+    election = verify_election_access(election_id, admin, db, write_access=False)
     if not election:
         raise HTTPException(404, "Election not found")
 
-    data = election_results_detail(election_id=election_id, admin=admin, db=db)
-    el_info = data["election"]
-    stats_info = data["statistics"]
-    candidates = data["candidates"]
-
-    wb = openpyxl.Workbook()
-    wb.remove(wb.active)
-
-    navy_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
-    header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
-    light_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
-    winner_fill = PatternFill(start_color="E6F4EA", end_color="E6F4EA", fill_type="solid")
-
-    font_title = Font(name="Calibri", size=15, bold=True, color="FFFFFF")
-    font_header = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    font_bold = Font(name="Calibri", size=11, bold=True, color="0F172A")
-    font_winner_bold = Font(name="Calibri", size=11, bold=True, color="047857")
-    font_regular = Font(name="Calibri", size=11, color="334155")
-
-    thin_border = Border(
-        left=Side(style="thin", color="CBD5E1"),
-        right=Side(style="thin", color="CBD5E1"),
-        top=Side(style="thin", color="CBD5E1"),
-        bottom=Side(style="thin", color="CBD5E1"),
+    data = calculate_election_results(
+        election_id=str(election.id),
+        db=db,
+        show_voter_names=bool(election.show_voter_names_in_results),
     )
+    if not data:
+        raise HTTPException(404, "Election results unavailable")
 
-    # -------------------------------------------------------------
-    # WORKSHEET 1: Election Summary
-    # -------------------------------------------------------------
-    ws1 = wb.create_sheet(title="Election Summary")
-    ws1.views.sheetView[0].showGridLines = True
+    excel_bytes = generate_election_excel(data)
 
-    ws1.merge_cells("A1:D1")
-    cell_t = ws1["A1"]
-    cell_t.value = f"CIVITAS OFFICIAL ELECTION SUMMARY — {el_info['name'].upper()}"
-    cell_t.font = font_title
-    cell_t.fill = navy_fill
-    cell_t.alignment = Alignment(horizontal="center", vertical="center")
-    ws1.row_dimensions[1].height = 38
-
-    summary_rows = [
-        ("Election Name", el_info["name"]),
-        ("Election ID", el_info["id"]),
-        ("Status", el_info["status"]),
-        ("Start Date", el_info["starts_at"]),
-        ("End Date", el_info["ends_at"]),
-        ("Registered Voters", stats_info["registered_voters"]),
-        ("Eligible Voters", stats_info["eligible_voters"]),
-        ("Votes Cast", stats_info["votes_cast"]),
-        ("Turnout Percentage", stats_info["turnout_percentage"] / 100.0),
-        ("Invalid / Abstained Votes", stats_info.get("invalid_abstained_votes", 0)),
-        ("Export Timestamp", data["last_updated"]),
-    ]
-
-    ws1.append([])
-    for label, val in summary_rows:
-        row_idx = ws1.max_row + 1
-        c_label = ws1.cell(row=row_idx, column=1, value=label)
-        c_val = ws1.cell(row=row_idx, column=2, value=val)
-        c_label.font = font_bold
-        c_label.fill = light_fill
-        c_label.border = thin_border
-        c_val.font = font_regular
-        c_val.border = thin_border
-
-        if label == "Turnout Percentage":
-            c_val.number_format = "0.00%"
-        elif isinstance(val, (int, float)) and label != "Turnout Percentage":
-            c_val.number_format = "#,##0"
-
-    for col in ws1.columns:
-        max_len = max(len(str(cell.value or "")) for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        ws1.column_dimensions[col_letter].width = max(max_len + 4, 20)
-
-    # -------------------------------------------------------------
-    # WORKSHEET 2: Candidate Results
-    # -------------------------------------------------------------
-    ws2 = wb.create_sheet(title="Candidate Results")
-    ws2.views.sheetView[0].showGridLines = True
-    ws2.freeze_panes = "A2"
-
-    headers_ws2 = ["Rank", "Candidate ID", "Candidate Name", "Party / Affiliation", "Votes", "Vote Percentage", "Status"]
-    ws2.append(headers_ws2)
-    ws2.row_dimensions[1].height = 28
-
-    for col_num, h_text in enumerate(headers_ws2, 1):
-        c = ws2.cell(row=1, column=col_num)
-        c.font = font_header
-        c.fill = header_fill
-        c.alignment = Alignment(horizontal="center", vertical="center")
-
-    has_tie = len(candidates) > 1 and candidates[0]["votes"] > 0 and candidates[0]["votes"] == candidates[1]["votes"]
-
-    for cand in candidates:
-        row_idx = ws2.max_row + 1
-        is_win = cand["rank"] == 1 and cand["votes"] > 0 and not has_tie
-        status_text = "WINNER" if is_win else ("TIED" if has_tie and cand["votes"] == candidates[0]["votes"] else "-")
-
-        r_cell = ws2.cell(row=row_idx, column=1, value=cand["rank"])
-        id_cell = ws2.cell(row=row_idx, column=2, value=cand["id"])
-        name_cell = ws2.cell(row=row_idx, column=3, value=cand["name"])
-        party_cell = ws2.cell(row=row_idx, column=4, value=cand["party"] or "Independent")
-        votes_cell = ws2.cell(row=row_idx, column=5, value=cand["votes"])
-        pct_cell = ws2.cell(row=row_idx, column=6, value=cand["percentage"] / 100.0)
-        status_cell = ws2.cell(row=row_idx, column=7, value=status_text)
-
-        r_cell.alignment = Alignment(horizontal="center")
-        status_cell.alignment = Alignment(horizontal="center")
-        votes_cell.number_format = "#,##0"
-        pct_cell.number_format = "0.00%"
-
-        row_cells = (r_cell, id_cell, name_cell, party_cell, votes_cell, pct_cell, status_cell)
-        for cell in row_cells:
-            cell.font = font_winner_bold if is_win else font_regular
-            cell.border = thin_border
-            if is_win:
-                cell.fill = winner_fill
-
-    ws2.auto_filter.ref = f"A1:G{len(candidates) + 1}"
-
-    for col in ws2.columns:
-        max_len = max(len(str(cell.value or "")) for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        ws2.column_dimensions[col_letter].width = max(max_len + 5, 15)
-
-    # -------------------------------------------------------------
-    # WORKSHEET 3: Voting Statistics
-    # -------------------------------------------------------------
-    ws3 = wb.create_sheet(title="Voting Statistics")
-    ws3.views.sheetView[0].showGridLines = True
-    ws3.freeze_panes = "A2"
-
-    headers_ws3 = ["Metric", "Value", "Notes"]
-    ws3.append(headers_ws3)
-    ws3.row_dimensions[1].height = 28
-
-    for col_num, h_text in enumerate(headers_ws3, 1):
-        c = ws3.cell(row=1, column=col_num)
-        c.font = font_header
-        c.fill = header_fill
-        c.alignment = Alignment(horizontal="center", vertical="center")
-
-    winner_cand = candidates[0] if candidates else {"name": "None", "votes": 0, "percentage": 0}
-    non_voters = max(0, stats_info["eligible_voters"] - stats_info["votes_cast"])
-
-    stats_rows = [
-        ("Total Registered Voters", stats_info["registered_voters"], "All registered voters in system database"),
-        ("Total Eligible Voters", stats_info["eligible_voters"], "Active voters eligible for this specific election"),
-        ("Total Votes Cast", stats_info["votes_cast"], "Valid ballots recorded in tamper-evident ledger"),
-        ("Voter Turnout Rate", stats_info["turnout_percentage"] / 100.0, "Votes Cast / Eligible Voters"),
-        ("Non-Voters", non_voters, "Eligible voters who have not cast a ballot"),
-        ("Invalid / Abstained Votes", stats_info.get("invalid_abstained_votes", 0), "Zero invalid votes recorded"),
-        ("Leading Candidate", winner_cand["name"], f"Rank 1 candidate with {winner_cand['votes']} votes"),
-        ("Winning Vote Share", winner_cand["percentage"] / 100.0, "Percentage of total cast votes"),
-    ]
-
-    for m_label, m_val, m_notes in stats_rows:
-        row_idx = ws3.max_row + 1
-        c_m = ws3.cell(row=row_idx, column=1, value=m_label)
-        c_v = ws3.cell(row=row_idx, column=2, value=m_val)
-        c_n = ws3.cell(row=row_idx, column=3, value=m_notes)
-
-        c_m.font = font_bold
-        c_v.font = font_regular
-        c_n.font = font_regular
-
-        for cell in (c_m, c_v, c_n):
-            cell.border = thin_border
-
-        if "Rate" in m_label or "Share" in m_label:
-            c_v.number_format = "0.00%"
-        elif isinstance(m_val, (int, float)):
-            c_v.number_format = "#,##0"
-
-    for col in ws3.columns:
-        max_len = max(len(str(cell.value or "")) for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        ws3.column_dimensions[col_letter].width = max(max_len + 6, 22)
-
-    # -------------------------------------------------------------
-    # WORKSHEET 4: Results Charts
-    # -------------------------------------------------------------
-    ws4 = wb.create_sheet(title="Results Charts")
-    ws4.views.sheetView[0].showGridLines = True
-
-    if len(candidates) > 0:
-        bar_chart = BarChart()
-        bar_chart.type = "col"
-        bar_chart.style = 10
-        bar_chart.title = "Candidate Vote Comparison"
-        bar_chart.y_axis.title = "Votes"
-        bar_chart.x_axis.title = "Candidate"
-
-        data_ref = Reference(ws2, min_col=5, min_row=1, max_row=len(candidates) + 1)
-        cats_ref = Reference(ws2, min_col=3, min_row=2, max_row=len(candidates) + 1)
-        bar_chart.add_data(data_ref, titles_from_data=True)
-        bar_chart.set_categories(cats_ref)
-        bar_chart.width = 16
-        bar_chart.height = 10
-        ws4.add_chart(bar_chart, "B2")
-
-        pie_chart = PieChart()
-        pie_chart.title = "Vote Share Distribution"
-        pie_data_ref = Reference(ws2, min_col=5, min_row=1, max_row=len(candidates) + 1)
-        pie_chart.add_data(pie_data_ref, titles_from_data=True)
-        pie_chart.set_categories(cats_ref)
-        pie_chart.width = 14
-        pie_chart.height = 10
-        ws4.add_chart(pie_chart, "M2")
-
-    # -------------------------------------------------------------
-    # WORKSHEET 5: Voter Participation Log
-    # -------------------------------------------------------------
-    ws5 = wb.create_sheet(title="Voter Participation Log")
-    ws5.views.sheetView[0].showGridLines = True
-    ws5.freeze_panes = "A2"
-
-    show_names = bool(election.show_voter_names_in_results)
-    headers_ws5 = (
-        ["Voter ID", "Voter Name", "Voted At Timestamp", "Status"]
-        if show_names
-        else ["Voter ID", "Voted At Timestamp", "Status"]
-    )
-    ws5.append(headers_ws5)
-    ws5.row_dimensions[1].height = 28
-
-    for col_num, h_text in enumerate(headers_ws5, 1):
-        c = ws5.cell(row=1, column=col_num)
-        c.font = font_header
-        c.fill = header_fill
-        c.alignment = Alignment(horizontal="center", vertical="center")
-
-    log_items = data.get("voter_participation_log", [])
-    for item in log_items:
-        row_idx = ws5.max_row + 1
-        if show_names:
-            c_id = ws5.cell(row=row_idx, column=1, value=item.get("voter_id", ""))
-            c_name = ws5.cell(row=row_idx, column=2, value=item.get("voter_name", ""))
-            c_time = ws5.cell(row=row_idx, column=3, value=item.get("voted_at", ""))
-            c_st = ws5.cell(row=row_idx, column=4, value="BALLOT CAST")
-            row_cells = (c_id, c_name, c_time, c_st)
-        else:
-            c_id = ws5.cell(row=row_idx, column=1, value=item.get("voter_id", ""))
-            c_time = ws5.cell(row=row_idx, column=2, value=item.get("voted_at", ""))
-            c_st = ws5.cell(row=row_idx, column=3, value="BALLOT CAST")
-            row_cells = (c_id, c_time, c_st)
-
-        for cell in row_cells:
-            cell.font = font_regular
-            cell.border = thin_border
-
-    for col in ws5.columns:
-        max_len = max(len(str(cell.value or "")) for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        ws5.column_dimensions[col_letter].width = max(max_len + 5, 18)
-
-    stream = io.BytesIO()
-    wb.save(stream)
-    stream.seek(0)
-
-    sanitized_name = re.sub(r"[^a-zA-Z0-9_-]", "_", el_info["name"])
+    sanitized_name = re.sub(r"[^a-zA-Z0-9_-]", "_", election.name)
     date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
     filename = f"Civitas_{sanitized_name}_Results_{date_str}.xlsx"
 
@@ -1546,7 +1219,7 @@ def export_election_results_excel(election_id: str, admin: User = Depends(admin_
         "Access-Control-Expose-Headers": "Content-Disposition",
     }
     return Response(
-        content=stream.getvalue(),
+        content=excel_bytes,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers=headers,
     )

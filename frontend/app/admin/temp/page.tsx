@@ -40,6 +40,7 @@ import {
   Clock,
   Sliders,
   UserCheck,
+  ArrowRight,
   TrendingUp,
   Percent,
   Camera,
@@ -55,6 +56,7 @@ import {
   Tooltip as RechartsTooltip,
 } from "recharts";
 import { api, readable, restoreAccessToken, clearAccessToken } from "../../../lib/api";
+import TypeSpecificResultDashboard from "../../../components/results/TypeSpecificResultDashboard";
 
 type LocalAdminTab =
   | "overview"
@@ -74,6 +76,8 @@ export default function LocalAdminPage() {
   const [activeTab, setActiveTab] = useState<LocalAdminTab>("overview");
   const [timelineRange, setTimelineRange] = useState<"today" | "week">("today");
   const [election, setElection] = useState<any | null>(null);
+  const [assignedElections, setAssignedElections] = useState<any[]>([]);
+  const [step2SelectionMode, setStep2SelectionMode] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -197,19 +201,32 @@ export default function LocalAdminPage() {
     try {
       const res = await api.get("/admin/elections");
       const list = res.data || [];
-      if (list.length > 0) {
+      setAssignedElections(list);
+      if (list.length === 1) {
         const current = list[0];
         setElection(current);
         syncSettingsForm(current);
         await loadTabData(current.id);
+        setStep2SelectionMode(false);
+      } else if (list.length > 1) {
+        setStep2SelectionMode(true);
       } else {
-        toast.error("No election assigned to this account.");
+        setStep2SelectionMode(true);
+        toast.error("No elections assigned to this account.");
       }
     } catch (err) {
       toast.error(readable(err) || "Failed to load election data.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectAssignedElection = async (elec: any, directTab: LocalAdminTab = "overview") => {
+    setElection(elec);
+    syncSettingsForm(elec);
+    setActiveTab(directTab);
+    setStep2SelectionMode(false);
+    await loadTabData(elec.id);
   };
 
   const syncSettingsForm = (elec: any) => {
@@ -608,6 +625,187 @@ export default function LocalAdminPage() {
     }
   }, [results, timelineRange]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="card p-8 text-center space-y-3 max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <RefreshCw className="h-8 w-8 text-teal-600 animate-spin mx-auto" />
+          <h3 className="font-bold text-slate-900 text-sm">Loading Assigned Elections...</h3>
+          <p className="text-xs text-slate-500">Authenticating Local Administrator session</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step2SelectionMode || !election) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8 font-sans">
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Banner */}
+          <div className="card p-6 sm:p-8 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-2xl shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+                <Shield className="h-3.5 w-3.5 text-teal-400" />
+                STEP 2 — SELECT ELECTION
+              </div>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Assigned Elections
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-slate-300">
+                Select an election assigned to your Local Admin credentials to manage operations or view results.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  clearAccessToken();
+                  if (typeof window !== "undefined") localStorage.removeItem("userRole");
+                  router.push("/local-admin");
+                }}
+                className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0"
+              >
+                <LogOut className="h-3.5 w-3.5 mr-1 inline" />
+                Sign Out
+              </button>
+            </div>
+          </div>
+
+          {/* Elections Grid */}
+          {assignedElections.length === 0 ? (
+            <div className="card p-12 text-center space-y-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+              <AlertCircle className="h-12 w-12 text-slate-400 mx-auto" />
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">No Assigned Elections Found</h3>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  No elections are currently assigned to this Local Administrator account. Please contact the system administrator or create a new election.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/admin/create")}
+                className="button button-teal text-xs py-2.5 px-4 font-bold"
+              >
+                Create New Election →
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {assignedElections.map((elec: any) => {
+                const isOpen = elec.state === "open";
+                const isClosed = elec.state === "closed" || elec.state === "published";
+                const votingType = elec.voting_type || "regular";
+
+                const typeBadgeMap: Record<string, { label: string; color: string }> = {
+                  regular: { label: "Regular Election", color: "bg-sky-50 text-sky-800 border-sky-200" },
+                  poll: { label: "Poll", color: "bg-teal-50 text-teal-800 border-teal-200" },
+                  multiple_choice: { label: "Multiple Choice", color: "bg-indigo-50 text-indigo-800 border-indigo-200" },
+                  yes_no: { label: "Yes / No Decision", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+                  rating: { label: "Rating Scale", color: "bg-amber-50 text-amber-800 border-amber-200" },
+                };
+                const typeBadge = typeBadgeMap[votingType] || { label: String(votingType), color: "bg-slate-100 text-slate-700 border-slate-200" };
+
+                return (
+                  <div
+                    key={elec.id}
+                    className="card p-6 bg-white border border-slate-200 hover:border-teal-500/50 hover:shadow-md transition-all rounded-2xl flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border ${typeBadge.color}`}>
+                            {typeBadge.label}
+                          </span>
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border ${
+                            elec.voter_registration_mode === "quick_entry"
+                              ? "bg-teal-50 text-teal-800 border-teal-300"
+                              : "bg-slate-50 text-slate-700 border-slate-200"
+                          }`}>
+                            {elec.voter_registration_mode === "quick_entry" ? "⚡ Quick Voter Entry" : "🛡️ Pre-Registered"}
+                          </span>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                            isOpen
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : isClosed
+                              ? "bg-slate-100 text-slate-700 border border-slate-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}
+                        >
+                          {isOpen && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                          Status: {elec.state ? elec.state.toUpperCase() : "DRAFT"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug">
+                          {elec.name}
+                        </h2>
+                        <p className="text-xs font-mono font-bold text-slate-500 mt-0.5">
+                          ID: {elec.election_id || elec.id}
+                        </p>
+                      </div>
+
+                      {elec.description && (
+                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                          {elec.description}
+                        </p>
+                      )}
+
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Start Date:</span>
+                          <span className="font-semibold text-slate-700">
+                            {elec.starts_at ? new Date(elec.starts_at).toLocaleString() : "—"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">End Date:</span>
+                          <span className="font-semibold text-slate-700">
+                            {elec.ends_at ? new Date(elec.ends_at).toLocaleString() : "—"}
+                          </span>
+                        </div>
+                        {elec.candidate_count !== undefined && (
+                          <div className="flex justify-between pt-1 border-t border-slate-200/60">
+                            <span className="text-slate-400">Options / Candidates:</span>
+                            <span className="font-bold text-teal-700">
+                              {elec.candidate_count} registered
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center gap-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => selectAssignedElection(elec, "overview")}
+                        className="button button-teal flex-1 text-xs py-2.5 font-bold flex items-center justify-center gap-1.5"
+                      >
+                        <span>Open Election</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectAssignedElection(elec, "results")}
+                        className="button button-outline text-xs py-2.5 px-3 font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-1"
+                      >
+                        <BarChart2 className="h-3.5 w-3.5" />
+                        <span>View Results</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <div className="flex-1 max-w-7xl mx-auto w-full p-6 sm:p-8 space-y-6">
@@ -656,6 +854,17 @@ export default function LocalAdminPage() {
               </button>
             );
           })}
+
+          {assignedElections.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setStep2SelectionMode(true)}
+              className="py-2 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition whitespace-nowrap ml-auto shrink-0"
+            >
+              <Shield className="h-3.5 w-3.5 text-teal-600" />
+              <span>Switch Election (Step 2)</span>
+            </button>
+          )}
         </div>
 
         {/* TAB 1: OVERVIEW DASHBOARD (Screenshot 2 Pixel Match!) */}
@@ -1398,97 +1607,14 @@ export default function LocalAdminPage() {
         )}
 
         {/* TAB 7: RESULTS & TALLIES */}
+        {/* TAB 7: LIVE RESULTS */}
         {activeTab === "results" && election && (
           <div className="space-y-6 animate-fade-in">
-            {/* Header & Export Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-900">Election Results & Standings</h2>
-                <p className="text-xs text-slate-500">
-                  Real-time verifiable vote tallies and participation audit log.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleExportExcel}
-                className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                <span>Export Results to Excel</span>
-              </button>
-            </div>
-
-            {/* Metrics */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
-                <div className="text-slate-500 text-xs font-bold uppercase">Total Voters</div>
-                <div className="text-2xl font-extrabold text-slate-900">
-                  {(results?.statistics?.registered_voters ?? voters.length).toLocaleString()}
-                </div>
-              </div>
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
-                <div className="text-slate-500 text-xs font-bold uppercase">Ballots Recorded</div>
-                <div className="text-2xl font-extrabold text-blue-700">
-                  {(results?.statistics?.votes_cast ?? 0).toLocaleString()}
-                </div>
-              </div>
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
-                <div className="text-slate-500 text-xs font-bold uppercase">Turnout</div>
-                <div className="text-2xl font-extrabold text-slate-900">
-                  {results?.statistics?.turnout_percentage ?? "0.0"}%
-                </div>
-              </div>
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
-                <div className="text-slate-500 text-xs font-bold uppercase">State</div>
-                <div className="text-2xl font-extrabold uppercase text-slate-800">
-                  {election.state}
-                </div>
-              </div>
-            </div>
-
-            {/* Candidate Standings */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
-              <h3 className="text-base font-bold text-slate-900">Candidate Standings</h3>
-              <div className="space-y-3">
-                {!results?.candidates || results.candidates.length === 0 ? (
-                  <div className="py-6 text-center text-slate-400 text-xs">
-                    No votes recorded yet for this election.
-                  </div>
-                ) : (
-                  results.candidates.map((cand: any, idx: number) => (
-                    <div key={cand.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                              idx === 0
-                                ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                : "bg-slate-200 text-slate-700"
-                            }`}
-                          >
-                            #{cand.rank || idx + 1}
-                          </span>
-                          <div>
-                            <span className="font-extrabold text-slate-900 text-sm">{cand.name}</span>
-                            <span className="text-slate-500 ml-2">({cand.party})</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-extrabold text-blue-700">{cand.votes} votes</span>
-                          <span className="text-slate-500 ml-2">({cand.percentage}%)</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-blue-600 h-full rounded-full transition-all"
-                          style={{ width: `${Math.min(cand.percentage, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            {/* Dynamic Type-Specific Results Dashboard */}
+            <TypeSpecificResultDashboard
+              results={results}
+              electionId={election.id}
+            />
 
             {/* Voter Participation Log */}
             <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
