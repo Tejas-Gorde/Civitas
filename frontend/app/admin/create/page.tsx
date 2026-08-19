@@ -685,14 +685,14 @@ export default function CreateElectionWizardPage() {
                     id: "pre_registered",
                     title: "Option A: Pre-Registered Voters",
                     badge: "Admin Enrolled",
-                    desc: "Admin adds and assigns voters before the election. Voters sign in with their assigned Voter ID and Password.",
+                    desc: "Admin adds and assigns voters before the election. Voters authenticate with their Full Name and Voter ID.",
                     color: "border-teal-600 bg-teal-50/70",
                   },
                   {
                     id: "quick_entry",
                     title: "Option B: Quick Voter Entry",
                     badge: "Open PRN Enrollment",
-                    desc: "Any eligible person enters their Full Name + 10-digit PRN during voting. Database strictly guarantees 1-person-1-vote per election.",
+                    desc: "Any eligible person enters their Full Name + PRN during voting. Database strictly guarantees 1-person-1-vote per election.",
                     color: "border-teal-600 bg-teal-50/70",
                   },
                 ].map((mode) => {
@@ -1121,7 +1121,7 @@ export default function CreateElectionWizardPage() {
                 className="input text-xs"
               >
                 <option value="full">Full Verification (Multimodal Identity + Biometrics)</option>
-                <option value="standard">Standard Verification (Voter ID + Password + Ballot)</option>
+                <option value="standard">Standard Verification (Full Name + Voter ID + Ballot)</option>
                 <option value="express">Express Verification (Instant Voter Verification)</option>
               </select>
             </div>

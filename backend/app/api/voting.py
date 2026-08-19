@@ -338,6 +338,8 @@ def verify_quick_voter(data: QuickVoterVerifyRequest, db: Session = Depends(get_
     )
 
 
+@router.post("/authenticate", response_model=VoterVerifyResponse)
+@router.post("/voter/authenticate", response_model=VoterVerifyResponse)
 @router.post("/verify-voter", response_model=VoterVerifyResponse)
 def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
     current = datetime.now(timezone.utc)
