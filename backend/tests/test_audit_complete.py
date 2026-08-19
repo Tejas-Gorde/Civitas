@@ -123,7 +123,6 @@ def test_complete_audit_and_role_isolation(client, db_session):
         json={
             "full_name": "John Doe",
             "voter_id": "VOTER-ALPHA-01",
-            "voter_password": "SecurePassword123!",
             "email": "john.doe@alpha.edu",
             "mobile": "+15550001111",
             "is_eligible": True,
@@ -132,14 +131,6 @@ def test_complete_audit_and_role_isolation(client, db_session):
     )
     assert voter_res.status_code == 201
     voter_id = voter_res.json()["id"]
-
-    # Reset Voter Password
-    reset_res = client.post(
-        f"/api/v1/admin/voters/{voter_id}/set-password",
-        json={"voter_password": "NewSecurePassword456!"},
-        headers=headers_a,
-    )
-    assert reset_res.status_code == 200
 
     # 8. TEST: Remote Voting & Election URL Formatting
     enable_qr_res = client.post(f"/api/v1/admin/elections/{elec_a_id}/remote-voting/enable", headers=headers_a)
@@ -155,13 +146,13 @@ def test_complete_audit_and_role_isolation(client, db_session):
     assert voting_url == "https://civitas-live.trycloudflare.com/vote/ALPHA-2026"
 
     # 9. TEST: Voting Flow & Ballots
-    # Voter verifies against Election A
+    # Voter verifies against Election A (Voter Name + Voter ID)
     verify_res = client.post(
         "/api/v1/voting/verify-voter",
         json={
             "election_id": "ALPHA-2026",
-            "voter_registration_id": "VOTER-ALPHA-01",
-            "voter_password": "NewSecurePassword456!",
+            "voter_id": "VOTER-ALPHA-01",
+            "voter_name": "John Doe",
         },
     )
     assert verify_res.status_code == 200

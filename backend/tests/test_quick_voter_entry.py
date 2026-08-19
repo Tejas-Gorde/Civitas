@@ -299,6 +299,7 @@ def test_quick_voter_entry_multiple_choice(client):
         "enable_step_3": False,
         "enable_step_4": False,
         "enable_step_5": False,
+        "max_selections": 3,
         "candidates": [
             {"name": "Option Alpha", "party": "Category A", "manifesto": "A"},
             {"name": "Option Beta", "party": "Category B", "manifesto": "B"},

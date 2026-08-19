@@ -74,9 +74,9 @@ function VoterPortalContent() {
 
     try {
       const res = await api.post("/voting/verify-voter", {
-        electionId: election.id,
-        voterId: voterIdInput.trim(),
-        voterName: voterNameInput.trim(),
+        election_id: election.id,
+        voter_id: voterIdInput.trim(),
+        voter_name: voterNameInput.trim(),
       });
 
       if (res.data && res.data.eligible) {

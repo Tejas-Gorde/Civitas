@@ -1,4 +1,4 @@
-"""End-to-End Verification Test for Voter Registration Passwords, Authentication, and Isolation.
+"""End-to-End Verification Test for Passwordless Voter Registration, Authentication, and Isolation.
 """
 
 import uuid
@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from app.main import app, run_auto_migrations
 from app.core.database import SessionLocal, engine
-from app.core.security import password_hash
 from app.models import (
     Candidate,
     Election,
@@ -38,7 +37,6 @@ def test_complete_voter_registration_and_authentication_flow(client, db_session)
             {
                 "voter_id": "VOTER-ALPHA",
                 "full_name": "Alpha Voter",
-                "voter_password": "AlphaPassword123!",
             }
         ],
     }
@@ -58,11 +56,10 @@ def test_complete_voter_registration_and_authentication_flow(client, db_session)
     token_a = login_a_res.json()["access_token"]
     headers_a = {"Authorization": f"Bearer {token_a}"}
 
-    # 3. Local Admin Registers Voter "beta" with Password
+    # 3. Local Admin Registers Voter "beta" without Password
     voter_beta_payload = {
         "voter_id": "VOTER-BETA",
         "full_name": "Beta Voter",
-        "voter_password": "BetaPassword123!",
         "election_id": internal_election_id_a,
     }
     reg_beta_res = client.post(
@@ -81,13 +78,13 @@ def test_complete_voter_registration_and_authentication_flow(client, db_session)
     assert dup_res.status_code == 409, f"Duplicate voter should return 409, got {dup_res.status_code}"
     assert "already registered for this election" in dup_res.text
 
-    # 5. Verify Voter Portal Authentication for VOTER-ALPHA
+    # 5. Verify Voter Portal Authentication for VOTER-ALPHA (Voter Name + Voter ID)
     verify_alpha = client.post(
         "/api/v1/voting/verify-voter",
         json={
             "election_id": election_id_a,
-            "voter_registration_id": "VOTER-ALPHA",
-            "voter_password": "AlphaPassword123!",
+            "voter_id": "VOTER-ALPHA",
+            "voter_name": "Alpha Voter",
         },
     )
     assert verify_alpha.status_code == 200, f"Voter Alpha auth failed: {verify_alpha.text}"
@@ -100,42 +97,43 @@ def test_complete_voter_registration_and_authentication_flow(client, db_session)
         "/api/v1/voting/verify-voter",
         json={
             "election_id": election_id_a,
-            "voter_registration_id": "VOTER-BETA",
-            "voter_password": "BetaPassword123!",
+            "voter_id": "VOTER-BETA",
+            "voter_name": "Beta Voter",
         },
     )
     assert verify_beta.status_code == 200, f"Voter Beta auth failed: {verify_beta.text}"
 
-    # 7. Test Wrong Password Rejection
-    verify_wrong_pass = client.post(
+    # 7. Test Wrong Name Rejection for Valid Voter ID
+    verify_wrong_name = client.post(
         "/api/v1/voting/verify-voter",
         json={
             "election_id": election_id_a,
-            "voter_registration_id": "VOTER-BETA",
-            "voter_password": "WrongPassword999!",
+            "voter_id": "VOTER-BETA",
+            "voter_name": "Wrong Person Name",
         },
     )
-    assert verify_wrong_pass.status_code == 401, f"Wrong password should return 401, got {verify_wrong_pass.status_code}"
+    assert verify_wrong_name.status_code == 401, f"Wrong name should return 401, got {verify_wrong_name.status_code}"
+    assert "Voter name and voter ID do not match" in verify_wrong_name.text
 
-    # 8. Test Set/Reset Password Endpoint
+    # 8. Test Edit Voter (Update Full Name & Voter ID)
     voter_beta_db_id = reg_beta_res.json()["id"]
-    reset_res = client.post(
-        f"/api/v1/admin/voters/{voter_beta_db_id}/set-password",
-        json={"voter_password": "NewBetaPassword456!"},
+    edit_res = client.put(
+        f"/api/v1/admin/voters/{voter_beta_db_id}",
+        json={"voter_id": "VOTER-BETA-NEW", "full_name": "Beta Updated Voter"},
         headers=headers_a,
     )
-    assert reset_res.status_code == 200, f"Reset password failed: {reset_res.text}"
+    assert edit_res.status_code == 200, f"Edit voter failed: {edit_res.text}"
 
-    # Verify authentication with NEW password
+    # Verify authentication with NEW name and ID
     verify_beta_new = client.post(
         "/api/v1/voting/verify-voter",
         json={
             "election_id": election_id_a,
-            "voter_registration_id": "VOTER-BETA",
-            "voter_password": "NewBetaPassword456!",
+            "voter_id": "VOTER-BETA-NEW",
+            "voter_name": "Beta Updated Voter",
         },
     )
-    assert verify_beta_new.status_code == 200, "Voter Beta auth with new password failed"
+    assert verify_beta_new.status_code == 200, "Voter Beta auth with updated credentials failed"
 
     # 9. Test Election Isolation: Create Election B and verify VOTER-BETA cannot access Election B
     admin_id_b = f"local_admin_b_{uuid.uuid4().hex[:6]}@civitas.local"
@@ -157,9 +155,9 @@ def test_complete_voter_registration_and_authentication_flow(client, db_session)
         "/api/v1/voting/verify-voter",
         json={
             "election_id": election_id_b,
-            "voter_registration_id": "VOTER-BETA",
-            "voter_password": "NewBetaPassword456!",
+            "voter_id": "VOTER-BETA-NEW",
+            "voter_name": "Beta Updated Voter",
         },
     )
     assert verify_cross_election.status_code == 403, f"Cross-election access should return 403, got {verify_cross_election.status_code}"
-    assert "not authorized to access this election" in verify_cross_election.text
+    assert "This voter is not registered for this election" in verify_cross_election.text

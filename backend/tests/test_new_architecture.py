@@ -255,8 +255,8 @@ def test_civitas_architecture_flow(client, db_session):
     # Voter 1 -> Election A (assigned) -> ALLOWED
     verify_ok = client.post("/api/v1/voting/verify-voter", json={
         "election_id": data["elec_a_id"],
-        "voter_registration_id": data["voter_1_id"],
-        "voter_password": data["voter_1_pass"],
+        "voter_id": data["voter_1_id"],
+        "voter_name": "Alice Smith",
     })
     assert verify_ok.status_code == 200, f"Voter 1 verify Election A failed: {verify_ok.text}"
     print("✅ TEST 1 & 7 PASSED: Voter 1 verifying assigned Election A ALLOWED.")
@@ -264,8 +264,8 @@ def test_civitas_architecture_flow(client, db_session):
     # Voter 1 -> Election B (unassigned) -> DENIED (403)
     verify_denied = client.post("/api/v1/voting/verify-voter", json={
         "election_id": data["elec_b_id"],
-        "voter_registration_id": data["voter_1_id"],
-        "voter_password": data["voter_1_pass"],
+        "voter_id": data["voter_1_id"],
+        "voter_name": "Alice Smith",
     })
     assert verify_denied.status_code == 403, f"Voter 1 verify Election B should be 403, got {verify_denied.status_code}"
     print("✅ TEST 8 PASSED: Voter 1 verifying unassigned Election B DENIED (403).")

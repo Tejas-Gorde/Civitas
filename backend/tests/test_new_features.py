@@ -185,7 +185,6 @@ def test_election_specific_voter_management(client, db_session):
         json={
             "full_name": "Tejas Gorde",
             "voter_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
             "email": "tejas@example.com",
             "mobile": "+15551001001",
             "is_eligible": True,
@@ -199,8 +198,8 @@ def test_election_specific_voter_management(client, db_session):
         "/api/v1/voting/verify-voter",
         json={
             "election_id": str(election_a.id),
-            "voter_registration_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
+            "voter_id": "VOTER-1001",
+            "voter_name": "Tejas Gorde",
         },
     )
     assert res_verify_a.status_code == 200, res_verify_a.text
@@ -211,8 +210,8 @@ def test_election_specific_voter_management(client, db_session):
         "/api/v1/voting/verify-voter",
         json={
             "election_id": str(election_b.id),
-            "voter_registration_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
+            "voter_id": "VOTER-1001",
+            "voter_name": "Tejas Gorde",
         },
     )
     assert res_verify_b_fail.status_code == 403
@@ -225,7 +224,6 @@ def test_election_specific_voter_management(client, db_session):
         json={
             "full_name": "Tejas Gorde",
             "voter_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
             "email": "tejas@example.com",
             "mobile": "+15551001001",
             "is_eligible": True,
@@ -244,7 +242,6 @@ def test_election_specific_voter_management(client, db_session):
         json={
             "full_name": "Tejas Gorde",
             "voter_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
             "email": "tejas@example.com",
             "mobile": "+15551001001",
             "is_eligible": True,
@@ -258,8 +255,8 @@ def test_election_specific_voter_management(client, db_session):
         "/api/v1/voting/verify-voter",
         json={
             "election_id": str(election_a.id),
-            "voter_registration_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
+            "voter_id": "VOTER-1001",
+            "voter_name": "Tejas Gorde",
         },
     )
     assert res_verify_a_again.status_code == 200
@@ -268,8 +265,8 @@ def test_election_specific_voter_management(client, db_session):
         "/api/v1/voting/verify-voter",
         json={
             "election_id": str(election_b.id),
-            "voter_registration_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
+            "voter_id": "VOTER-1001",
+            "voter_name": "Tejas Gorde",
         },
     )
     assert res_verify_b_now.status_code == 200
@@ -279,8 +276,8 @@ def test_election_specific_voter_management(client, db_session):
         "/api/v1/voting/verify-voter",
         json={
             "election_id": str(election_c.id),
-            "voter_registration_id": "VOTER-1001",
-            "voter_password": "VoterPassword123!",
+            "voter_id": "VOTER-1001",
+            "voter_name": "Tejas Gorde",
         },
     )
     assert res_verify_c_fail.status_code == 403

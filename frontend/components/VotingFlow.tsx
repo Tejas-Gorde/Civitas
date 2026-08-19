@@ -131,7 +131,6 @@ export default function VotingFlow({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [voterId, setVoterId] = useState(initialVoterId || "");
   const [voterFullName, setVoterFullName] = useState(initialVoterName || "");
-  const [voterPassword, setVoterPassword] = useState("");
   const [quickFullName, setQuickFullName] = useState("");
   const [quickPrn, setQuickPrn] = useState("");
   const [duplicateVotedError, setDuplicateVotedError] = useState(false);
@@ -377,9 +376,9 @@ export default function VotingFlow({
       try {
         setBusy(true);
         const vRes = await request("/voting/verify-voter", {
-          electionId: election.id,
-          voterId: voterId.trim(),
-          voterName: voterFullName.trim(),
+          election_id: election.id,
+          voter_id: voterId.trim(),
+          voter_name: voterFullName.trim(),
         });
         setVoterInternalId(vRes.voter_internal_id);
         setSession(vRes.session_id);
