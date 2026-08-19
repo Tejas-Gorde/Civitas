@@ -218,7 +218,6 @@ export default function VotingFlow({
     election.enable_step_2,
     election.enable_step_3,
     election.enable_step_4,
-    election.enable_step_5,
     shouldSkipWebAuthn,
   ]);
 
@@ -319,18 +318,16 @@ export default function VotingFlow({
     setVerifyError(null);
     setDuplicateVotedError(false);
 
-    const isQuickEntry = election.voter_registration_mode === "quick_entry";
-
-    if (isQuickEntry) {
+    if (election.voter_registration_mode === "quick_entry") {
       const cleanName = quickFullName.trim();
-      const cleanPrn = quickPrn.replace(/\s+/g, "");
+      const cleanPrn = quickPrn.trim().replace(/\s+/g, "");
 
-      if (!cleanName || cleanName.length < 2) {
-        toast.error("Please enter your Full Name (minimum 2 characters)");
+      if (!cleanName) {
+        toast.error("Please enter your Full Name.");
         return;
       }
-      if (!/^\d{10}$/.test(cleanPrn)) {
-        toast.error("PRN must contain exactly 10 digits.");
+      if (!cleanPrn) {
+        toast.error("Please enter your PRN / Voter ID.");
         return;
       }
 
@@ -352,6 +349,7 @@ export default function VotingFlow({
         if (
           msg.toLowerCase().includes("already participated") ||
           msg.toLowerCase().includes("already recorded") ||
+          msg.toLowerCase().includes("already voted") ||
           msg.toLowerCase().includes("already cast") ||
           err?.status === 409
         ) {
@@ -1145,7 +1143,7 @@ export default function VotingFlow({
                         Vote Already Recorded
                       </h2>
                       <p className="text-xs sm:text-sm text-rose-800 mt-2 leading-relaxed">
-                        This PRN has already participated in this election. In accordance with strict cryptographic election rules, multiple ballots cannot be submitted for the same PRN.
+                        This Voter ID / PRN has already participated in this election. In accordance with strict cryptographic election rules, multiple ballots cannot be submitted for the same Voter ID / PRN.
                       </p>
                     </div>
 
@@ -1173,9 +1171,9 @@ export default function VotingFlow({
                         </span>
                         <span className="badge badge-open text-[10px]">Quick Voter Entry</span>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">ENTER VOTER DETAILS</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">VOTER IDENTIFICATION</h2>
                       <p className="mt-1 text-xs text-slate-600">
-                        Enter your Full Name and 10-digit PRN to access the official ballot.
+                        Enter your Full Name and PRN to access your ballot.
                       </p>
                     </div>
 
@@ -1188,7 +1186,7 @@ export default function VotingFlow({
                           type="text"
                           className="field text-sm"
                           required
-                          placeholder="e.g. Rahul Sharma"
+                          placeholder="e.g. Jane Doe"
                           value={quickFullName}
                           onChange={(e) => setQuickFullName(e.target.value)}
                         />
@@ -1196,35 +1194,19 @@ export default function VotingFlow({
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          10-DIGIT PRN <span className="text-red-500">*</span>
+                          PRN / VOTER ID <span className="text-red-500">*</span>
                         </label>
                         <input
-                          type="tel"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={10}
-                          className="field font-mono text-sm tracking-wider"
+                          type="text"
+                          className="field font-mono text-sm tracking-wider uppercase"
                           required
-                          placeholder="Enter exactly 10 digits (e.g. 1234567890)"
+                          placeholder="e.g. TEST002 or 1234567890"
                           value={quickPrn}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                            setQuickPrn(val);
-                          }}
+                          onChange={(e) => setQuickPrn(e.target.value)}
                         />
-
-                        {quickPrn.length > 0 && quickPrn.length < 10 && (
-                          <p className="text-[11px] font-semibold text-amber-700 mt-1.5 flex items-center gap-1">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                            PRN must contain exactly 10 digits ({quickPrn.length}/10 entered).
-                          </p>
-                        )}
-                        {quickPrn.length === 10 && (
-                          <p className="text-[11px] font-semibold text-emerald-700 mt-1.5 flex items-center gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                            ✓ 10-digit PRN format verified
-                          </p>
-                        )}
+                        <p className="text-[11px] text-amber-700 mt-1">
+                          Quick Entry Mode: Pre-registration is not required. Your PRN / Voter ID uniquely tracks your participation.
+                        </p>
                       </div>
 
                       {verifyError && (
@@ -1236,7 +1218,7 @@ export default function VotingFlow({
                       <button
                         type="submit"
                         className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold shadow-md shadow-teal-700/10"
-                        disabled={busy || !quickFullName.trim() || quickPrn.length !== 10}
+                        disabled={busy || !quickFullName.trim() || !quickPrn.trim()}
                       >
                         {busy ? "Verifying Eligibility..." : "Continue →"}
                       </button>

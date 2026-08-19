@@ -61,7 +61,7 @@ class Voter(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "voters"
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     voter_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    full_name: Mapped[str] = mapped_column(String(200))
+    full_name: Mapped[str] = mapped_column(String(200), index=True)
     date_of_birth: Mapped[str] = mapped_column(String(10))
     gender: Mapped[str] = mapped_column(String(40))
     mobile: Mapped[str] = mapped_column(String(20), unique=True)
@@ -149,7 +149,7 @@ class QuickVoterRecord(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "quick_voter_records"
     election_id: Mapped[str] = mapped_column(String(36), ForeignKey("elections.id", ondelete="CASCADE"), index=True)
     voter_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    prn: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    prn: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     candidate_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("candidates.id", ondelete="SET NULL"), nullable=True)
     candidate_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
     receipt_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
@@ -169,7 +169,7 @@ class Candidate(UUIDMixin, TimestampMixin, Base):
     election_id: Mapped[str] = mapped_column(String(36), ForeignKey("elections.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(200))
     party: Mapped[str] = mapped_column(String(160))
-    manifesto: Mapped[str] = mapped_column(Text)
+    manifesto: Mapped[Text] = mapped_column(Text)
     photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     symbol_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     election: Mapped[Election] = relationship(back_populates="candidates")
@@ -182,7 +182,11 @@ class VoterElectionStatus(UUIDMixin, TimestampMixin, Base):
     election_id: Mapped[str] = mapped_column(String(36), ForeignKey("elections.id", ondelete="CASCADE"))
     eligible: Mapped[bool] = mapped_column(Boolean, default=True)
     voted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    __table_args__ = (UniqueConstraint("voter_id", "election_id", name="uq_voter_election"),)
+    __table_args__ = (
+        UniqueConstraint("voter_id", "election_id", name="uq_voter_election"),
+        Index("ix_voter_election_status_election_voter", "election_id", "voter_id"),
+        Index("ix_voter_election_status_election_voted", "election_id", "voted_at"),
+    )
 
 
 class Vote(UUIDMixin, Base):
@@ -191,6 +195,7 @@ class Vote(UUIDMixin, Base):
     candidate_id: Mapped[str] = mapped_column(String(36), ForeignKey("candidates.id", ondelete="RESTRICT"), index=True)
     receipt_id: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     cast_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    __table_args__ = (Index("ix_votes_election_candidate", "election_id", "candidate_id"),)
 
 
 class AuthenticationLog(UUIDMixin, Base):

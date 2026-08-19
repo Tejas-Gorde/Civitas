@@ -224,7 +224,7 @@ export default function BigAdminMonitorPage() {
         setModalAuditLogs(logsData.value.data || []);
       }
     } catch (err) {
-      console.error(err);
+      toast.error("Failed to load election details: " + readable(err));
     } finally {
       setLoadingModalData(false);
     }

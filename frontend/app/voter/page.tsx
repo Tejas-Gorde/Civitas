@@ -118,6 +118,8 @@ function VoterPortalContent() {
     );
   }
 
+  const isQuickEntry = election?.voter_registration_mode === "quick_entry";
+
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Top Banner */}
@@ -132,7 +134,7 @@ function VoterPortalContent() {
               Official Voter Entry & Ballot
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-300">
-              Authenticate with your Election ID, Voter ID, and Password to securely access your ballot.
+              Enter your Election ID to securely access your official ballot.
             </p>
           </div>
 
@@ -225,10 +227,17 @@ function VoterPortalContent() {
         <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
           <div className="border-b border-slate-100 pb-3 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
-                Selected Election
-              </span>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900">{election.name}</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
+                  Selected Election
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  isQuickEntry ? "bg-amber-100 text-amber-800" : "bg-teal-100 text-teal-800"
+                }`}>
+                  {isQuickEntry ? "Quick Voter Entry" : "Pre-Registered Mode"}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">{election.name}</h2>
             </div>
             <button
               type="button"
@@ -250,7 +259,9 @@ function VoterPortalContent() {
               Voter Identification
             </h3>
             <p className="text-xs text-slate-600 mt-1">
-              Enter your registered Full Name and Voter ID to access the official ballot.
+              {isQuickEntry
+                ? "Enter your Full Name and PRN to access your ballot."
+                : "Enter your registered Full Name and Voter ID to access your ballot."}
             </p>
           </div>
 
@@ -267,7 +278,7 @@ function VoterPortalContent() {
           <form onSubmit={handleVoterAuthenticate} className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Voter Full Name <span className="text-rose-500">*</span>
+                {isQuickEntry ? "Full Name" : "Voter Full Name"} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -281,16 +292,21 @@ function VoterPortalContent() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Voter ID <span className="text-rose-500">*</span>
+                {isQuickEntry ? "PRN / Voter ID" : "Voter ID"} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={voterIdInput}
                 onChange={(e) => setVoterIdInput(e.target.value)}
-                placeholder="Enter your voter ID (e.g. VOTER-1001)"
+                placeholder={isQuickEntry ? "Enter your PRN or unique ID (e.g. TEST002 or 1234567890)" : "Enter your registered voter ID (e.g. VOTER-1001)"}
                 className="input font-mono uppercase"
               />
+              {isQuickEntry && (
+                <p className="text-[11px] text-amber-700 mt-1">
+                  Quick Entry Mode: Pre-registration is not required. Your PRN / Voter ID uniquely tracks your participation for this election.
+                </p>
+              )}
             </div>
 
             <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

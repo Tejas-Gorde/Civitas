@@ -48,7 +48,7 @@ export default function LiveElectionsPage() {
       const res = await api.get(`/voting/elections/${election.id}/candidates`);
       setCandidatesList(res.data || []);
     } catch (e) {
-      console.error(e);
+      toast.error("Could not load candidate details: " + readable(e));
     } finally {
       setLoadingCandidates(false);
     }

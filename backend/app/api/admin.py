@@ -815,6 +815,7 @@ def ensure_utc(dt: datetime) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
+@router.post("/elections/onboard", response_model=ElectionOut, status_code=201)
 @router.post("/elections/onboarding", response_model=ElectionOut, status_code=201)
 def public_onboarding_create_election(data: ElectionOnboardingCreate, db: Session = Depends(get_db)):
     if data.ends_at <= data.starts_at:

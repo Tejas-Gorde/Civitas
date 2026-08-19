@@ -250,9 +250,8 @@ class VoterOut(BaseModel):
 
 class VoterVerifyRequest(BaseModel):
     election_id: str = Field(..., validation_alias=AliasChoices("election_id", "electionId"))
-    voter_id: str = Field(..., validation_alias=AliasChoices("voter_id", "voter_registration_id", "voterId"), min_length=1, max_length=64)
+    voter_id: str = Field(..., validation_alias=AliasChoices("voter_id", "voter_registration_id", "voterId", "prn", "voter_prn"), min_length=1, max_length=64)
     voter_name: str = Field(..., validation_alias=AliasChoices("voter_name", "voterName", "name", "full_name"), min_length=1, max_length=200)
-    voter_password: str | None = None
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -263,6 +262,17 @@ class VoterVerifyResponse(BaseModel):
     voter_id: str | None = None
     voter_internal_id: UUID | None = None
     session_id: UUID | None = None
+    expires_at: str | None = None
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
 
 
 class WebAuthnRegisterOptionsRequest(BaseModel):
@@ -384,24 +394,23 @@ class AuthProgress(BaseModel):
 
 class QuickVoterVerifyRequest(BaseModel):
     election_id: str = Field(..., validation_alias=AliasChoices("election_id", "electionId"))
-    full_name: str = Field(..., validation_alias=AliasChoices("full_name", "name", "voter_name"), min_length=2, max_length=200)
-    prn: str = Field(..., validation_alias=AliasChoices("prn", "voter_prn", "prn_number"))
+    full_name: str = Field(..., validation_alias=AliasChoices("full_name", "name", "voter_name", "voterName"), min_length=1, max_length=200)
+    prn: str = Field(..., validation_alias=AliasChoices("prn", "voter_id", "voter_prn", "voterId", "prn_number"), min_length=1, max_length=64)
 
     @field_validator("prn")
     @classmethod
     def validate_and_normalize_prn(cls, v: str) -> str:
-        import re
-        normalized = re.sub(r"\s+", "", str(v).strip())
-        if not re.match(r"^\d{10}$", normalized):
-            raise ValueError("PRN must contain exactly 10 digits.")
+        normalized = str(v).strip()
+        if not normalized:
+            raise ValueError("PRN / Voter ID is required.")
         return normalized
 
     @field_validator("full_name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         cleaned = str(v).strip()
-        if len(cleaned) < 2:
-            raise ValueError("Full Name must be at least 2 characters.")
+        if not cleaned:
+            raise ValueError("Full Name is required.")
         return cleaned
 
     model_config = ConfigDict(populate_by_name=True)
@@ -446,3 +455,72 @@ class CastVote(BaseModel):
 class VoteReceipt(BaseModel):
     receipt_id: str
     cast_at: datetime
+
+
+class LiveElectionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    election_id: str | None = None
+    name: str
+    description: str = ""
+    starts_at: datetime
+    ends_at: datetime
+    state: str
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
+    remote_voting_enabled: bool = False
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    show_voter_names_in_results: bool = False
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
+    is_live_now: bool = False
+    candidate_count: int = 0
+
+
+class VerifyTokenResponse(BaseModel):
+    valid: bool
+    election_id: UUID
+    election_name: str
+    starts_at: datetime
+    ends_at: datetime
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
+    message: str = "Token is valid and active."
+
+
+class PublicElectionDetailOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    election_id: str | None = None
+    name: str
+    description: str = ""
+    starts_at: datetime
+    ends_at: datetime
+    state: str
+    voting_type: str = "regular"
+    voter_registration_mode: str = "pre_registered"
+    remote_voting_enabled: bool = False
+    voting_flow_mode: str = "full"
+    enable_step_2: bool = True
+    enable_step_3: bool = True
+    enable_step_4: bool = True
+    enable_step_5: bool = True
+    show_voter_names_in_results: bool = False
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
+    is_live_now: bool = False
+    candidate_count: int = 0

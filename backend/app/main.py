@@ -88,6 +88,16 @@ def run_auto_migrations(target_engine):
             if "updated_at" not in columns:
                 conn.execute(text("ALTER TABLE authentication_sessions ADD COLUMN updated_at DATETIME"))
 
+    # Idempotently create performance indexes
+    with target_engine.begin() as conn:
+        if "voters" in tables:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_voters_full_name ON voters (full_name)"))
+        if "voter_election_status" in tables:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_voter_election_status_election_voter ON voter_election_status (election_id, voter_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_voter_election_status_election_voted ON voter_election_status (election_id, voted_at)"))
+        if "votes" in tables:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_votes_election_candidate ON votes (election_id, candidate_id)"))
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

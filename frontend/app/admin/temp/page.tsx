@@ -266,7 +266,7 @@ export default function LocalAdminPage() {
         }
       }
     } catch (err) {
-      console.error(err);
+      toast.error("Failed to load dashboard data: " + readable(err));
     }
   };
 
@@ -281,8 +281,8 @@ export default function LocalAdminPage() {
         },
       });
       setQrDataUrl(dataUrl);
-    } catch (err) {
-      console.error("QR Code generation error:", err);
+    } catch {
+      setQrDataUrl("");
     }
   };
 
@@ -1332,15 +1332,30 @@ export default function LocalAdminPage() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowAddVoterModal(true)}
-                  className="w-full sm:w-auto min-h-[44px] py-2.5 sm:py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Register Single Voter</span>
-                </button>
+                {election.voter_registration_mode !== "quick_entry" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddVoterModal(true)}
+                    className="w-full sm:w-auto min-h-[44px] py-2.5 sm:py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Register Single Voter</span>
+                  </button>
+                )}
               </div>
+
+              {election.voter_registration_mode === "quick_entry" && (
+                <div className="mx-4 sm:mx-6 my-3 p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-950 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-teal-900 block">
+                      ⚡ Quick Voter Entry Mode Active
+                    </span>
+                    <span className="text-[11px] text-teal-800">
+                      Pre-registration is not required. Participants enter their Full Name and PRN / Voter ID at voting time with automatic server-side duplicate prevention.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="overflow-x-auto">
                 {/* Desktop Table (md+) */}
