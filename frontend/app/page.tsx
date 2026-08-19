@@ -2,9 +2,21 @@ import Link from "next/link";
 import { UserCheck, Shield, Activity, ArrowRight, Lock, CheckCircle2 } from "lucide-react";
 import CivitasHelpAssistant from "../components/CivitasHelpAssistant";
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Civitas",
+  "alternateName": ["CIVITAS"],
+  "url": "https://civitas-frontend-nvp6.onrender.com/",
+};
+
 export default function Home() {
   return (
     <div className="space-y-5 sm:space-y-8 max-w-5xl mx-auto py-4 sm:py-6 px-2 sm:px-4 relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
       {/* Brand Hero Header */}
       <div className="card p-6 sm:p-10 text-center space-y-3 sm:space-y-4 bg-gradient-to-b from-white to-slate-50 border-slate-200/80 shadow-xs relative overflow-hidden">
         <div className="absolute -top-12 -right-12 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   ),
   title: "Civitas \u2013 Secure Digital Voting System",
   description:
-    "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+    "Civitas is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
   keywords: [
     "Civitas",
     "secure digital voting",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Civitas" }],
   creator: "Civitas",
   publisher: "Civitas",
-  applicationName: "Civitas Secure Digital Voting System",
+  applicationName: "Civitas",
   robots: {
     index: true,
     follow: true,
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
     siteName: "Civitas",
     title: "Civitas \u2013 Secure Digital Voting System",
     description:
-      "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+      "Civitas is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Civitas \u2013 Secure Digital Voting System",
     description:
-      "CIVITAS is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
+      "Civitas is a secure digital voting platform featuring biometric authentication, real-time face verification, and multiple voting modes for transparent and tamper-evident elections.",
   },
   verification: {
     google: "-V0qciSSJoLVrcZdmDGlkPrSA6wEn4C2yyvSXy-qctM",
