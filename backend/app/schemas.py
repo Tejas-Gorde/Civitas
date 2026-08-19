@@ -65,7 +65,6 @@ class OnboardingCandidateItem(BaseModel):
 class OnboardingVoterItem(BaseModel):
     voter_id: str = Field(min_length=1, max_length=64)
     full_name: str = Field(min_length=1, max_length=200)
-    voter_password: str | None = None
 
 
 class ElectionOnboardingCreate(BaseModel):
@@ -260,15 +259,10 @@ class VoterRegistration(BaseModel):
 class AdminVoterCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=200)
     voter_id: str = Field(min_length=1, max_length=64)
-    voter_password: str | None = None
     election_id: str | None = None
     email: EmailStr | None = None
     mobile: str | None = None
     is_eligible: bool = True
-
-
-class VoterSetPasswordRequest(BaseModel):
-    voter_password: str = Field(min_length=4, max_length=128)
 
 
 class VoterUpdate(BaseModel):

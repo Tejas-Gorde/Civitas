@@ -52,7 +52,6 @@ from app.schemas import (
     TokenResponse,
     VoterOut,
     VoterRegistration,
-    VoterSetPasswordRequest,
     VoterUpdate,
     VoiceGuidanceSettingsOut,
     VoiceGuidanceSettingsUpdate,
@@ -125,7 +124,6 @@ def add_voter_to_election_helper(
     email: str | None = None,
     mobile: str | None = None,
     is_eligible: bool = True,
-    voter_password: str | None = None,
     commit: bool = True,
 ):
     voter_id = voter_id.strip()
@@ -138,10 +136,6 @@ def add_voter_to_election_helper(
 
     if existing_voter:
         voter = existing_voter
-        if voter_password and voter_password.strip():
-            user = db.get(User, voter.user_id)
-            if user:
-                user.password_hash = password_hash(voter_password.strip())
 
         # CASE 3: Check if voter is already registered for this election
         existing_status = db.scalar(
@@ -185,7 +179,7 @@ def add_voter_to_election_helper(
         if db.scalar(select(Voter).where(Voter.mobile == v_mobile)):
             v_mobile = f"+1555{secrets.randbelow(10000000):07d}"
 
-        v_pass_hash = password_hash(voter_password.strip()) if voter_password and voter_password.strip() else password_hash(secrets.token_urlsafe(32))
+        v_pass_hash = password_hash(secrets.token_urlsafe(32))
 
         user = User(
             email=v_email,
@@ -332,7 +326,6 @@ def add_voter_to_election(
         email=data.email,
         mobile=data.mobile,
         is_eligible=data.is_eligible,
-        voter_password=data.voter_password,
     )
 
 
@@ -366,42 +359,9 @@ def register_voter(
             email=data.email,
             mobile=data.mobile,
             is_eligible=data.is_eligible,
-            voter_password=data.voter_password,
         )
 
 
-@router.post("/voters/{voter_id}/set-password")
-def set_voter_password(
-    voter_id: str,
-    data: VoterSetPasswordRequest,
-    admin: User = Depends(admin_only),
-    db: Session = Depends(get_db),
-):
-    if admin.role in (Role.BIG_ADMIN, Role.ADMIN):
-        raise HTTPException(403, "Big Administrator is restricted to read-only system monitoring.")
-
-    voter = db.get(Voter, voter_id)
-    if not voter:
-        voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == voter_id.strip().lower()))
-    if not voter:
-        raise HTTPException(404, "Voter record not found")
-
-    statuses = db.scalars(select(VoterElectionStatus).where(VoterElectionStatus.voter_id == voter.id)).all()
-    has_permission = any(
-        db.scalar(select(Election.id).where(Election.id == st.election_id, Election.temp_admin_user_id == admin.id))
-        for st in statuses
-    )
-    if not has_permission:
-        raise HTTPException(403, "You are not authorized to modify voters outside your assigned election.")
-
-    user = db.get(User, voter.user_id)
-    if not user:
-        raise HTTPException(404, "Voter user record not found")
-
-    user.password_hash = password_hash(data.voter_password.strip())
-    audit(db, admin.id, "voter_password_reset", "voter", str(voter.id), {"voter_id": voter.voter_id})
-    db.commit()
-    return {"success": True, "message": f"Password updated for voter '{voter.voter_id}'"}
 
 
 @router.put("/voters/{voter_id}")
@@ -873,7 +833,6 @@ def public_onboarding_create_election(data: ElectionOnboardingCreate, db: Sessio
             election_id=election.id,
             full_name=v.full_name,
             voter_id=v.voter_id,
-            voter_password=v.voter_password,
             commit=False,
         )
 
