@@ -1,7 +1,0 @@
-# https://www.robotstxt.org/robotstxt.html
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /local-admin/
-
-Sitemap: https://civitas-frontend-nvp6.onrender.com/sitemap.xml

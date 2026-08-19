@@ -36,9 +36,8 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: {
-    canonical: "https://civitas-frontend-nvp6.onrender.com",
-  },
+  // Removed hardcoded canonical to prevent conflicting canonical configuration on subpages
+
   openGraph: {
     type: "website",
     locale: "en_US",
