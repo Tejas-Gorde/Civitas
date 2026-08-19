@@ -10,6 +10,8 @@ import DecisionDashboard from "./DecisionDashboard";
 import RatingDashboard from "./RatingDashboard";
 import QuickVoterResultsSection from "./QuickVoterResultsSection";
 
+import PresidentialResultDashboard from "./PresidentialResultDashboard";
+
 interface TypeSpecificResultDashboardProps {
   results: any;
   electionId?: string;
@@ -30,7 +32,7 @@ export default function TypeSpecificResultDashboard({
   }
 
   const targetElectionId = electionId || results?.election?.id || results?.election?.election_id;
-  const votingType = results?.voting_type || results?.election?.voting_type || "regular";
+  const votingType = (results?.voting_type || results?.election?.voting_type || "general").toLowerCase();
   const isQuickEntry =
     results?.voter_registration_mode === "quick_entry" ||
     results?.election?.voter_registration_mode === "quick_entry" ||
@@ -75,14 +77,15 @@ export default function TypeSpecificResultDashboard({
 
   const renderDashboard = () => {
     switch (votingType) {
-      case "poll":
+      case "presidential":
         return (
-          <PollDashboard
+          <PresidentialResultDashboard
             results={results}
             onExportExcel={handleExportExcel}
             exporting={exporting}
           />
         );
+      case "council":
       case "multiple_choice":
         return (
           <MultipleChoiceDashboard
@@ -91,9 +94,18 @@ export default function TypeSpecificResultDashboard({
             exporting={exporting}
           />
         );
+      case "referendum":
       case "yes_no":
         return (
           <DecisionDashboard
+            results={results}
+            onExportExcel={handleExportExcel}
+            exporting={exporting}
+          />
+        );
+      case "poll":
+        return (
+          <PollDashboard
             results={results}
             onExportExcel={handleExportExcel}
             exporting={exporting}
@@ -107,6 +119,7 @@ export default function TypeSpecificResultDashboard({
             exporting={exporting}
           />
         );
+      case "general":
       case "regular":
       default:
         return (

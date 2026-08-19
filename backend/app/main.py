@@ -56,6 +56,12 @@ def run_auto_migrations(target_engine):
                 conn.execute(text("ALTER TABLE elections ADD COLUMN voting_type VARCHAR(40) DEFAULT 'regular'"))
             if "voter_registration_mode" not in columns:
                 conn.execute(text("ALTER TABLE elections ADD COLUMN voter_registration_mode VARCHAR(40) DEFAULT 'pre_registered'"))
+            if "max_selections" not in columns:
+                conn.execute(text("ALTER TABLE elections ADD COLUMN max_selections INTEGER DEFAULT 1"))
+            if "allow_abstain" not in columns:
+                conn.execute(text("ALTER TABLE elections ADD COLUMN allow_abstain BOOLEAN DEFAULT 0"))
+            if "position_title" not in columns:
+                conn.execute(text("ALTER TABLE elections ADD COLUMN position_title VARCHAR(100)"))
     if "quick_voter_records" not in tables:
         with target_engine.begin() as conn:
             conn.execute(text("""

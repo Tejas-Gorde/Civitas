@@ -38,7 +38,10 @@ export default function CreateElectionWizardPage() {
   const [name, setName] = useState("");
   const [electionCustomId, setElectionCustomId] = useState("");
   const [description, setDescription] = useState("");
-  const [votingType, setVotingType] = useState("regular");
+  const [votingType, setVotingType] = useState("general");
+  const [maxSelections, setMaxSelections] = useState(1);
+  const [allowAbstain, setAllowAbstain] = useState(false);
+  const [positionTitle, setPositionTitle] = useState("");
   const [voterRegistrationMode, setVoterRegistrationMode] = useState("pre_registered");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -52,7 +55,7 @@ export default function CreateElectionWizardPage() {
 
   const handleSelectVotingType = (type: string) => {
     setVotingType(type);
-    if (type === "yes_no" && candidateList.length === 0) {
+    if ((type === "referendum" || type === "yes_no") && candidateList.length === 0) {
       setCandidateList([
         { name: "YES / APPROVE", party: "Approve Proposal", manifesto: "Vote in favor of the measure." },
         { name: "NO / REJECT", party: "Reject Proposal", manifesto: "Vote against the measure." },
@@ -69,12 +72,9 @@ export default function CreateElectionWizardPage() {
   };
 
   // STEP 4: Voters / Members
-  const [voterList, setVoterList] = useState<Array<{ voter_id: string; full_name: string; voter_password?: string }>>([]);
+  const [voterList, setVoterList] = useState<Array<{ voter_id: string; full_name: string }>>([]);
   const [voterRegId, setVoterRegId] = useState("");
   const [voterFullName, setVoterFullName] = useState("");
-  const [voterPassword, setVoterPassword] = useState("");
-  const [voterConfirmPassword, setVoterConfirmPassword] = useState("");
-  const [showVoterPass, setShowVoterPass] = useState(false);
 
   // Auto-generate persistent Election ID at Step 2 if empty
   useEffect(() => {
@@ -140,35 +140,21 @@ export default function CreateElectionWizardPage() {
 
   const handleAddVoter = () => {
     if (!voterRegId.trim() || !voterFullName.trim()) {
-      toast.error("Please provide Voter Registration ID and Full Name.");
-      return;
-    }
-    if (!voterPassword.trim()) {
-      toast.error("Voter password is required.");
-      return;
-    }
-    if (voterPassword.trim().length < 4) {
-      toast.error("Voter password must be at least 4 characters long.");
-      return;
-    }
-    if (voterPassword !== voterConfirmPassword) {
-      toast.error("Passwords do not match.");
+      toast.error("Please provide both Voter ID and Full Name.");
       return;
     }
 
     if (voterList.some((v) => v.voter_id.toLowerCase() === voterRegId.trim().toLowerCase())) {
-      toast.error("Voter Registration ID already exists in setup list.");
+      toast.error("Voter ID already exists in setup list.");
       return;
     }
 
     setVoterList((prev) => [
       ...prev,
-      { voter_id: voterRegId.trim(), full_name: voterFullName.trim(), voter_password: voterPassword.trim() },
+      { voter_id: voterRegId.trim(), full_name: voterFullName.trim() },
     ]);
     setVoterRegId("");
     setVoterFullName("");
-    setVoterPassword("");
-    setVoterConfirmPassword("");
     toast.success("Voter added to setup list.");
   };
 
@@ -229,6 +215,9 @@ export default function CreateElectionWizardPage() {
         election_id: electionCustomId.trim(),
         description: description.trim(),
         voting_type: votingType,
+        max_selections: Number(maxSelections) || 1,
+        allow_abstain: Boolean(allowAbstain),
+        position_title: positionTitle.trim() || null,
         voter_registration_mode: voterRegistrationMode,
         starts_at: new Date(startsAt).toISOString(),
         ends_at: new Date(endsAt).toISOString(),
@@ -550,51 +539,51 @@ export default function CreateElectionWizardPage() {
             {/* VOTING TYPE SELECTOR */}
             <div className="space-y-2 pt-1">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Voting Type <span className="text-rose-500">*</span>
+                Election Type & Format <span className="text-rose-500">*</span>
               </label>
               <p className="text-xs text-slate-500">
-                Select the format of the ballot and election decision mechanics:
+                Select the format of the ballot, candidate presentation, and tally mechanics:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
                 {[
                   {
-                    id: "regular",
-                    title: "1. Regular Election",
-                    badge: "Candidate Ballot",
-                    desc: "Single-choice candidate election with leaderboard ranking, vote totals, and winner determination.",
-                    color: "border-sky-500 bg-sky-50/50",
-                  },
-                  {
-                    id: "poll",
-                    title: "2. Poll",
-                    badge: "Opinion Survey",
-                    desc: "Single-question poll with top option ranking and response distribution metrics.",
+                    id: "general",
+                    title: "1. General Election",
+                    badge: "Candidate Roster",
+                    desc: "Standard single-choice certified ballot with candidate photos, parties, and symbols.",
                     color: "border-teal-500 bg-teal-50/50",
                   },
                   {
-                    id: "multiple_choice",
-                    title: "3. Multiple Choice",
-                    badge: "Multi-Selection",
-                    desc: "Voters can select multiple options simultaneously. Tally shows % of participating voters per option.",
+                    id: "presidential",
+                    title: "2. Presidential / Leader",
+                    badge: "Executive Profile",
+                    desc: "High-profile executive single-winner election with candidate manifesto showcases and winner spotlights.",
                     color: "border-indigo-500 bg-indigo-50/50",
                   },
                   {
-                    id: "yes_no",
-                    title: "4. Yes / No",
-                    badge: "Binary Referendum",
-                    desc: "Approve vs Reject decision for motions or policy referendums with margin calculation.",
+                    id: "council",
+                    title: "3. Council / Committee",
+                    badge: "Multi-Seat Election",
+                    desc: "Voters select up to X candidates for open council seats with real-time selection limits and counters.",
+                    color: "border-purple-500 bg-purple-50/50",
+                  },
+                  {
+                    id: "referendum",
+                    title: "4. Referendum / Yes-No",
+                    badge: "Policy Decision",
+                    desc: "Approve vs Reject decision for proposals or constitutional motions with margin analytics.",
                     color: "border-emerald-500 bg-emerald-50/50",
                   },
                   {
-                    id: "rating",
-                    title: "5. Rating",
-                    badge: "5-Star Scale",
-                    desc: "1 to 5 star rating scale evaluation with calculated average scores and distribution.",
-                    color: "border-amber-500 bg-amber-50/50",
+                    id: "custom",
+                    title: "5. Custom / Poll",
+                    badge: "Configurable",
+                    desc: "Configurable election format adapting to custom options, ratings, or specialized organizational rules.",
+                    color: "border-sky-500 bg-sky-50/50",
                   },
                 ].map((type) => {
-                  const isSelected = votingType === type.id;
+                  const isSelected = votingType === type.id || (type.id === "general" && votingType === "regular") || (type.id === "council" && votingType === "multiple_choice") || (type.id === "referendum" && votingType === "yes_no");
                   return (
                     <div
                       key={type.id}
@@ -624,6 +613,61 @@ export default function CreateElectionWizardPage() {
                   );
                 })}
               </div>
+
+              {/* Dynamic Type-Specific Configuration Fields */}
+              {(votingType === "presidential" || votingType === "general") && (
+                <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 mt-3 space-y-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-indigo-900">
+                    Office / Position Title (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={positionTitle}
+                    onChange={(e) => setPositionTitle(e.target.value)}
+                    placeholder="e.g. President, Chairperson, Executive Director"
+                    className="input bg-white text-xs"
+                  />
+                  <p className="text-[11px] text-indigo-700">
+                    Displayed prominently on ballot cards and the election outcome banner.
+                  </p>
+                </div>
+              )}
+
+              {(votingType === "council" || votingType === "multiple_choice") && (
+                <div className="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 mt-3 space-y-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-purple-900">
+                    Number of Open Seats / Max Allowed Selections
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={maxSelections}
+                    onChange={(e) => setMaxSelections(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="input bg-white text-xs font-bold"
+                  />
+                  <p className="text-[11px] text-purple-700">
+                    Enforces that voters cannot select more than {maxSelections} candidate(s) on their ballot.
+                  </p>
+                </div>
+              )}
+
+              {(votingType === "referendum" || votingType === "yes_no") && (
+                <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 mt-3 space-y-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-emerald-900 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowAbstain}
+                      onChange={(e) => setAllowAbstain(e.target.checked)}
+                      className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                    />
+                    <span>Include "Abstain" option on referendum ballot</span>
+                  </label>
+                  <p className="text-[11px] text-emerald-700">
+                    Allows voters to cast a neutral stance without voting Yes or No.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* VOTER REGISTRATION MODE SELECTOR */}
@@ -970,48 +1014,24 @@ export default function CreateElectionWizardPage() {
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Voter Name *</label>
+                <input
+                  type="text"
+                  value={voterFullName}
+                  onChange={(e) => setVoterFullName(e.target.value)}
+                  placeholder="e.g. Jane Doe"
+                  className="input text-xs"
+                />
+              </div>
+
+              <div>
                 <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Voter ID *</label>
                 <input
                   type="text"
                   value={voterRegId}
                   onChange={(e) => setVoterRegId(e.target.value)}
                   placeholder="e.g. VOTER-1001"
-                  className="input text-xs font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Full Name *</label>
-                <input
-                  type="text"
-                  value={voterFullName}
-                  onChange={(e) => setVoterFullName(e.target.value)}
-                  placeholder="e.g. Tejas Sharma"
-                  className="input text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Voter Password *</label>
-                <input
-                  type="password"
-                  value={voterPassword}
-                  onChange={(e) => setVoterPassword(e.target.value)}
-                  placeholder="Assign password (min 4 chars)"
-                  className="input text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Confirm Password *</label>
-                <input
-                  type="password"
-                  value={voterConfirmPassword}
-                  onChange={(e) => setVoterConfirmPassword(e.target.value)}
-                  placeholder="Confirm password"
-                  className="input text-xs"
+                  className="input text-xs font-mono uppercase"
                 />
               </div>
             </div>

@@ -41,6 +41,12 @@ import { isMobileDevice } from "../lib/device";
 import { useVoiceGuidance } from "../hooks/useVoiceGuidance";
 import Chatbot from "./Chatbot";
 import { STEP_INSTRUCTIONS, FEEDBACK_MESSAGES, CHALLENGE_TEXTS } from "../lib/translations";
+import ElectionHeader from "./voter/ElectionHeader";
+import ElectionIntro from "./voter/ElectionIntro";
+import ElectionVotingView from "./voter/ElectionVotingView";
+import VoteReview from "./voter/VoteReview";
+import VoteSubmission from "./voter/VoteSubmission";
+import VoteSuccess from "./voter/VoteSuccess";
 
 type Stage =
   | "identify"
@@ -91,6 +97,7 @@ export default function VotingFlow({
   election,
   initialSession,
   initialVoterId,
+  initialVoterName,
   initialVoterInternalId,
   initialExpiresAt,
   onReset,
@@ -107,15 +114,23 @@ export default function VotingFlow({
     enable_step_3?: boolean;
     enable_step_4?: boolean;
     enable_step_5?: boolean;
+    max_selections?: number;
+    allow_abstain?: boolean;
+    position_title?: string | null;
+    candidate_count?: number;
   };
   initialSession?: string;
   initialVoterId?: string;
+  initialVoterName?: string;
   initialVoterInternalId?: string;
   initialExpiresAt?: string;
   onReset?: () => void;
 }) {
   const [stage, setStage] = useState<Stage>("identify");
+  const [hasStartedVoting, setHasStartedVoting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [voterId, setVoterId] = useState(initialVoterId || "");
+  const [voterFullName, setVoterFullName] = useState(initialVoterName || "");
   const [voterPassword, setVoterPassword] = useState("");
   const [quickFullName, setQuickFullName] = useState("");
   const [quickPrn, setQuickPrn] = useState("");
@@ -350,12 +365,12 @@ export default function VotingFlow({
         setBusy(false);
       }
     } else {
-      if (!voterId.trim()) {
-        toast.error("Please enter your Voter Registration ID");
+      if (!voterFullName.trim()) {
+        toast.error("Please enter your Full Name");
         return;
       }
-      if (!voterPassword.trim()) {
-        toast.error("Please enter your Voter Password");
+      if (!voterId.trim()) {
+        toast.error("Please enter your Voter ID");
         return;
       }
 
@@ -364,7 +379,7 @@ export default function VotingFlow({
         const vRes = await request("/voting/verify-voter", {
           electionId: election.id,
           voterId: voterId.trim(),
-          password: voterPassword.trim(),
+          voterName: voterFullName.trim(),
         });
         setVoterInternalId(vRes.voter_internal_id);
         setSession(vRes.session_id);
@@ -756,27 +771,39 @@ export default function VotingFlow({
 
   // Step 7 -> 8: Submit Vote
   const submitFinalVote = async () => {
-    if (votingType === "multiple_choice") {
+    const normType = (election.voting_type || "general").toLowerCase();
+    const isMulti =
+      normType === "council" ||
+      normType === "multiple_choice" ||
+      (normType === "custom" && (election.max_selections || 1) > 1);
+
+    if (isMulti) {
       if (selectedCandidateIds.length === 0) {
-        toast.error("No option selected.");
+        toast.error("Please select at least one candidate/choice.");
         return;
       }
     } else {
       if (!selectedCandidateId) {
-        toast.error("No option selected.");
+        toast.error("Please select an option to cast your vote.");
         return;
       }
     }
     try {
       setBusy(true);
+      setSubmitError(null);
       const payload: any = {
         election_id: election.id,
         voting_grant: grant,
       };
-      if (votingType === "multiple_choice") {
+      if (isMulti) {
         payload.candidate_ids = selectedCandidateIds;
       } else {
         payload.candidate_id = selectedCandidateId;
+      }
+
+      if (election.voter_registration_mode === "quick_entry") {
+        if (quickFullName) payload.voter_name = quickFullName;
+        if (quickPrn) payload.prn = quickPrn;
       }
 
       const r = await request("/voting/cast", payload);
@@ -785,7 +812,9 @@ export default function VotingFlow({
       setStage("receipt");
       toast.success("Your ballot has been cast and recorded successfully.");
     } catch (err) {
-      toast.error(readable(err));
+      const errMsg = readable(err);
+      setSubmitError(errMsg);
+      toast.error(errMsg);
     } finally {
       setBusy(false);
     }
@@ -1229,28 +1258,28 @@ export default function VotingFlow({
                     <form onSubmit={startSession} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          VOTER REGISTRATION ID <span className="text-red-500">*</span>
+                          VOTER FULL NAME <span className="text-red-500">*</span>
                         </label>
                         <input
-                          className="field font-mono"
+                          type="text"
+                          className="field"
                           required
-                          placeholder="e.g. VOTER-1001"
-                          value={voterId}
-                          onChange={(e) => setVoterId(e.target.value)}
+                          placeholder="Enter your registered full name"
+                          value={voterFullName}
+                          onChange={(e) => setVoterFullName(e.target.value)}
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          VOTER PASSWORD / SECURITY KEY <span className="text-red-500">*</span>
+                          VOTER ID <span className="text-red-500">*</span>
                         </label>
                         <input
-                          type="password"
-                          className="field"
+                          className="field font-mono uppercase"
                           required
-                          placeholder="Enter password"
-                          value={voterPassword}
-                          onChange={(e) => setVoterPassword(e.target.value)}
+                          placeholder="e.g. VOTER-1001"
+                          value={voterId}
+                          onChange={(e) => setVoterId(e.target.value)}
                         />
                       </div>
 
@@ -1263,9 +1292,9 @@ export default function VotingFlow({
                       <button
                         type="submit"
                         className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold"
-                        disabled={busy}
+                        disabled={busy || !voterFullName.trim() || !voterId.trim()}
                       >
-                        {busy ? "Verifying Record..." : "Verify Voter Eligibility"}
+                        {busy ? "Verifying Identity..." : "Continue to Verification"}
                       </button>
                     </form>
                   </>
@@ -1855,7 +1884,7 @@ export default function VotingFlow({
                                       {c.party}
                                     </span>
                                   )}
-                                </div>
+</div>
                                 {c.manifesto && (
                                   <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
                                     {c.manifesto}
@@ -1888,191 +1917,65 @@ export default function VotingFlow({
               </div>
             )}
 
-            {/* STAGE 6: REVIEW */}
+            {/* STAGE 5: BALLOT SELECTION (DYNAMIC BY ELECTION TYPE) */}
+            {stage === "ballot" && (
+              !hasStartedVoting ? (
+                <ElectionIntro
+                  election={election}
+                  voterName={quickFullName || voterId || "Eligible Voter"}
+                  onStartVoting={() => setHasStartedVoting(true)}
+                />
+              ) : (
+                <ElectionVotingView
+                  election={election}
+                  candidates={candidates}
+                  selectedCandidateId={selectedCandidateId}
+                  selectedCandidateIds={selectedCandidateIds}
+                  onSelectCandidate={(id) => {
+                    setSelectedCandidateId(id);
+                  }}
+                  onSelectCandidateIds={(ids) => {
+                    setSelectedCandidateIds(ids);
+                  }}
+                  onProceedToReview={() => setStage("review")}
+                  onBackToIntro={() => setHasStartedVoting(false)}
+                />
+              )
+            )}
+
+            {/* STAGE 6: REVIEW & CONFIRMATION */}
             {stage === "review" && (
-              <div className="space-y-4 sm:space-y-6">
-                <div>
-                  <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-indigo-600">
-                    Step 6 — Ballot Summary Review
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-                    Review Ballot Selection
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {currentInstruction?.display}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 space-y-3 sm:space-y-4 shadow-xs">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Target Election
-                    </span>
-                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 text-right">
-                      {election.name}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 sm:pb-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Voting Type
-                    </span>
-                    <span className="text-xs font-bold uppercase text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
-                      {votingType.replace("_", " ")}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-slate-100 pb-2.5 sm:pb-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Selected {votingType === "multiple_choice" ? `Choices (${selectedCandidateIds.length})` : "Choice"}
-                    </span>
-
-                    {votingType === "multiple_choice" ? (
-                      <div className="flex flex-wrap gap-1.5 sm:justify-end">
-                        {selectedCandidatesList.map((c) => (
-                          <span
-                            key={c.id}
-                            className="text-xs font-extrabold text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 shadow-xs"
-                          >
-                            {c.name}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs sm:text-sm font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 shadow-xs">
-                        {selectedCandidate?.name || "None Selected"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Security Token Status
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold">
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Single-Use Grant Active</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-amber-50 p-3.5 sm:p-4 text-xs text-amber-900 border border-amber-200 flex items-start gap-2.5 sm:gap-3">
-                  <AlertCircle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Final Step:</strong> Clicking "Confirm & Cast Ballot" will permanently submit your anonymous ballot to the electronic tally vault.
-                  </span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
-                  <button
-                    type="button"
-                    className="button button-outline w-full sm:flex-1 py-3 text-xs font-bold min-h-[46px] order-2 sm:order-1"
-                    disabled={busy}
-                    onClick={() => setStage("ballot")}
-                  >
-                    <ArrowLeft className="mr-1.5 h-4 w-4 inline" />
-                    Back to Choices
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-teal w-full sm:flex-1 disabled:opacity-60 font-extrabold py-3.5 text-xs sm:text-sm shadow-md shadow-indigo-600/20 min-h-[48px] order-1 sm:order-2"
-                    disabled={busy}
-                    onClick={submitFinalVote}
-                  >
-                    {busy ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin inline mr-2" />
-                        Submitting Encrypted Ballot...
-                      </>
-                    ) : (
-                      "Confirm & Cast Ballot"
-                    )}
-                  </button>
-                </div>
-              </div>
+              busy || submitError ? (
+                <VoteSubmission
+                  error={submitError}
+                  onRetry={submitFinalVote}
+                  onBackToReview={() => {
+                    setSubmitError(null);
+                    setBusy(false);
+                  }}
+                />
+              ) : (
+                <VoteReview
+                  election={election}
+                  candidates={candidates}
+                  selectedCandidateId={selectedCandidateId}
+                  selectedCandidateIds={selectedCandidateIds}
+                  voterName={quickFullName || voterId}
+                  isSubmitting={busy}
+                  onBackToBallot={() => setStage("ballot")}
+                  onConfirmVote={submitFinalVote}
+                />
+              )
             )}
 
             {/* STAGE 7: RECEIPT */}
             {stage === "receipt" && (
-              <div className="mx-auto max-w-lg text-center space-y-4 sm:space-y-6 py-2">
-                <div className="mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-md">
-                  <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-600" />
-                </div>
-
-                <div>
-                  <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs font-extrabold text-emerald-800 mb-2">
-                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                    <span>Vote Successfully Recorded</span>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    Official Cryptographic Receipt
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {currentInstruction?.display}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 text-left space-y-3 sm:space-y-4 shadow-md">
-                  <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Election</span>
-                    <p className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">{election.name}</p>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Verification Receipt ID</span>
-                    <div className="mt-1 flex items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-3.5 font-mono text-xs font-bold text-emerald-400 shadow-inner">
-                      <span className="break-all">{receipt}</span>
-                      <button
-                        type="button"
-                        onClick={copyReceipt}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shrink-0 transition min-h-[34px]"
-                      >
-                        <Copy className="h-3.5 w-3.5 mr-1 inline" />
-                        {copied ? "Copied" : "Copy"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Cast Timestamp</span>
-                    <p className="text-xs text-slate-700 font-mono font-bold mt-0.5">
-                      {new Date(castTimestamp).toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-3 text-[11px] text-slate-500 leading-relaxed">
-                    * In accordance with privacy standards, this receipt contains no candidate selection details and serves solely as cryptographic proof of participation.
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
-                  <button
-                    type="button"
-                    className="button button-outline text-xs min-h-[44px] px-5 font-bold w-full sm:w-auto"
-                    onClick={downloadReceiptTxt}
-                  >
-                    <Save className="mr-2 h-4 w-4 inline text-indigo-600" />
-                    Save Receipt
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-outline text-xs min-h-[44px] px-5 font-bold w-full sm:w-auto"
-                    onClick={() => window.print()}
-                  >
-                    <Printer className="mr-2 h-4 w-4 inline text-slate-700" />
-                    Print Receipt
-                  </button>
-                  {onReset && (
-                    <button
-                      type="button"
-                      className="button button-teal text-xs min-h-[44px] px-5 w-full sm:w-auto"
-                      onClick={onReset}
-                    >
-                      Finish & Exit
-                    </button>
-                  )}
-                </div>
-              </div>
+              <VoteSuccess
+                electionName={election.name}
+                receiptId={receipt}
+                castTimestamp={castTimestamp}
+                onReset={onReset}
+              />
             )}
           </motion.div>
 

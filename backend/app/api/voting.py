@@ -312,6 +312,9 @@ def verify_quick_voter(data: QuickVoterVerifyRequest, db: Session = Depends(get_
         enable_step_3=bool(election.enable_step_3),
         enable_step_4=bool(election.enable_step_4),
         enable_step_5=bool(election.enable_step_5),
+        max_selections=getattr(election, "max_selections", 1) or 1,
+        allow_abstain=bool(getattr(election, "allow_abstain", False)),
+        position_title=getattr(election, "position_title", None),
     )
 
 
@@ -328,26 +331,33 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
     if not election:
         raise HTTPException(404, "Election not found.")
     if election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)):
-        raise HTTPException(400, "Election is not currently active.")
+        raise HTTPException(400, "This election is not currently open")
 
     # If election is quick_entry mode, suggest quick voter entry
     if getattr(election, "voter_registration_mode", "pre_registered") == "quick_entry":
         raise HTTPException(400, "This election uses Quick Voter Entry (Name + 10-digit PRN).")
 
-    voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == data.voter_registration_id.strip().lower()))
+    input_voter_id = data.voter_id.strip() if data.voter_id else ""
+    input_voter_name = data.voter_name.strip() if data.voter_name else ""
+
+    if not input_voter_id:
+        raise HTTPException(400, "Voter ID is required.")
+    if not input_voter_name:
+        raise HTTPException(400, "Voter Name is required.")
+
+    voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == input_voter_id.lower()))
     if not voter:
-        raise HTTPException(401, "Invalid voter ID or password.")
+        raise HTTPException(404, "Voter not found")
+
+    # Verify that voter name matches the registered full name (case-insensitive & trimmed)
+    registered_name = re.sub(r"\s+", " ", voter.full_name.strip()).lower()
+    provided_name = re.sub(r"\s+", " ", input_voter_name).lower()
+    if registered_name != provided_name:
+        raise HTTPException(401, "Voter name and voter ID do not match")
 
     user = db.get(User, voter.user_id)
     if not user or not user.is_active:
         raise HTTPException(403, "Voter account is inactive or not eligible to vote")
-
-    if not data.voter_password or not data.voter_password.strip():
-        raise HTTPException(400, "Voter password is required.")
-
-    from app.core.security import password_verify
-    if not password_verify(data.voter_password.strip(), user.password_hash):
-        raise HTTPException(401, "Invalid voter ID or password.")
 
     status_row = db.scalar(
         select(VoterElectionStatus).where(
@@ -359,11 +369,11 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
     if not status_row or not status_row.eligible:
         raise HTTPException(
             403,
-            "You are not authorized to access this election.",
+            "This voter is not registered for this election",
         )
 
     if status_row.voted_at:
-        raise HTTPException(409, "You have already cast a ballot for this election")
+        raise HTTPException(409, "You have already voted")
 
     # Start authentication session
     session = AuthSession(
@@ -371,6 +381,7 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
         election_id=election.id,
         stage=AuthStage.IDENTIFIED,
         expires_at=current + timedelta(minutes=settings.max_authentication_minutes),
+        metrics={"voter_name": voter.full_name, "voter_id": voter.voter_id},
     )
     db.add(session)
     db.commit()
@@ -406,6 +417,10 @@ def cast_vote(data: CastVote, db: Session = Depends(get_db)):
 
     if not candidate_id_list:
         raise HTTPException(422, "At least one candidate or option must be selected")
+
+    max_allowed = getattr(election, "max_selections", 1) or 1
+    if len(candidate_id_list) > max_allowed:
+        raise HTTPException(422, f"You may only select up to {max_allowed} option{'s' if max_allowed > 1 else ''} for this election")
 
     # Verify all candidates belong to this election
     for cid in candidate_id_list:

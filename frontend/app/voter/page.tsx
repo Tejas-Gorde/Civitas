@@ -13,8 +13,8 @@ function VoterPortalContent() {
 
   const [electionId, setElectionId] = useState<string>(searchParams.get("election_id") || "");
   const [election, setElection] = useState<any | null>(null);
+  const [voterNameInput, setVoterNameInput] = useState<string>("");
   const [voterIdInput, setVoterIdInput] = useState<string>("");
-  const [voterPasswordInput, setVoterPasswordInput] = useState<string>("");
 
   // Authenticated Session State
   const [authSessionId, setAuthSessionId] = useState<string>("");
@@ -60,12 +60,12 @@ function VoterPortalContent() {
 
   const handleVoterAuthenticate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!voterIdInput.trim()) {
-      toast.error("Please enter your Voter ID.");
+    if (!voterNameInput.trim()) {
+      toast.error("Please enter your Full Name.");
       return;
     }
-    if (!voterPasswordInput.trim()) {
-      toast.error("Please enter your Voter Password.");
+    if (!voterIdInput.trim()) {
+      toast.error("Please enter your Voter ID.");
       return;
     }
 
@@ -76,11 +76,11 @@ function VoterPortalContent() {
       const res = await api.post("/voting/verify-voter", {
         electionId: election.id,
         voterId: voterIdInput.trim(),
-        password: voterPasswordInput.trim(),
+        voterName: voterNameInput.trim(),
       });
 
       if (res.data && res.data.eligible) {
-        toast.success("Voter authenticated successfully.");
+        toast.success("Voter identity verified successfully.");
         setAuthSessionId(res.data.session_id || "");
         setVoterInternalId(res.data.voter_internal_id || "");
         setSessionExpiresAt(res.data.expires_at || "");
@@ -101,14 +101,15 @@ function VoterPortalContent() {
         election={election}
         initialSession={authSessionId}
         initialVoterId={voterIdInput.trim()}
+        initialVoterName={voterNameInput.trim()}
         initialVoterInternalId={voterInternalId}
         initialExpiresAt={sessionExpiresAt}
         onReset={() => {
           setStep("election_input");
           setElection(null);
           setElectionId("");
+          setVoterNameInput("");
           setVoterIdInput("");
-          setVoterPasswordInput("");
           setAuthSessionId("");
           setVoterInternalId("");
           setSessionExpiresAt("");
@@ -246,10 +247,10 @@ function VoterPortalContent() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black shrink-0">
                 2
               </span>
-              Authenticate Voter Credentials
+              Voter Identification
             </h3>
             <p className="text-xs text-slate-600 mt-1">
-              Enter your official Voter ID and Password registered for this election.
+              Enter your registered Full Name and Voter ID to access the official ballot.
             </p>
           </div>
 
@@ -266,6 +267,20 @@ function VoterPortalContent() {
           <form onSubmit={handleVoterAuthenticate} className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Voter Full Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={voterNameInput}
+                onChange={(e) => setVoterNameInput(e.target.value)}
+                placeholder="Enter your full name (e.g. Jane Doe)"
+                className="input"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                 Voter ID <span className="text-rose-500">*</span>
               </label>
               <input
@@ -273,26 +288,9 @@ function VoterPortalContent() {
                 required
                 value={voterIdInput}
                 onChange={(e) => setVoterIdInput(e.target.value)}
-                placeholder="e.g. VOTER-1001"
-                className="input font-mono"
+                placeholder="Enter your voter ID (e.g. VOTER-1001)"
+                className="input font-mono uppercase"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Voter Password / Security Key <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="password"
-                required
-                value={voterPasswordInput}
-                onChange={(e) => setVoterPasswordInput(e.target.value)}
-                placeholder="Enter password"
-                className="input"
-              />
-              <p className="text-[11px] text-slate-500 mt-1">
-                Password assigned during registration by election administrator.
-              </p>
             </div>
 
             <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -303,17 +301,17 @@ function VoterPortalContent() {
 
               <button
                 type="submit"
-                disabled={loading || !voterIdInput.trim() || !voterPasswordInput.trim()}
+                disabled={loading || !voterNameInput.trim() || !voterIdInput.trim()}
                 className="button button-teal font-bold text-xs py-3 sm:py-2.5 px-6 disabled:opacity-60 w-full sm:w-auto"
               >
                 {loading ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin inline mr-1.5" />
-                    Authenticating...
+                    Verifying Identity...
                   </>
                 ) : (
                   <>
-                    Authenticate & Load Ballot
+                    Continue to Ballot
                     <ArrowRight className="h-4 w-4 ml-1.5 inline" />
                   </>
                 )}

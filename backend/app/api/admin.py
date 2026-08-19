@@ -411,6 +411,8 @@ def update_voter(voter_id: str, data: VoterUpdate, admin: User = Depends(admin_o
 
     voter = db.get(Voter, voter_id)
     if not voter:
+        voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == voter_id.strip().lower()))
+    if not voter:
         raise HTTPException(404, "Voter not found")
 
     statuses = db.scalars(select(VoterElectionStatus).where(VoterElectionStatus.voter_id == voter.id)).all()
@@ -422,7 +424,15 @@ def update_voter(voter_id: str, data: VoterUpdate, admin: User = Depends(admin_o
         raise HTTPException(403, "You are not authorized to modify voters outside your assigned election.")
 
     user = db.get(User, voter.user_id)
-    if data.full_name is not None:
+    if data.voter_id is not None and data.voter_id.strip():
+        new_vid = data.voter_id.strip()
+        if new_vid.lower() != voter.voter_id.lower():
+            existing = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == new_vid.lower(), Voter.id != voter.id))
+            if existing:
+                raise HTTPException(409, f"Voter ID '{new_vid}' is already registered for another voter.")
+            voter.voter_id = new_vid
+
+    if data.full_name is not None and data.full_name.strip():
         voter.full_name = data.full_name.strip()
     if data.mobile is not None:
         voter.mobile = data.mobile.strip()
@@ -431,7 +441,7 @@ def update_voter(voter_id: str, data: VoterUpdate, admin: User = Depends(admin_o
     if data.is_active is not None and user:
         user.is_active = data.is_active
     db.commit()
-    return {"status": "updated", "id": voter.id}
+    return {"status": "updated", "id": str(voter.id), "voter_id": voter.voter_id, "full_name": voter.full_name}
 
 
 @router.delete("/voters/{voter_id}", status_code=status.HTTP_204_NO_CONTENT)

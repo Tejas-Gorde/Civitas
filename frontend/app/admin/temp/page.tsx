@@ -149,19 +149,16 @@ export default function LocalAdminPage() {
   const [voterForm, setVoterForm] = useState({
     full_name: "",
     voter_id: "",
-    email: "",
-    mobile: "",
-    voter_password: "",
-    is_eligible: true,
   });
-  const [showVoterPass, setShowVoterPass] = useState(false);
   const [addingVoter, setAddingVoter] = useState(false);
 
-  // Reset Voter Password Modal State
-  const [setPasswordVoter, setSetPasswordVoter] = useState<any | null>(null);
-  const [resetPassInput, setResetPassInput] = useState("");
-  const [showResetPass, setShowResetPass] = useState(false);
-  const [updatingPass, setUpdatingPass] = useState(false);
+  // Edit Voter Modal State
+  const [editingVoter, setEditingVoter] = useState<any | null>(null);
+  const [editVoterForm, setEditVoterForm] = useState({ full_name: "", voter_id: "" });
+  const [savingVoter, setSavingVoter] = useState(false);
+
+  // Voter Status Filter State
+  const [voterStatusFilter, setVoterStatusFilter] = useState<"all" | "voted" | "not_voted">("all");
 
   // Remote Voting & QR State
   const [remoteStatus, setRemoteStatus] = useState<any | null>(null);
@@ -410,7 +407,7 @@ export default function LocalAdminPage() {
     e.preventDefault();
     if (!election) return;
     if (!voterForm.voter_id.trim() || !voterForm.full_name.trim()) {
-      toast.error("Please provide both Voter ID and Full Name.");
+      toast.error("Please provide both Voter Name and Voter ID.");
       return;
     }
 
@@ -419,10 +416,7 @@ export default function LocalAdminPage() {
       await api.post(`/admin/elections/${election.id}/voters`, {
         full_name: voterForm.full_name.trim(),
         voter_id: voterForm.voter_id.trim(),
-        email: voterForm.email.trim() || undefined,
-        mobile: voterForm.mobile.trim() || undefined,
-        voter_password: voterForm.voter_password.trim() || undefined,
-        is_eligible: voterForm.is_eligible,
+        is_eligible: true,
       });
 
       toast.success(`Voter '${voterForm.voter_id}' registered.`);
@@ -430,10 +424,6 @@ export default function LocalAdminPage() {
       setVoterForm({
         full_name: "",
         voter_id: "",
-        email: "",
-        mobile: "",
-        voter_password: "",
-        is_eligible: true,
       });
       await loadTabData(election.id);
     } catch (err) {
@@ -443,26 +433,35 @@ export default function LocalAdminPage() {
     }
   };
 
-  const handleResetVoterPassword = async (e: React.FormEvent) => {
+  const handleOpenEditVoter = (v: any) => {
+    setEditingVoter(v);
+    setEditVoterForm({
+      full_name: v.full_name || "",
+      voter_id: v.voter_id || "",
+    });
+  };
+
+  const handleUpdateVoter = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!setPasswordVoter) return;
-    if (!resetPassInput.trim()) {
-      toast.error("Please enter a new password.");
+    if (!editingVoter || !election) return;
+    if (!editVoterForm.full_name.trim() || !editVoterForm.voter_id.trim()) {
+      toast.error("Please provide both Voter Name and Voter ID.");
       return;
     }
 
-    setUpdatingPass(true);
+    setSavingVoter(true);
     try {
-      await api.post(`/admin/voters/${setPasswordVoter.id}/set-password`, {
-        voter_password: resetPassInput.trim(),
+      await api.put(`/admin/voters/${editingVoter.id}`, {
+        full_name: editVoterForm.full_name.trim(),
+        voter_id: editVoterForm.voter_id.trim(),
       });
-      toast.success(`Password reset for '${setPasswordVoter.voter_id}'`);
-      setSetPasswordVoter(null);
-      setResetPassInput("");
+      toast.success(`Voter '${editVoterForm.voter_id}' updated.`);
+      setEditingVoter(null);
+      await loadTabData(election.id);
     } catch (err) {
-      toast.error("Password reset failed: " + readable(err));
+      toast.error("Failed to update voter: " + readable(err));
     } finally {
-      setUpdatingPass(false);
+      setSavingVoter(false);
     }
   };
 
@@ -587,15 +586,21 @@ export default function LocalAdminPage() {
 
   // Filtered Voters
   const filteredVoters = useMemo(() => {
+    let list = voters;
+    if (voterStatusFilter === "voted") {
+      list = list.filter((v) => v.has_voted);
+    } else if (voterStatusFilter === "not_voted") {
+      list = list.filter((v) => !v.has_voted);
+    }
     const q = voterSearch.toLowerCase().trim();
-    if (!q) return voters;
-    return voters.filter(
+    if (!q) return list;
+    return list.filter(
       (v) =>
-        v.voter_id.toLowerCase().includes(q) ||
-        v.full_name.toLowerCase().includes(q) ||
+        v.voter_id?.toLowerCase().includes(q) ||
+        v.full_name?.toLowerCase().includes(q) ||
         (v.email && v.email.toLowerCase().includes(q))
     );
-  }, [voters, voterSearch]);
+  }, [voters, voterSearch, voterStatusFilter]);
 
   const activeVotingUrl =
     remoteStatus?.voting_url ||
@@ -698,11 +703,16 @@ export default function LocalAdminPage() {
                 const votingType = elec.voting_type || "regular";
 
                 const typeBadgeMap: Record<string, { label: string; color: string }> = {
-                  regular: { label: "Regular Election", color: "bg-sky-50 text-sky-800 border-sky-200" },
-                  poll: { label: "Poll", color: "bg-teal-50 text-teal-800 border-teal-200" },
-                  multiple_choice: { label: "Multiple Choice", color: "bg-indigo-50 text-indigo-800 border-indigo-200" },
-                  yes_no: { label: "Yes / No Decision", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+                  general: { label: "General Election", color: "bg-teal-50 text-teal-800 border-teal-200" },
+                  regular: { label: "General Election", color: "bg-teal-50 text-teal-800 border-teal-200" },
+                  presidential: { label: "Presidential / Leader", color: "bg-indigo-50 text-indigo-800 border-indigo-200" },
+                  council: { label: "Council / Committee", color: "bg-purple-50 text-purple-800 border-purple-200" },
+                  multiple_choice: { label: "Council / Committee", color: "bg-purple-50 text-purple-800 border-purple-200" },
+                  referendum: { label: "Referendum / Yes-No", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+                  yes_no: { label: "Referendum / Yes-No", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+                  poll: { label: "Opinion Poll", color: "bg-sky-50 text-sky-800 border-sky-200" },
                   rating: { label: "Rating Scale", color: "bg-amber-50 text-amber-800 border-amber-200" },
+                  custom: { label: "Custom Election", color: "bg-sky-50 text-sky-800 border-sky-200" },
                 };
                 const typeBadge = typeBadgeMap[votingType] || { label: String(votingType), color: "bg-slate-100 text-slate-700 border-slate-200" };
 
@@ -1271,16 +1281,55 @@ export default function LocalAdminPage() {
         {activeTab === "voters" && election && (
           <div className="space-y-4 sm:space-y-6 animate-fade-in">
             <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
-              <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="relative w-full sm:w-80">
-                  <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={voterSearch}
-                    onChange={(e) => setVoterSearch(e.target.value)}
-                    placeholder="Search by name, voter ID, email..."
-                    className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
-                  />
+              <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                  <div className="relative w-full sm:w-72">
+                    <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={voterSearch}
+                      onChange={(e) => setVoterSearch(e.target.value)}
+                      placeholder="Search by name or voter ID..."
+                      className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
+                    />
+                  </div>
+
+                  {/* Status Filter Pills */}
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setVoterStatusFilter("all")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        voterStatusFilter === "all"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      All ({voters.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVoterStatusFilter("voted")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        voterStatusFilter === "voted"
+                          ? "bg-white text-emerald-800 shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Voted ({voters.filter((v) => v.has_voted).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVoterStatusFilter("not_voted")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        voterStatusFilter === "not_voted"
+                          ? "bg-white text-amber-800 shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Not Voted ({voters.filter((v) => !v.has_voted).length})
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -1300,16 +1349,15 @@ export default function LocalAdminPage() {
                     <tr>
                       <th className="py-3.5 px-6 font-semibold">Voter Name</th>
                       <th className="py-3.5 px-6 font-semibold">Voter ID</th>
-                      <th className="py-3.5 px-6 font-semibold">Status</th>
-                      <th className="py-3.5 px-6 font-semibold">Contact</th>
+                      <th className="py-3.5 px-6 font-semibold">Voting Status</th>
                       <th className="py-3.5 px-6 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredVoters.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400">
-                          No voters registered for this election yet.
+                        <td colSpan={4} className="py-12 text-center text-slate-400">
+                          No voters match the criteria.
                         </td>
                       </tr>
                     ) : (
@@ -1324,22 +1372,19 @@ export default function LocalAdminPage() {
                                 Voted
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                                 Not Voted
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-6 text-slate-500 text-[11px]">
-                            <div>{v.email || "—"}</div>
-                            <div>{v.mobile || "—"}</div>
-                          </td>
                           <td className="py-3.5 px-6 text-right space-x-2 whitespace-nowrap">
                             <button
                               type="button"
-                              onClick={() => setSetPasswordVoter(v)}
-                              className="py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-blue-700 text-xs font-bold transition border border-slate-200"
+                              onClick={() => handleOpenEditVoter(v)}
+                              className="py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition border border-slate-200 inline-flex items-center gap-1"
                             >
-                              Reset Password
+                              <Edit3 className="h-3.5 w-3.5" />
+                              <span>Edit</span>
                             </button>
                             <button
                               type="button"
@@ -1352,7 +1397,7 @@ export default function LocalAdminPage() {
                                   : "text-red-600 hover:bg-red-50"
                               }`}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 inline" />
                             </button>
                           </td>
                         </tr>
@@ -1365,7 +1410,7 @@ export default function LocalAdminPage() {
                 <div className="block md:hidden divide-y divide-slate-100">
                   {filteredVoters.length === 0 ? (
                     <div className="py-12 text-center text-slate-400 text-xs">
-                      No voters registered for this election yet.
+                      No voters match the criteria.
                     </div>
                   ) : (
                     filteredVoters.map((v) => (
@@ -1382,27 +1427,21 @@ export default function LocalAdminPage() {
                                 Voted
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                                 Not Voted
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {(v.email || v.mobile) && (
-                          <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg space-y-0.5">
-                            {v.email && <div>Email: {v.email}</div>}
-                            {v.mobile && <div>Mobile: {v.mobile}</div>}
-                          </div>
-                        )}
-
                         <div className="flex items-center gap-2 pt-1">
                           <button
                             type="button"
-                            onClick={() => setSetPasswordVoter(v)}
-                            className="flex-1 py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-blue-700 text-xs font-bold transition border border-slate-200 min-h-[40px] text-center"
+                            onClick={() => handleOpenEditVoter(v)}
+                            className="flex-1 py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition border border-slate-200 min-h-[40px] flex items-center justify-center gap-1.5"
                           >
-                            Reset Password
+                            <Edit3 className="h-3.5 w-3.5" />
+                            <span>Edit Voter</span>
                           </button>
                           <button
                             type="button"
@@ -2139,7 +2178,7 @@ export default function LocalAdminPage() {
 
             <form onSubmit={handleAddVoter} className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">Full Name *</label>
+                <label className="font-bold text-slate-700">Voter Name *</label>
                 <input
                   type="text"
                   required
@@ -2158,51 +2197,8 @@ export default function LocalAdminPage() {
                   value={voterForm.voter_id}
                   onChange={(e) => setVoterForm({ ...voterForm, voter_id: e.target.value })}
                   placeholder="e.g. VOTER-1001"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 uppercase focus:outline-none focus:border-blue-500 focus:bg-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 uppercase focus:outline-none focus:border-blue-500 focus:bg-white font-mono"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Email (Optional)</label>
-                  <input
-                    type="email"
-                    value={voterForm.email}
-                    onChange={(e) => setVoterForm({ ...voterForm, email: e.target.value })}
-                    placeholder="voter@civitas.local"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Mobile (Optional)</label>
-                  <input
-                    type="text"
-                    value={voterForm.mobile}
-                    onChange={(e) => setVoterForm({ ...voterForm, mobile: e.target.value })}
-                    placeholder="+1 555-0199"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Initial Password (Optional)</label>
-                <div className="relative">
-                  <input
-                    type={showVoterPass ? "text" : "password"}
-                    value={voterForm.voter_password}
-                    onChange={(e) => setVoterForm({ ...voterForm, voter_password: e.target.value })}
-                    placeholder="Auto-generated if blank"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white pr-9"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowVoterPass(!showVoterPass)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                  >
-                    {showVoterPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -2218,7 +2214,7 @@ export default function LocalAdminPage() {
                   disabled={addingVoter}
                   className="py-2 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-xs"
                 >
-                  {addingVoter ? "Registering..." : "Register Voter"}
+                  {addingVoter ? "Registering..." : "Add Voter"}
                 </button>
               </div>
             </form>
@@ -2226,66 +2222,60 @@ export default function LocalAdminPage() {
         </div>
       )}
 
-      {/* RESET PASSWORD MODAL */}
-      {setPasswordVoter && (
+      {/* EDIT VOTER MODAL */}
+      {editingVoter && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900">Reset Voter Password</h3>
+              <h3 className="text-base font-bold text-slate-900">Edit Voter</h3>
               <button
                 type="button"
-                onClick={() => setSetPasswordVoter(null)}
+                onClick={() => setEditingVoter(null)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleResetVoterPassword} className="space-y-3.5 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <div className="text-slate-600">
-                  Voter: <strong className="text-slate-900">{setPasswordVoter.full_name}</strong>
-                </div>
-                <div className="text-slate-600">
-                  Voter ID: <strong className="text-blue-700 font-mono">{setPasswordVoter.voter_id}</strong>
-                </div>
+            <form onSubmit={handleUpdateVoter} className="space-y-3.5 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">Voter Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editVoterForm.full_name}
+                  onChange={(e) => setEditVoterForm({ ...editVoterForm, full_name: e.target.value })}
+                  placeholder="e.g. Jane Doe"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white"
+                />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">New Password *</label>
-                <div className="relative">
-                  <input
-                    type={showResetPass ? "text" : "password"}
-                    required
-                    value={resetPassInput}
-                    onChange={(e) => setResetPassInput(e.target.value)}
-                    placeholder="Enter new password"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white pr-9"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowResetPass(!showResetPass)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                  >
-                    {showResetPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+                <label className="font-bold text-slate-700">Voter ID *</label>
+                <input
+                  type="text"
+                  required
+                  value={editVoterForm.voter_id}
+                  onChange={(e) => setEditVoterForm({ ...editVoterForm, voter_id: e.target.value })}
+                  placeholder="e.g. VOTER-1001"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 uppercase focus:outline-none focus:border-blue-500 focus:bg-white font-mono"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setSetPasswordVoter(null)}
+                  onClick={() => setEditingVoter(null)}
                   className="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={updatingPass}
+                  disabled={savingVoter}
                   className="py-2 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-xs"
                 >
-                  {updatingPass ? "Updating..." : "Update Password"}
+                  {savingVoter ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

@@ -27,6 +27,9 @@ class ElectionCreate(BaseModel):
     enable_step_4: bool = True
     enable_step_5: bool = True
     show_voter_names_in_results: bool = False
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
     temp_admin_id: str | None = None
     temp_admin_password: str | None = None
 
@@ -38,9 +41,9 @@ class OnboardingCandidateItem(BaseModel):
 
 
 class OnboardingVoterItem(BaseModel):
-    voter_id: str = Field(min_length=2, max_length=64)
-    full_name: str = Field(min_length=2, max_length=200)
-    voter_password: str | None = Field(default=None, min_length=4, max_length=128)
+    voter_id: str = Field(min_length=1, max_length=64)
+    full_name: str = Field(min_length=1, max_length=200)
+    voter_password: str | None = None
 
 
 class ElectionOnboardingCreate(BaseModel):
@@ -59,6 +62,9 @@ class ElectionOnboardingCreate(BaseModel):
     enable_step_4: bool = True
     enable_step_5: bool = True
     show_voter_names_in_results: bool = False
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
     candidates: list[OnboardingCandidateItem] = Field(default_factory=list)
     voters: list[OnboardingVoterItem] = Field(default_factory=list)
 
@@ -77,6 +83,9 @@ class ElectionUpdate(BaseModel):
     enable_step_4: bool | None = None
     enable_step_5: bool | None = None
     show_voter_names_in_results: bool | None = None
+    max_selections: int | None = None
+    allow_abstain: bool | None = None
+    position_title: str | None = None
     temp_admin_id: str | None = None
     temp_admin_password: str | None = None
 
@@ -101,6 +110,9 @@ class ElectionOut(BaseModel):
     enable_step_4: bool = True
     enable_step_5: bool = True
     show_voter_names_in_results: bool = False
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
     temp_admin_username: str | None = None
     candidate_count: int = 0
 
@@ -202,9 +214,9 @@ class VoterRegistration(BaseModel):
 
 
 class AdminVoterCreate(BaseModel):
-    full_name: str = Field(min_length=2, max_length=200)
-    voter_id: str = Field(min_length=2, max_length=64)
-    voter_password: str | None = Field(default=None, min_length=4, max_length=128)
+    full_name: str = Field(min_length=1, max_length=200)
+    voter_id: str = Field(min_length=1, max_length=64)
+    voter_password: str | None = None
     election_id: str | None = None
     email: EmailStr | None = None
     mobile: str | None = None
@@ -216,6 +228,7 @@ class VoterSetPasswordRequest(BaseModel):
 
 
 class VoterUpdate(BaseModel):
+    voter_id: str | None = None
     full_name: str | None = None
     email: EmailStr | None = None
     mobile: str | None = None
@@ -237,8 +250,9 @@ class VoterOut(BaseModel):
 
 class VoterVerifyRequest(BaseModel):
     election_id: str = Field(..., validation_alias=AliasChoices("election_id", "electionId"))
-    voter_registration_id: str = Field(..., validation_alias=AliasChoices("voter_registration_id", "voterId", "voter_id"), min_length=1, max_length=64)
-    voter_password: str = Field(..., validation_alias=AliasChoices("voter_password", "password"), min_length=1, max_length=128)
+    voter_id: str = Field(..., validation_alias=AliasChoices("voter_id", "voter_registration_id", "voterId"), min_length=1, max_length=64)
+    voter_name: str = Field(..., validation_alias=AliasChoices("voter_name", "voterName", "name", "full_name"), min_length=1, max_length=200)
+    voter_password: str | None = Field(default=None, validation_alias=AliasChoices("voter_password", "password"))
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -406,6 +420,9 @@ class QuickVoterVerifyResponse(BaseModel):
     enable_step_3: bool = True
     enable_step_4: bool = True
     enable_step_5: bool = True
+    max_selections: int = 1
+    allow_abstain: bool = False
+    position_title: str | None = None
 
 
 class QuickVoterRecordOut(BaseModel):
