@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import HeaderNav from "../components/HeaderNav";
+import { ThemeProvider } from "../components/ThemeProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -60,38 +61,61 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body suppressHydrationWarning className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-        <HeaderNav />
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('civitas-theme');
+                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.style.colorScheme = 'light';
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body suppressHydrationWarning className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+        <ThemeProvider>
+          <HeaderNav />
 
-        {/* Main Content Area */}
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
-          {children}
-        </main>
+          {/* Main Content Area */}
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
+            {children}
+          </main>
 
-        {/* Footer */}
-        <footer className="border-t border-slate-200 bg-white py-6 text-xs text-slate-500">
-          <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 sm:flex-row sm:px-6">
-            <div>
-              <p className="font-semibold text-slate-700">CIVITAS Secure Digital Voting System</p>
-              <p className="mt-0.5 text-slate-500">
-                Authorized Election Security Verification Platform
-              </p>
+          {/* Footer */}
+          <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-200">
+            <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 sm:flex-row sm:px-6">
+              <div>
+                <p className="font-semibold text-slate-700 dark:text-slate-300">CIVITAS Secure Digital Voting System</p>
+                <p className="mt-0.5 text-slate-500 dark:text-slate-500">
+                  Authorized Election Security Verification Platform
+                </p>
+              </div>
+              <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  System Operational
+                </span>
+                <span>•</span>
+                <span>Privacy Guaranteed</span>
+                <span>•</span>
+                <span>Anonymous Ballot</span>
+              </div>
             </div>
-            <div className="flex items-center gap-4 text-slate-500">
-              <span className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                System Operational
-              </span>
-              <span>•</span>
-              <span>Privacy Guaranteed</span>
-              <span>•</span>
-              <span>Anonymous Ballot</span>
-            </div>
-          </div>
-        </footer>
+          </footer>
 
-        <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
