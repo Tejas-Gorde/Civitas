@@ -1406,27 +1406,9 @@ def update_voter_assistance_settings(
 from fastapi.responses import FileResponse
 from typing import List
 
-@router.get("/photos", response_model=List[VoterPhotoOut])
-def list_voter_photos(
-    admin: User = Depends(current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    List all verification photos.
-    Big Admin sees all photos.
-    Local Admin sees ONLY photos for elections assigned to them.
-    """
-    if admin.role not in (Role.BIG_ADMIN, Role.ADMIN, Role.TEMP_ADMIN):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not authorized to view verification photos.")
 
-    query = select(VoterPhoto).order_by(VoterPhoto.created_at.desc())
-    
-    if admin.role == Role.TEMP_ADMIN:
-        query = query.where(VoterPhoto.local_admin_id == str(admin.id))
-        
-    photos = db.scalars(query).all()
-    
-    # Enrich with display fields
+def _enrich_photos(photos: list, db: Session) -> list:
+    """Enrich VoterPhoto records with voter and election display fields."""
     enriched = []
     for photo in photos:
         out = VoterPhotoOut.model_validate(photo)
@@ -1438,8 +1420,72 @@ def list_voter_photos(
         if election:
             out.election_name = election.name
         enriched.append(out)
-        
     return enriched
+
+
+@router.get("/elections/{election_id}/verification-photos", response_model=List[VoterPhotoOut])
+def list_election_verification_photos(
+    election_id: str,
+    admin: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    List verification photos for a specific election.
+    Local Admin (TEMP_ADMIN) can only see photos for elections they manage.
+    Big Admin / System Admin can see all.
+    """
+    if admin.role not in (Role.BIG_ADMIN, Role.ADMIN, Role.TEMP_ADMIN):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not authorized to view verification photos.")
+
+    # Resolve election — support both UUID and election_id slug
+    election = db.scalar(
+        select(Election).where(
+            (func.lower(Election.id) == election_id.lower()) |
+            (func.lower(Election.election_id) == election_id.lower())
+        )
+    )
+    if not election:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Election not found.")
+
+    # Enforce Local Admin authorization
+    if admin.role == Role.TEMP_ADMIN and election.temp_admin_user_id != str(admin.id):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You are not authorized to access this election's photos.")
+
+    photos = db.scalars(
+        select(VoterPhoto)
+        .where(VoterPhoto.election_id == str(election.id))
+        .order_by(VoterPhoto.created_at.desc())
+    ).all()
+
+    return _enrich_photos(list(photos), db)
+
+
+@router.get("/photos", response_model=List[VoterPhotoOut])
+def list_voter_photos(
+    admin: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Legacy: List verification photos.
+    Big Admin sees all. Local Admin sees only their elections' photos.
+    Use /elections/{id}/verification-photos for election-scoped fetching.
+    """
+    if admin.role not in (Role.BIG_ADMIN, Role.ADMIN, Role.TEMP_ADMIN):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not authorized to view verification photos.")
+
+    query = select(VoterPhoto).order_by(VoterPhoto.created_at.desc())
+
+    if admin.role == Role.TEMP_ADMIN:
+        # Get all elections this admin manages
+        admin_elections = db.scalars(
+            select(Election.id).where(Election.temp_admin_user_id == str(admin.id))
+        ).all()
+        query = query.where(VoterPhoto.election_id.in_([str(e) for e in admin_elections]))
+
+    photos = db.scalars(query).all()
+    return _enrich_photos(list(photos), db)
+
+
 
 
 @router.get("/photos/{photo_id}/view")

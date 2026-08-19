@@ -250,7 +250,7 @@ export default function LocalAdminPage() {
         api.get(`/admin/elections/${electionId}/results`),
         api.get(`/admin/elections/${electionId}/remote-voting`),
         api.get(`/admin/elections/${electionId}/audit-logs`),
-        api.get(`/admin/photos`),
+        api.get(`/admin/elections/${electionId}/verification-photos`),
       ]);
 
       if (votersRes.status === "fulfilled") setVoters(votersRes.value.data || []);

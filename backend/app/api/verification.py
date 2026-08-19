@@ -95,19 +95,20 @@ def save_voter_photo_file(db: Session, session: AuthSession, file: UploadFile) -
         )
     )
     
-    # Save VoterPhoto record
+    # Save VoterPhoto record — always persist, even if local_admin_id is None
     election = db.get(Election, session.election_id)
-    local_admin_id = election.temp_admin_user_id if election else None
-    if local_admin_id:
-        voter_photo = VoterPhoto(
-            id=photo_id,
-            election_id=session.election_id,
-            voter_id=session.voter_id,
-            local_admin_id=local_admin_id,
-            photo_type="face_verification",
-            storage_path=target_path
-        )
-        db.add(voter_photo)
+    local_admin_id = str(election.temp_admin_user_id) if election and election.temp_admin_user_id else None
+    voter_photo = VoterPhoto(
+        id=photo_id,
+        election_id=session.election_id,
+        voter_id=session.voter_id,
+        local_admin_id=local_admin_id,
+        photo_type="face_verification",
+        storage_path=target_path,
+        file_size_bytes=len(contents),
+        mime_type="image/jpeg",
+    )
+    db.add(voter_photo)
 
     db.commit()
 

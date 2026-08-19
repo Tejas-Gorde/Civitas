@@ -278,9 +278,11 @@ class VoterPhoto(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "voter_photos"
     election_id: Mapped[str] = mapped_column(String(36), ForeignKey("elections.id", ondelete="CASCADE"), index=True)
     voter_id: Mapped[str] = mapped_column(String(36), ForeignKey("voters.id", ondelete="CASCADE"), index=True)
-    local_admin_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    local_admin_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     photo_type: Mapped[str] = mapped_column(String(80), default="face_verification")
     storage_path: Mapped[str] = mapped_column(String(500))
+    file_size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mime_type: Mapped[str | None] = mapped_column(String(80), nullable=True)
 
 
 Index("ix_auth_voter_election_created", AuthenticationLog.voter_id, AuthenticationLog.election_id, AuthenticationLog.created_at)

@@ -153,15 +153,15 @@ class VoterPhotoOut(BaseModel):
     id: UUID
     election_id: str
     voter_id: str
-    local_admin_id: str
+    local_admin_id: str | None = None
     photo_type: str
     created_at: datetime
-    # Display fields
+    file_size_bytes: int | None = None
+    mime_type: str | None = None
+    # Display fields (populated server-side)
     voter_reg_id: str | None = None
     voter_name: str | None = None
     election_name: str | None = None
-    
-
 
 class RemoteVotingStatusOut(BaseModel):
     election_id: UUID

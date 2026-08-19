@@ -41,6 +41,7 @@ import { isMobileDevice } from "../lib/device";
 import { useVoiceGuidance } from "../hooks/useVoiceGuidance";
 import Chatbot from "./Chatbot";
 import { STEP_INSTRUCTIONS, FEEDBACK_MESSAGES, CHALLENGE_TEXTS } from "../lib/translations";
+import { compressPhotoBlob } from "../lib/photoCompress";
 import ElectionHeader from "./voter/ElectionHeader";
 import ElectionIntro from "./voter/ElectionIntro";
 import ElectionVotingView from "./voter/ElectionVotingView";
@@ -157,6 +158,17 @@ export default function VotingFlow({
   const [photoPhase, setPhotoPhase] = useState<"live" | "preview">("live");
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
+  // Photo upload lifecycle: idle → uploading → saved | failed
+  type PhotoUploadStatus = "idle" | "uploading" | "saved" | "failed";
+  const [photoUploadStatus, setPhotoUploadStatus] = useState<PhotoUploadStatus>("idle");
+  // Ref version so async callbacks can read latest value without stale closure
+  const photoUploadStatusRef = useRef<PhotoUploadStatus>("idle");
+  const setPhotoStatus = (s: PhotoUploadStatus) => {
+    photoUploadStatusRef.current = s;
+    setPhotoUploadStatus(s);
+  };
+  // Keep compressed blob around for retry-without-retake
+  const pendingUploadBlob = useRef<Blob | null>(null);
   const [voiceTestStatus, setVoiceTestStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
   const [isMobile, setIsMobile] = useState(false);
   const [mobileVerificationEnabled, setMobileVerificationEnabled] = useState(false);
@@ -541,6 +553,66 @@ export default function VotingFlow({
     voice.speak(FEEDBACK_MESSAGES[voice.language]?.photo_retake || FEEDBACK_MESSAGES.en.photo_retake);
   };
 
+  /**
+   * BACKGROUND UPLOAD HELPER
+   * Uploads a compressed blob for the current session.
+   * Called after voter has already been advanced to the next step.
+   * Handles retries internally. Updates photoUploadStatus.
+   */
+  const uploadPhotoInBackground = async (compressedBlob: Blob, sessionId: string, electionId?: string) => {
+    const MAX_RETRIES = 4;
+    let lastErr: any = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 1) {
+          await new Promise((r) => setTimeout(r, 800 * attempt));
+        }
+
+        const formData = new FormData();
+        formData.append("file", compressedBlob, "voter_photo.jpg");
+        formData.append("session_id", sessionId);
+        if (electionId) formData.append("election_id", electionId);
+
+        const response = await api.post("/verification/photo", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        if (response.data.success || response.data.status === "ok") {
+      pendingUploadBlob.current = null;
+          setPhotoStatus("saved");
+          if (response.data.challenge) {
+            const arr = response.data.challenge.split(",") as ChallengeType[];
+            setChallengesList(arr);
+            setCurrentChallengeIdx(0);
+            setChallenge(response.data.challenge);
+          }
+          return;
+        }
+        lastErr = new Error(response.data.message || "Photo save failed");
+      } catch (err: any) {
+        lastErr = err;
+        const msg = readable(err);
+        if (msg.includes("session has expired") || err?.response?.status === 401) {
+          // Session expired — cannot retry
+          setPhotoUploadStatus("failed");
+          return;
+        }
+      }
+    }
+
+    // All retries exhausted
+    setPhotoStatus("failed");
+    console.error("Photo upload failed after retries:", lastErr);
+  };
+
+  /** Retry an already-compressed but failed upload (no retake needed). */
+  const handleRetryPhotoUpload = async () => {
+    if (!pendingUploadBlob.current || !session) return;
+    setPhotoStatus("uploading");
+    await uploadPhotoInBackground(pendingUploadBlob.current, session, election?.id);
+  };
+
   const handleConfirmSavePhoto = async () => {
     setVerifyError(null);
     if (!capturedBlob || !session) {
@@ -553,72 +625,51 @@ export default function VotingFlow({
       return;
     }
 
+    // Guard: prevent duplicate uploads
+    if (photoUploadStatus === "uploading" || photoUploadStatus === "saved") return;
+
     setBusy(true);
-    let attempts = 0;
-    const maxRetries = 5;
-    let lastErr: any = null;
+    setVerifyError(null);
 
-    while (attempts < maxRetries) {
-      attempts++;
+    try {
+      // Step 1: Compress the captured blob client-side
+      let compressedBlob: Blob;
       try {
-        if (attempts > 1) {
-          toast.info(`Retrying photo upload (Attempt ${attempts} of ${maxRetries})...`);
-          await new Promise((r) => setTimeout(r, 600 * attempts));
-        }
-
-        const formData = new FormData();
-        formData.append("file", capturedBlob, "voter_photo.jpg");
-        formData.append("session_id", session);
-        if (voterId) {
-          formData.append("voter_id", voterId);
-        }
-        if (election?.id) {
-          formData.append("election_id", election.id);
-        }
-
-        const response = await api.post("/verification/photo", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        if (response.data.success || response.data.status === "ok") {
-          if (capturedUrl) {
-            URL.revokeObjectURL(capturedUrl);
-          }
-          setCapturedBlob(null);
-          setCapturedUrl(null);
-          setPhotoPhase("live");
-          if (response.data.challenge) {
-            const arr = response.data.challenge.split(",") as ChallengeType[];
-            setChallengesList(arr);
-            setCurrentChallengeIdx(0);
-            setChallenge(response.data.challenge);
-          } else {
-            setChallenge("blink"); // fallback
-          }
-          toast.success("✓ Photo securely saved");
-          voice.speak(FEEDBACK_MESSAGES[voice.language]?.photo_confirmed || FEEDBACK_MESSAGES.en.photo_confirmed);
-          setBusy(false);
-          await advanceFromStage("face");
-          return;
-        } else {
-          lastErr = new Error(response.data.message || "Photo save failed");
-        }
-      } catch (err: any) {
-        lastErr = err;
-        const msg = readable(err);
-        if (msg.includes("session has expired") || (err.response && err.response.status === 401)) {
-          setSessionExpired(true);
-          toast.error("Your voting session has expired.");
-          setBusy(false);
-          return;
-        }
+        compressedBlob = await compressPhotoBlob(capturedBlob);
+      } catch {
+        compressedBlob = capturedBlob; // Fallback to original if compression fails
       }
-    }
 
-    const msg = readable(lastErr) || "Photo upload was unsuccessful after 5 attempts. Please try again.";
-    setVerifyError(msg);
-    toast.error(msg);
-    setBusy(false);
+      // Store for potential retry without retake
+      pendingUploadBlob.current = compressedBlob;
+
+      // Step 2: Clean up captured state immediately
+      if (capturedUrl) URL.revokeObjectURL(capturedUrl);
+      setCapturedBlob(null);
+      setCapturedUrl(null);
+      setPhotoPhase("live");
+
+      // Step 3: Mark as uploading and advance voter immediately (non-blocking UX)
+      setPhotoStatus("uploading");
+      voice.speak(FEEDBACK_MESSAGES[voice.language]?.photo_confirmed || FEEDBACK_MESSAGES.en.photo_confirmed);
+      setBusy(false);
+
+      // Step 4: Advance to next stage BEFORE the upload completes
+      await advanceFromStage("face");
+
+      // Step 5: Upload in background
+      await uploadPhotoInBackground(compressedBlob, session, election?.id);
+
+      if (photoUploadStatusRef.current !== "failed") {
+        toast.success("✓ Verification photo securely saved");
+      }
+    } catch (err: any) {
+      const msg = readable(err) || "Photo processing failed. Please try again.";
+      setVerifyError(msg);
+      toast.error(msg);
+      setPhotoStatus("failed");
+      setBusy(false);
+    }
   };
 
   // Step 4: Guided Demonstration Challenge Handlers
@@ -785,6 +836,28 @@ export default function VotingFlow({
         return;
       }
     }
+
+    // Photo upload safety gate — if photo upload is required (step 3 enabled) and failed, block vote
+    if (election.enable_step_3 !== false && photoUploadStatusRef.current === "failed") {
+      toast.error("Your verification photo could not be saved. Please retry or retake before casting your ballot.");
+      return;
+    }
+
+    // If upload is still in-progress, wait briefly for it to complete
+    if (election.enable_step_3 !== false && photoUploadStatusRef.current === "uploading") {
+      toast.info("Waiting for verification photo to be saved...");
+      let waited = 0;
+      while (photoUploadStatusRef.current === "uploading" && waited < 15000) {
+        await new Promise((r) => setTimeout(r, 500));
+        waited += 500;
+      }
+      // Cast to string to defeat TS narrowing — ref value may have changed to "failed" by async callback
+      if ((photoUploadStatusRef.current as string) === "failed") {
+        toast.error("Verification photo could not be saved. Please retry before casting your ballot.");
+        return;
+      }
+    }
+
     try {
       setBusy(true);
       setSubmitError(null);
@@ -816,6 +889,7 @@ export default function VotingFlow({
       setBusy(false);
     }
   };
+
 
   const selectedCandidate = candidates.find((c) => c.id === selectedCandidateId);
   const selectedCandidatesList = candidates.filter((c) => selectedCandidateIds.includes(c.id));
@@ -876,7 +950,38 @@ export default function VotingFlow({
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Floating Photo Upload Status Indicator */}
+      {photoUploadStatus === "uploading" && (
+        <div className="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-medium text-indigo-800 shadow-sm">
+          <RefreshCw className="h-3.5 w-3.5 animate-spin text-indigo-600 shrink-0" />
+          <span>Saving verification photo in the background…</span>
+        </div>
+      )}
+      {photoUploadStatus === "failed" && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-rose-50 border border-rose-200 rounded-xl shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-medium text-rose-800">
+            <AlertCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+            <span>Verification photo could not be saved.</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleRetryPhotoUpload}
+              className="text-xs font-bold text-rose-700 underline hover:text-rose-900"
+            >
+              Retry Upload
+            </button>
+            <button
+              onClick={() => { setPhotoUploadStatus("idle"); setStage("face"); setPhotoPhase("live"); }}
+              className="text-xs font-bold text-slate-600 underline hover:text-slate-900"
+            >
+              Retake Photo
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Progress Bar Header */}
+
       <div className="card p-3.5 sm:p-5">
         {/* Desktop Header Audio & Language Toolbar (Locked for Desktop) */}
         <div className="hidden sm:flex items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">

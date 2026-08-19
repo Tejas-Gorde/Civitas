@@ -98,6 +98,19 @@ def run_auto_migrations(target_engine):
         if "votes" in tables:
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_votes_election_candidate ON votes (election_id, candidate_id)"))
 
+    # voter_photos table — add new columns if missing (safe, idempotent)
+    if "voter_photos" in tables:
+        vp_columns = [c["name"] for c in inspector.get_columns("voter_photos")]
+        with target_engine.begin() as conn:
+            if "file_size_bytes" not in vp_columns:
+                conn.execute(text("ALTER TABLE voter_photos ADD COLUMN file_size_bytes INTEGER"))
+            if "mime_type" not in vp_columns:
+                conn.execute(text("ALTER TABLE voter_photos ADD COLUMN mime_type VARCHAR(80)"))
+            # Note: SQLite does not support dropping NOT NULL constraints directly.
+            # Since local_admin_id may have been NOT NULL, we handle this gracefully
+            # by ensuring the application code handles None values correctly.
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
