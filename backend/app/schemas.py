@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class TokenResponse(BaseModel):
@@ -33,11 +33,33 @@ class ElectionCreate(BaseModel):
     temp_admin_id: str | None = None
     temp_admin_password: str | None = None
 
+    @model_validator(mode="after")
+    def validate_election_dates(self) -> "ElectionCreate":
+        if self.ends_at <= self.starts_at:
+            raise ValueError("End time must be later than start time")
+        return self
+
 
 class OnboardingCandidateItem(BaseModel):
-    name: str = Field(min_length=2, max_length=200)
-    party: str = Field(min_length=2, max_length=160)
+    name: str = Field(min_length=1, max_length=200)
+    party: str | None = Field(default=None, max_length=160)
     manifesto: str = Field(default="", max_length=5000)
+
+    @field_validator("name")
+    @classmethod
+    def validate_candidate_name(cls, v: str) -> str:
+        cleaned = str(v).strip()
+        if not cleaned:
+            raise ValueError("Candidate name cannot be empty")
+        return cleaned
+
+    @field_validator("party")
+    @classmethod
+    def validate_candidate_party(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = str(v).strip()
+        return cleaned if cleaned else None
 
 
 class OnboardingVoterItem(BaseModel):
@@ -67,6 +89,12 @@ class ElectionOnboardingCreate(BaseModel):
     position_title: str | None = None
     candidates: list[OnboardingCandidateItem] = Field(default_factory=list)
     voters: list[OnboardingVoterItem] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_election_dates(self) -> "ElectionOnboardingCreate":
+        if self.ends_at <= self.starts_at:
+            raise ValueError("End time must be later than start time")
+        return self
 
 
 class ElectionUpdate(BaseModel):
@@ -170,16 +198,32 @@ class RemoteVotingUrlUpdateIn(BaseModel):
 
 
 class CandidateCreate(BaseModel):
-    name: str = Field(min_length=2, max_length=200)
-    party: str = Field(min_length=2, max_length=160)
-    manifesto: str = Field(min_length=1, max_length=5000)
+    name: str = Field(min_length=1, max_length=200)
+    party: str | None = Field(default=None, max_length=160)
+    manifesto: str = Field(default="", max_length=5000)
     photo_url: str | None = Field(default=None, max_length=500)
     symbol_url: str | None = Field(default=None, max_length=500)
 
+    @field_validator("name")
+    @classmethod
+    def validate_candidate_name(cls, v: str) -> str:
+        cleaned = str(v).strip()
+        if not cleaned:
+            raise ValueError("Candidate name cannot be empty")
+        return cleaned
+
+    @field_validator("party")
+    @classmethod
+    def validate_candidate_party(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = str(v).strip()
+        return cleaned if cleaned else None
+
 
 class CandidateUpdate(BaseModel):
-    name: str | None = Field(default=None, min_length=2, max_length=200)
-    party: str | None = Field(default=None, min_length=2, max_length=160)
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    party: str | None = Field(default=None, max_length=160)
     manifesto: str | None = Field(default=None, max_length=5000)
     photo_url: str | None = Field(default=None, max_length=500)
     symbol_url: str | None = Field(default=None, max_length=500)

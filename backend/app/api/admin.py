@@ -857,11 +857,12 @@ def public_onboarding_create_election(data: ElectionOnboardingCreate, db: Sessio
     db.flush()
 
     for c in data.candidates:
+        cand_party = c.party.strip() if c.party and c.party.strip() else ""
         cand = Candidate(
             election_id=election.id,
             name=c.name.strip(),
-            party=c.party.strip(),
-            manifesto=c.manifesto.strip(),
+            party=cand_party,
+            manifesto=c.manifesto.strip() if c.manifesto else "",
         )
         db.add(cand)
 
@@ -1085,7 +1086,10 @@ def list_candidates(election_id: str | None = None, admin: User = Depends(admin_
 @router.post("/elections/{election_id}/candidates", response_model=CandidateOut, status_code=201)
 def create_candidate(election_id: str, data: CandidateCreate, admin: User = Depends(admin_only), db: Session = Depends(get_db)):
     election = verify_election_access(election_id, admin, db, write_access=True)
-    candidate = Candidate(election_id=election.id, **data.model_dump())
+    cand_data = data.model_dump()
+    cand_data["party"] = cand_data["party"].strip() if cand_data.get("party") else ""
+    cand_data["manifesto"] = cand_data["manifesto"].strip() if cand_data.get("manifesto") else ""
+    candidate = Candidate(election_id=election.id, **cand_data)
     db.add(candidate)
     db.flush()
     audit(db, admin.id, "candidate_registered", "candidate", str(candidate.id))

@@ -53,6 +53,27 @@ export default function CreateElectionWizardPage() {
   const [candParty, setCandParty] = useState("");
   const [candManifesto, setCandManifesto] = useState("");
 
+  const formatDateTimeForInput = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Initialize dynamic future dates on mount
+  useEffect(() => {
+    if (!startsAt) {
+      const now = new Date();
+      const start = new Date(now.getTime() + 5 * 60 * 1000); // 5 min in future
+      const end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days in future
+      setStartsAt(formatDateTimeForInput(start));
+      setEndsAt(formatDateTimeForInput(end));
+    }
+  }, []);
+
   const handleSelectVotingType = (type: string) => {
     setVotingType(type);
     if ((type === "referendum" || type === "yes_no") && candidateList.length === 0) {
@@ -62,11 +83,11 @@ export default function CreateElectionWizardPage() {
       ]);
     } else if (type === "rating" && candidateList.length === 0) {
       setCandidateList([
-        { name: "5 Stars", party: "5", manifesto: "Excellent / Strongly Agree" },
-        { name: "4 Stars", party: "4", manifesto: "Good / Agree" },
-        { name: "3 Stars", party: "3", manifesto: "Neutral / Average" },
-        { name: "2 Stars", party: "2", manifesto: "Fair / Disagree" },
-        { name: "1 Star", party: "1", manifesto: "Poor / Strongly Disagree" },
+        { name: "5 Stars", party: "5 Stars", manifesto: "Excellent / Strongly Agree" },
+        { name: "4 Stars", party: "4 Stars", manifesto: "Good / Agree" },
+        { name: "3 Stars", party: "3 Stars", manifesto: "Neutral / Average" },
+        { name: "2 Stars", party: "2 Stars", manifesto: "Fair / Disagree" },
+        { name: "1 Star", party: "1 Star", manifesto: "Poor / Strongly Disagree" },
       ]);
     }
   };
@@ -93,7 +114,8 @@ export default function CreateElectionWizardPage() {
 
   // Handlers for Adding Candidates & Voters
   const handleAddCandidate = () => {
-    if (!candName.trim()) {
+    const cleanName = candName.trim();
+    if (!cleanName) {
       toast.error(
         votingType === "poll"
           ? "Please provide an Option title."
@@ -103,22 +125,24 @@ export default function CreateElectionWizardPage() {
       );
       return;
     }
-    const defaultParty =
-      votingType === "poll"
-        ? "Poll Option"
-        : votingType === "multiple_choice"
-        ? "Multi-Choice Option"
-        : votingType === "yes_no"
-        ? "Proposal Decision"
-        : votingType === "rating"
-        ? "Scale"
-        : "Independent";
+
+    const cleanParty = candParty.trim();
+    if (cleanParty && cleanParty.length < 2) {
+      toast.error("Please enter a valid party name (minimum 2 characters).");
+      return;
+    }
+
+    let defaultParty = "Independent";
+    if (votingType === "poll") defaultParty = "Poll Option";
+    else if (votingType === "multiple_choice") defaultParty = "Choice";
+    else if (votingType === "yes_no") defaultParty = "Proposal Decision";
+    else if (votingType === "rating") defaultParty = "Rating Scale";
 
     setCandidateList((prev) => [
       ...prev,
       {
-        name: candName.trim(),
-        party: candParty.trim() || defaultParty,
+        name: cleanName,
+        party: cleanParty || defaultParty,
         manifesto: candManifesto.trim() || "",
       },
     ]);
@@ -197,8 +221,63 @@ export default function CreateElectionWizardPage() {
       toast.error("Please specify both Start and End times.");
       return false;
     }
-    if (new Date(endsAt) <= new Date(startsAt)) {
+    const startDate = new Date(startsAt);
+    const endDate = new Date(endsAt);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      toast.error("Please enter valid start and end dates.");
+      return false;
+    }
+    const now = new Date();
+    // Prevent starting in the past (allow 2 min grace period for submission duration)
+    if (startDate.getTime() < now.getTime() - 2 * 60 * 1000) {
+      toast.error("Start time must be in the future (cannot start in the past).");
+      return false;
+    }
+    if (endDate.getTime() <= startDate.getTime()) {
       toast.error("End time must be after start time.");
+      return false;
+    }
+    return true;
+  };
+
+  // Step 3 Validation
+  const validateStep3 = () => {
+    if (candidateList.length === 0) {
+      toast.error(
+        votingType === "poll"
+          ? "Please add at least 2 poll options."
+          : votingType === "multiple_choice"
+          ? "Please add at least 2 choices."
+          : votingType === "yes_no"
+          ? "Please configure the Yes and No voting options."
+          : "Please add at least one candidate before proceeding."
+      );
+      return false;
+    }
+
+    for (let i = 0; i < candidateList.length; i++) {
+      const cand = candidateList[i];
+      const cleanName = (cand.name || "").trim();
+      if (!cleanName || cleanName.length < 1) {
+        toast.error(`Candidate / Option #${i + 1} has an empty name.`);
+        return false;
+      }
+      if (cand.party) {
+        const cleanParty = cand.party.trim();
+        if (cleanParty.length === 1) {
+          toast.error(`Candidate "${cleanName}" has an invalid party name ("${cleanParty}"). Please enter a valid party name (minimum 2 characters).`);
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const canNavigateToStep = (targetStep: number) => {
+    if (targetStep >= 2 && !validateStep1()) return false;
+    if (targetStep >= 3 && !validateStep2()) return false;
+    if (targetStep >= 4 && !validateStep3()) {
+      setCurrentStep(3);
       return false;
     }
     return true;
@@ -206,6 +285,19 @@ export default function CreateElectionWizardPage() {
 
   // Final Submit
   const handleFinalSubmit = async () => {
+    if (!validateStep1()) {
+      setCurrentStep(1);
+      return;
+    }
+    if (!validateStep2()) {
+      setCurrentStep(2);
+      return;
+    }
+    if (!validateStep3()) {
+      setCurrentStep(3);
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -363,15 +455,16 @@ export default function CreateElectionWizardPage() {
             key={idx}
             type="button"
             onClick={() => {
-              if (idx + 1 < currentStep) setCurrentStep(idx + 1);
+              if (idx + 1 < currentStep || canNavigateToStep(idx + 1)) {
+                setCurrentStep(idx + 1);
+              }
             }}
-            disabled={idx + 1 > currentStep}
             className={`flex-1 py-2 px-2 text-center rounded-lg whitespace-nowrap transition-all ${
               currentStep === idx + 1
                 ? "bg-indigo-600 text-white shadow-xs font-extrabold"
                 : currentStep > idx + 1
                 ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100"
-                : "text-slate-400 cursor-not-allowed opacity-60"
+                : "text-slate-400 cursor-pointer hover:bg-slate-200/60"
             }`}
           >
             {lbl}
@@ -964,7 +1057,9 @@ export default function CreateElectionWizardPage() {
 
             <button
               type="button"
-              onClick={() => setCurrentStep(4)}
+              onClick={() => {
+                if (validateStep3()) setCurrentStep(4);
+              }}
               className="button button-teal text-xs py-2.5 px-6"
             >
               Continue to Voters/Members
@@ -1162,7 +1257,9 @@ export default function CreateElectionWizardPage() {
 
             <button
               type="button"
-              onClick={() => setCurrentStep(6)}
+              onClick={() => {
+                if (canNavigateToStep(6)) setCurrentStep(6);
+              }}
               className="button button-teal text-xs py-2.5 px-6"
             >
               Review Election Setup
@@ -1250,6 +1347,25 @@ export default function CreateElectionWizardPage() {
             <div>
               <span className="text-slate-500 font-bold uppercase block text-[10px]">Show Voter Names in Results</span>
               <p className="font-bold text-slate-900">{showVoterNames ? "Yes (Enabled)" : "No (Disabled)"}</p>
+            </div>
+
+            {/* Candidate & Options Breakdown in Review */}
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <span className="text-slate-500 font-bold uppercase block text-[10px]">
+                Configured Candidates / Options ({candidateList.length})
+              </span>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {candidateList.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
+                    <span className="font-bold text-slate-800">{c.name}</span>
+                    {c.party && (
+                      <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                        {c.party}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
