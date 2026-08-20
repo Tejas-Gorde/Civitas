@@ -929,8 +929,8 @@ def update_election(election_id: str, data: ElectionUpdate, admin: User = Depend
     if data.ends_at is not None:
         election.ends_at = data.ends_at
 
-    new_starts = election.starts_at
-    new_ends = election.ends_at
+    new_starts = ensure_utc(election.starts_at)
+    new_ends = ensure_utc(election.ends_at)
     if new_ends <= new_starts:
         raise HTTPException(400, "Election end time must be after start time")
 
@@ -1105,8 +1105,13 @@ def election_results(election_id: str, admin: User = Depends(admin_only), db: Se
     total_voters = db.scalar(
         select(func.count(VoterElectionStatus.id)).where(VoterElectionStatus.election_id == election.id)
     ) or 0
-    votes_cast = db.scalar(select(func.count(Vote.id)).where(Vote.election_id == election.id)) or 0
-    turnout = round(100.0 * votes_cast / total_voters, 2) if total_voters > 0 else 0.0
+    ballots_cast = db.scalar(
+        select(func.count(VoterElectionStatus.id)).where(
+            VoterElectionStatus.election_id == election.id,
+            VoterElectionStatus.voted_at.isnot(None)
+        )
+    ) or 0
+    turnout = round(100.0 * ballots_cast / total_voters, 2) if total_voters > 0 else 0.0
 
     candidates = db.scalars(select(Candidate).where(Candidate.election_id == election.id)).all()
     tallies = []
@@ -1119,7 +1124,7 @@ def election_results(election_id: str, admin: User = Depends(admin_only), db: Se
         election_name=election.name,
         state=election.state.value,
         total_voters=total_voters,
-        total_votes_cast=votes_cast,
+        total_votes_cast=ballots_cast,
         turnout_percent=turnout,
         candidates=tallies,
     )
