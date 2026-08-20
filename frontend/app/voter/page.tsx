@@ -58,14 +58,24 @@ function VoterPortalContent() {
     }
   }, [searchParams]);
 
+  const isExpressMode =
+    election?.voter_registration_mode === "express" ||
+    election?.voter_registration_mode === "express_voting" ||
+    election?.voter_registration_mode === "anyone_can_vote" ||
+    election?.voter_registration_mode === "open_enrollment" ||
+    election?.voter_registration_mode === "open_registration" ||
+    election?.voter_registration_mode === "open" ||
+    election?.voter_registration_mode === "public" ||
+    election?.voter_registration_mode === "quick_entry";
+
   const handleVoterAuthenticate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!voterNameInput.trim()) {
-      toast.error("Please enter your Full Name.");
+      toast.error("Please enter your Voter Name.");
       return;
     }
-    if (!voterIdInput.trim()) {
-      toast.error("Please enter your Voter ID.");
+    if (!isExpressMode && !voterIdInput.trim()) {
+      toast.error("Please enter your Registered Voter ID.");
       return;
     }
 
@@ -73,14 +83,21 @@ function VoterPortalContent() {
     setErrorMsg(null);
 
     try {
-      const res = await api.post("/voting/verify-voter", {
+      const payload: any = {
         election_id: election.id,
-        voter_id: voterIdInput.trim(),
         voter_name: voterNameInput.trim(),
-      });
+      };
+      if (!isExpressMode) {
+        payload.voter_id = voterIdInput.trim();
+      }
+
+      const res = await api.post(
+        isExpressMode ? "/voting/express/authenticate" : "/voting/verify-voter",
+        payload
+      );
 
       if (res.data && res.data.eligible) {
-        toast.success("Voter identity verified successfully.");
+        toast.success(isExpressMode ? "Welcome! Express voter identity confirmed." : "Voter identity verified successfully.");
         setAuthSessionId(res.data.session_id || "");
         setVoterInternalId(res.data.voter_internal_id || "");
         setSessionExpiresAt(res.data.expires_at || "");
@@ -100,7 +117,7 @@ function VoterPortalContent() {
       <VotingFlow
         election={election}
         initialSession={authSessionId}
-        initialVoterId={voterIdInput.trim()}
+        initialVoterId={voterIdInput.trim() || undefined}
         initialVoterName={voterNameInput.trim()}
         initialVoterInternalId={voterInternalId}
         initialExpiresAt={sessionExpiresAt}
@@ -118,14 +135,6 @@ function VoterPortalContent() {
     );
   }
 
-  const isQuickEntry =
-    election?.voter_registration_mode === "quick_entry" ||
-    election?.voter_registration_mode === "anyone_can_vote" ||
-    election?.voter_registration_mode === "open_enrollment" ||
-    election?.voter_registration_mode === "open_registration" ||
-    election?.voter_registration_mode === "open" ||
-    election?.voter_registration_mode === "public";
-
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Top Banner */}
@@ -134,24 +143,15 @@ function VoterPortalContent() {
           <div>
             <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 dark:text-[#2dd4bf] bg-teal-900/60 dark:bg-[#051816] px-3 py-1 rounded-full border border-teal-700/50 dark:border-[#0e3834]">
               <UserCheck className="h-3.5 w-3.5" />
-              OPTION 1 — VOTER PORTAL
+              CIVITAS — VOTER PORTAL
             </div>
             <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight text-white dark:text-[#f5f7fa]">
               Official Voter Entry & Ballot
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-300 dark:text-[#a7b0bd]">
-              Enter your Election ID to securely access your official ballot.
+              Enter your election credentials to begin the secure identity check and ballot casting process.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="button button-secondary text-xs text-slate-300 hover:text-white shrink-0 self-start sm:self-auto min-h-[40px] px-3.5"
-          >
-            <ArrowLeft className="h-3.5 w-3.5 mr-1 inline" />
-            Back to Options
-          </button>
         </div>
       </div>
 
@@ -163,10 +163,10 @@ function VoterPortalContent() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-transparent dark:border-[#0e3834] text-xs font-black shrink-0">
                 1
               </span>
-              Enter Election ID
+              Find Your Election
             </h2>
             <p className="text-xs text-slate-600 dark:text-[#a7b0bd] mt-1">
-              Please enter the unique ID of the election you wish to participate in.
+              Enter the Election ID provided by your election administrator to access the ballot.
             </p>
           </div>
 
@@ -238,9 +238,9 @@ function VoterPortalContent() {
                   Selected Election
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  isQuickEntry ? "bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-teal-300 dark:border-[#0e3834]" : "bg-blue-100 dark:bg-[#061421] text-blue-800 dark:text-[#38bdf8] border border-blue-300 dark:border-[#0e2c47]"
+                  isExpressMode ? "bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-teal-300 dark:border-[#0e3834]" : "bg-blue-100 dark:bg-[#061421] text-blue-800 dark:text-[#38bdf8] border border-blue-300 dark:border-[#0e2c47]"
                 }`}>
-                  {isQuickEntry ? "Open Enrollment / Anyone Can Vote" : "Pre-Registered Mode"}
+                  {isExpressMode ? "⚡ Express Voting — Anyone Can Vote" : "🛡️ Normal Voting — Registered Mode"}
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f5f7fa] mt-0.5">{election.name}</h2>
@@ -262,11 +262,11 @@ function VoterPortalContent() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-transparent dark:border-[#0e3834] text-xs font-black shrink-0">
                 2
               </span>
-              Voter Identification
+              {isExpressMode ? "Express Voter Identification" : "Registered Voter Identification"}
             </h3>
             <p className="text-xs text-slate-600 dark:text-[#a7b0bd] mt-1">
-              {isQuickEntry
-                ? "Open Enrollment — enter your Full Name and Voter ID to access your official ballot."
+              {isExpressMode
+                ? "Express Voting is active. Simply enter your name to access your ballot."
                 : "Enter your registered Full Name and Voter ID to access your official ballot."}
             </p>
           </div>
@@ -284,36 +284,33 @@ function VoterPortalContent() {
           <form onSubmit={handleVoterAuthenticate} className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a7b0bd] mb-1">
-                {isQuickEntry ? "Full Name" : "Voter Full Name"} <span className="text-rose-500">*</span>
+                {isExpressMode ? "Voter Name" : "Registered Full Name"} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={voterNameInput}
                 onChange={(e) => setVoterNameInput(e.target.value)}
-                placeholder="Enter your full name (e.g. Jane Doe)"
+                placeholder="Enter your name (e.g. Tejas)"
                 className="input"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a7b0bd] mb-1">
-                {isQuickEntry ? "Voter ID / PRN" : "Voter ID"} <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={voterIdInput}
-                onChange={(e) => setVoterIdInput(e.target.value)}
-                placeholder={isQuickEntry ? "Enter your unique Voter ID or PRN (e.g. ABC123 or 1234567890)" : "Enter your registered voter ID (e.g. VOTER-1001)"}
-                className="input font-mono uppercase"
-              />
-              {isQuickEntry && (
-                <p className="text-[11px] text-teal-700 dark:text-teal-400 mt-1">
-                  Open Enrollment Mode: Zero pre-registration required. Any Voter ID uniquely tracks participation to strictly enforce 1-person-1-vote.
-                </p>
-              )}
-            </div>
+            {!isExpressMode && (
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a7b0bd] mb-1">
+                  Registered Voter ID <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={voterIdInput}
+                  onChange={(e) => setVoterIdInput(e.target.value)}
+                  placeholder="Enter your registered voter ID (e.g. VOTER-1001)"
+                  className="input font-mono uppercase"
+                />
+              </div>
+            )}
 
             <div className="pt-3 sm:pt-4 border-t border-slate-100 dark:border-[#141a22] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#707a88] font-medium">
@@ -323,7 +320,7 @@ function VoterPortalContent() {
 
               <button
                 type="submit"
-                disabled={loading || !voterNameInput.trim() || !voterIdInput.trim()}
+                disabled={loading || !voterNameInput.trim() || (!isExpressMode && !voterIdInput.trim())}
                 className="button button-teal font-bold text-xs py-3 sm:py-2.5 px-6 disabled:opacity-60 w-full sm:w-auto"
               >
                 {loading ? (

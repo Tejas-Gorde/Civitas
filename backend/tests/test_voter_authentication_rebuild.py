@@ -107,12 +107,13 @@ def test_anyone_can_vote_comprehensive_suite(client):
     )
     assert v_empty_name.status_code in (400, 422)
 
-    # Test 4: Empty voter ID -> FAIL (400)
+    # Test 4: Empty voter ID -> In Express mode, voter_id is optional and accepted
     v_empty_id = client.post(
         "/api/v1/voting/verify-voter",
         json={"election_id": elec_slug_a, "voter_id": "", "voter_name": "Valid Name"},
     )
-    assert v_empty_id.status_code in (400, 422)
+    assert v_empty_id.status_code == 200
+    assert v_empty_id.json()["eligible"] is True
 
     # Test 5: Cast vote with Voter 1, then attempt second vote in SAME election -> FAIL (409)
     cands_a = client.get(f"/api/v1/voting/elections/{elec_a_id}/candidates").json()

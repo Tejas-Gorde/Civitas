@@ -766,32 +766,32 @@ export default function CreateElectionWizardPage() {
             {/* VOTER REGISTRATION MODE SELECTOR */}
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Voter Registration Mode <span className="text-rose-500">*</span>
+                Election Type & Voter Access Mode <span className="text-rose-500">*</span>
               </label>
               <p className="text-xs text-slate-500">
-                Choose how voters qualify and authenticate to access their ballot:
+                Choose the authentication model for how voters access their ballot:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 {[
                   {
                     id: "pre_registered",
-                    title: "Option A: Pre-Registered Voters",
-                    badge: "Admin Enrolled",
-                    desc: "Admin adds and assigns voters before the election. Voters authenticate with their Full Name and Voter ID.",
-                    color: "border-teal-600 bg-teal-50/70",
+                    title: "MODE 1 — NORMAL VOTING",
+                    badge: "🛡️ Secure Registered",
+                    desc: "Secure election with pre-enrolled voters. Voters authenticate with their registered Full Name and Voter ID against the database.",
+                    color: "border-blue-600 bg-blue-50/70",
                   },
                   {
                     id: "anyone_can_vote",
-                    title: "Option B: Anyone Can Vote",
-                    badge: "Open Enrollment",
-                    desc: "Any person enters their Full Name + Voter ID during voting. Zero pre-registration required. Database strictly guarantees 1-person-1-vote per election.",
+                    title: "MODE 2 — EXPRESS VOTING",
+                    badge: "⚡ Anyone Can Vote",
+                    desc: "Fast unrestricted voting. Voters enter ONLY their Name. Zero pre-registration, no voter ID, no passwords.",
                     color: "border-teal-600 bg-teal-50/70",
                   },
                 ].map((mode) => {
                   const isSelected =
                     voterRegistrationMode === mode.id ||
-                    (mode.id === "anyone_can_vote" && voterRegistrationMode === "quick_entry");
+                    (mode.id === "anyone_can_vote" && (voterRegistrationMode === "quick_entry" || voterRegistrationMode === "express"));
                   return (
                     <div
                       key={mode.id}
@@ -808,7 +808,7 @@ export default function CreateElectionWizardPage() {
                         </span>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            isSelected ? "bg-teal-100 text-teal-800 border border-teal-300" : "bg-slate-100 text-slate-500"
+                            isSelected ? "bg-white text-slate-900 border" : "bg-slate-100 text-slate-500"
                           }`}
                         >
                           {mode.badge}
@@ -1084,93 +1084,95 @@ export default function CreateElectionWizardPage() {
             </p>
           </div>
 
-          {(voterRegistrationMode === "quick_entry" || voterRegistrationMode === "anyone_can_vote") && (
-            <div className="p-4 bg-teal-50/80 border border-teal-200 rounded-xl space-y-2 text-xs">
+          {(voterRegistrationMode === "quick_entry" || voterRegistrationMode === "anyone_can_vote" || voterRegistrationMode === "express") ? (
+            <div className="p-6 bg-teal-50/90 border border-teal-200 rounded-2xl space-y-3 text-xs">
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-teal-900 uppercase tracking-wider text-[11px]">
-                  ⚡ Anyone Can Vote Mode Active
+                <span className="font-black text-teal-950 uppercase tracking-wider text-sm">
+                  ⚡ Express Voting Active (Anyone Can Vote)
                 </span>
-                <span className="badge badge-open text-[10px]">Open Enrollment</span>
+                <span className="badge badge-open text-[10px]">Name Only</span>
               </div>
-              <p className="text-teal-950 leading-relaxed">
-                Voters do not need to be pre-registered or added here. Any eligible voter can simply enter their <strong>Full Name + Voter ID</strong> directly on the voter login page. The database strictly enforces 1-person-1-vote per election.
+              <p className="text-teal-900 leading-relaxed text-xs">
+                Pre-registering voters is not required for Express Voting. Any participant will enter <strong>ONLY their Name</strong> on the ballot page to cast their vote.
               </p>
-              <div className="pt-1">
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(5)}
-                  className="button button-teal text-xs py-1.5 px-4 font-bold"
+                  className="button button-teal text-xs py-2.5 px-6 font-bold shadow-xs"
                 >
-                  Skip to Step 5: Verification Security →
+                  Proceed to Step 5: Verification Pipeline →
                 </button>
               </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Voter Form */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Registered Voter Name *</label>
+                    <input
+                      type="text"
+                      value={voterFullName}
+                      onChange={(e) => setVoterFullName(e.target.value)}
+                      placeholder="e.g. Jane Doe"
+                      className="input text-xs"
+                    />
+                  </div>
 
-          {/* Voter Form */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Voter Name *</label>
-                <input
-                  type="text"
-                  value={voterFullName}
-                  onChange={(e) => setVoterFullName(e.target.value)}
-                  placeholder="e.g. Jane Doe"
-                  className="input text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Voter ID *</label>
-                <input
-                  type="text"
-                  value={voterRegId}
-                  onChange={(e) => setVoterRegId(e.target.value)}
-                  placeholder="e.g. VOTER-1001"
-                  className="input text-xs font-mono uppercase"
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleAddVoter}
-              className="button button-teal text-xs py-2 px-4 font-bold"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1 inline" />
-              Add Voter to Setup List
-            </button>
-          </div>
-
-          {/* Added Voter List */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Added Voters ({voterList.length})
-            </h4>
-
-            {voterList.length === 0 && (
-              <p className="text-xs text-slate-500 italic p-3 bg-white border border-slate-200 rounded-lg">
-                No voters added yet. You can also register voters later from the Election Admin panel.
-              </p>
-            )}
-
-            {voterList.map((v, idx) => (
-              <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
-                <div>
-                  <h5 className="font-bold text-slate-900">{v.full_name}</h5>
-                  <span className="font-mono text-[10px] text-slate-600">{v.voter_id}</span>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">Registered Voter ID *</label>
+                    <input
+                      type="text"
+                      value={voterRegId}
+                      onChange={(e) => setVoterRegId(e.target.value)}
+                      placeholder="e.g. VOTER-1001"
+                      className="input text-xs font-mono uppercase"
+                    />
+                  </div>
                 </div>
+
                 <button
                   type="button"
-                  onClick={() => handleRemoveVoter(idx)}
-                  className="text-rose-600 hover:text-rose-800 p-1"
+                  onClick={handleAddVoter}
+                  className="button button-teal text-xs py-2 px-4 font-bold"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5 mr-1 inline" />
+                  Add Voter to Registered Roster
                 </button>
               </div>
-            ))}
-          </div>
+
+              {/* Added Voter List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Registered Voters Roster ({voterList.length})
+                </h4>
+
+                {voterList.length === 0 && (
+                  <p className="text-xs text-slate-500 italic p-3 bg-white border border-slate-200 rounded-lg">
+                    No voters added yet. You can also register voters later from the Election Admin panel.
+                  </p>
+                )}
+
+                {voterList.map((v, idx) => (
+                  <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                      <h5 className="font-bold text-slate-900">{v.full_name}</h5>
+                      <span className="font-mono text-[10px] text-slate-600">{v.voter_id}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVoter(idx)}
+                      className="text-rose-600 hover:text-rose-800 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="pt-4 border-t border-slate-100 flex justify-between">
             <button

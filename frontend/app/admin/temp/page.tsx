@@ -1364,14 +1364,14 @@ export default function LocalAdminPage() {
                 {/* SECTION 4: VOTER REGISTRATION & ACCESS MODE */}
                 <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#141a22]">
                   <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
-                    4. Voter Registration & Authentication Mode
+                    4. Election Mode & Voter Access Architecture
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div
                       onClick={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "pre_registered" })}
                       className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        settingsForm.voter_registration_mode === "pre_registered"
+                        settingsForm.voter_registration_mode === "pre_registered" || settingsForm.voter_registration_mode === "normal"
                           ? "bg-blue-50/80 dark:bg-[#061421] border-blue-500 dark:border-[#38bdf8] shadow-xs"
                           : "bg-slate-50 dark:bg-[#0d1117] border-slate-200 dark:border-[#1a222c] opacity-70 hover:opacity-100"
                       }`}
@@ -1380,21 +1380,21 @@ export default function LocalAdminPage() {
                         <input
                           type="radio"
                           name="reg_mode"
-                          checked={settingsForm.voter_registration_mode === "pre_registered"}
+                          checked={settingsForm.voter_registration_mode === "pre_registered" || settingsForm.voter_registration_mode === "normal"}
                           onChange={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "pre_registered" })}
                           className="text-blue-600"
                         />
-                        <span>🛡️ Option A — Pre-Registered Whitelist</span>
+                        <span>🛡️ MODE 1 — NORMAL VOTING</span>
                       </div>
                       <p className="text-[11px] text-slate-600 dark:text-[#a7b0bd] mt-1.5 pl-5">
-                        Only voters registered in the voter roster database are allowed to vote. Requires Name + Voter ID matching.
+                        Secure registered election. Voters must exist in the database roster and authenticate with their registered Full Name + Voter ID.
                       </p>
                     </div>
 
                     <div
                       onClick={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "anyone_can_vote" })}
                       className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        settingsForm.voter_registration_mode === "anyone_can_vote" || settingsForm.voter_registration_mode === "quick_entry" || settingsForm.voter_registration_mode === "open_enrollment"
+                        settingsForm.voter_registration_mode === "anyone_can_vote" || settingsForm.voter_registration_mode === "express" || settingsForm.voter_registration_mode === "quick_entry" || settingsForm.voter_registration_mode === "open_enrollment"
                           ? "bg-teal-50/80 dark:bg-[#082421] border-teal-500 dark:border-[#2dd4bf] shadow-xs"
                           : "bg-slate-50 dark:bg-[#0d1117] border-slate-200 dark:border-[#1a222c] opacity-70 hover:opacity-100"
                       }`}
@@ -1403,14 +1403,14 @@ export default function LocalAdminPage() {
                         <input
                           type="radio"
                           name="reg_mode"
-                          checked={settingsForm.voter_registration_mode === "anyone_can_vote" || settingsForm.voter_registration_mode === "quick_entry" || settingsForm.voter_registration_mode === "open_enrollment"}
+                          checked={settingsForm.voter_registration_mode === "anyone_can_vote" || settingsForm.voter_registration_mode === "express" || settingsForm.voter_registration_mode === "quick_entry" || settingsForm.voter_registration_mode === "open_enrollment"}
                           onChange={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "anyone_can_vote" })}
                           className="text-teal-600"
                         />
-                        <span>⚡ Option B — Anyone Can Vote / Open Enrollment</span>
+                        <span>⚡ MODE 2 — EXPRESS VOTING</span>
                       </div>
                       <p className="text-[11px] text-slate-600 dark:text-[#a7b0bd] mt-1.5 pl-5">
-                        Zero pre-registration required. Participants enter their Full Name and Voter ID to vote with automatic election-scoped duplicate prevention.
+                        Fast unrestricted voting. Voters enter ONLY their Name. Zero pre-registration, no voter ID, no passwords.
                       </p>
                     </div>
                   </div>
@@ -1628,7 +1628,7 @@ export default function LocalAdminPage() {
                   </div>
                 </div>
 
-                {election.voter_registration_mode !== "quick_entry" && election.voter_registration_mode !== "anyone_can_vote" && election.voter_registration_mode !== "open_enrollment" && election.voter_registration_mode !== "open_registration" && (
+                {election.voter_registration_mode !== "quick_entry" && election.voter_registration_mode !== "anyone_can_vote" && election.voter_registration_mode !== "open_enrollment" && election.voter_registration_mode !== "open_registration" && election.voter_registration_mode !== "express" && (
                   <button
                     type="button"
                     onClick={() => setShowAddVoterModal(true)}
@@ -1640,15 +1640,22 @@ export default function LocalAdminPage() {
                 )}
               </div>
 
-              {(election.voter_registration_mode === "quick_entry" || election.voter_registration_mode === "anyone_can_vote" || election.voter_registration_mode === "open_enrollment" || election.voter_registration_mode === "open_registration") && (
-                <div className="mx-4 sm:mx-6 my-3 p-3.5 rounded-xl bg-teal-50 dark:bg-[#082421] border border-teal-200 dark:border-[#0e3834] text-xs text-teal-950 dark:text-[#2dd4bf] flex items-center justify-between">
+              {(election.voter_registration_mode === "quick_entry" || election.voter_registration_mode === "anyone_can_vote" || election.voter_registration_mode === "open_enrollment" || election.voter_registration_mode === "open_registration" || election.voter_registration_mode === "express") && (
+                <div className="mx-4 sm:mx-6 my-3 p-4 rounded-xl bg-teal-50 dark:bg-[#082421] border border-teal-200 dark:border-[#0e3834] text-xs text-teal-950 dark:text-[#2dd4bf] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="font-bold text-teal-900 dark:text-[#f5f7fa] block">
-                      ⚡ Anyone Can Vote / Open Enrollment Mode Active
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black bg-teal-700 text-white uppercase tracking-wider mb-1">
+                      ⚡ MODE 2 — EXPRESS VOTING ACTIVE
+                    </div>
+                    <span className="font-bold text-teal-900 dark:text-[#f5f7fa] block text-sm">
+                      Unrestricted Name-Only Participation
                     </span>
                     <span className="text-[11px] text-teal-800 dark:text-[#a7b0bd]">
-                      Pre-registration is not required. Participants enter their Full Name and Voter ID at voting time with automatic server-side duplicate prevention.
+                      Pre-registration is not required. Participants enter ONLY their name on the ballot page to cast their vote.
                     </span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[10px] text-teal-700 dark:text-teal-400 font-bold block uppercase">Total Ballots Cast</span>
+                    <span className="text-xl font-black text-teal-950 dark:text-[#f5f7fa]">{results?.total_votes || 0}</span>
                   </div>
                 </div>
               )}

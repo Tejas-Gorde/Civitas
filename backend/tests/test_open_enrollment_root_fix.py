@@ -207,7 +207,7 @@ def test_open_enrollment_comprehensive_matrix(client):
     assert "already voted" in login_dup.json()["detail"].lower()
 
     # -------------------------------------------------------------------------
-    # TEST E: EMPTY ID
+    # TEST E: EMPTY ID (Accepted in Express/Open Enrollment Mode)
     # -------------------------------------------------------------------------
     login_empty_id = client.post(
         "/api/v1/voting/verify-voter",
@@ -217,7 +217,8 @@ def test_open_enrollment_comprehensive_matrix(client):
             "voter_name": "Tejas",
         },
     )
-    assert login_empty_id.status_code in (400, 422)
+    assert login_empty_id.status_code == 200
+    assert login_empty_id.json()["eligible"] is True
 
     # -------------------------------------------------------------------------
     # TEST F: EMPTY NAME

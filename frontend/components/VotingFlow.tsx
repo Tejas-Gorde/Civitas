@@ -340,30 +340,24 @@ export default function VotingFlow({
 
     if (isAnyoneCanVote) {
       const cleanName = quickFullName.trim();
-      const cleanPrn = quickPrn.trim().replace(/\s+/g, "");
 
       if (!cleanName) {
-        toast.error("Please enter your Full Name.");
-        return;
-      }
-      if (!cleanPrn) {
-        toast.error("Please enter your Voter ID.");
+        toast.error("Please enter your Voter Name.");
         return;
       }
 
       try {
         setBusy(true);
-        const vRes = await request("/voting/verify-voter", {
+        const vRes = await request("/voting/express/authenticate", {
           election_id: election.id,
-          voter_id: cleanPrn,
           voter_name: cleanName,
         });
-        setVoterId(cleanPrn);
+        setVoterId(vRes.voter_id || "");
         setVoterInternalId(vRes.voter_internal_id);
         setSession(vRes.session_id);
         const defaultExp = new Date(Date.now() + 30 * 60 * 1000).toISOString();
         setSessionExpiresAt(vRes.expires_at || defaultExp);
-        toast.success("Voter eligibility verified successfully");
+        toast.success("Express voter identity verified successfully");
         await advanceFromStage("identify", vRes.session_id);
       } catch (err: any) {
         const msg = readable(err);
@@ -1282,46 +1276,29 @@ export default function VotingFlow({
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
-                          Step 1 — Eligibility Check
+                          Step 1 — Express Voter Entry
                         </span>
-                        <span className="badge badge-open text-[10px]">Anyone Can Vote</span>
+                        <span className="badge badge-open text-[10px]">⚡ Express Voting</span>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">VOTER IDENTIFICATION</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">EXPRESS VOTER IDENTIFICATION</h2>
                       <p className="mt-1 text-xs text-slate-600">
-                        Enter your Full Name and Voter ID / PRN to access your ballot.
+                        Express Voting is active. Enter your name to access your official ballot.
                       </p>
                     </div>
 
                     <form onSubmit={startSession} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          FULL NAME <span className="text-red-500">*</span>
+                          VOTER NAME <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           className="field text-sm"
                           required
-                          placeholder="e.g. Jane Doe"
+                          placeholder="Enter your name (e.g. Tejas)"
                           value={quickFullName}
                           onChange={(e) => setQuickFullName(e.target.value)}
                         />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          VOTER ID / PRN <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="field font-mono text-sm tracking-wider uppercase"
-                          required
-                          placeholder="e.g. ABC123 or 1234567890"
-                          value={quickPrn}
-                          onChange={(e) => setQuickPrn(e.target.value)}
-                        />
-                        <p className="text-[11px] text-amber-700 mt-1">
-                          Anyone Can Vote Mode: Pre-registration is not required. Any Voter ID uniquely tracks participation to prevent duplicate voting.
-                        </p>
                       </div>
 
                       {verifyError && (
@@ -1333,9 +1310,9 @@ export default function VotingFlow({
                       <button
                         type="submit"
                         className="button button-teal w-full min-h-[48px] text-xs sm:text-sm font-bold shadow-md shadow-teal-700/10"
-                        disabled={busy || !quickFullName.trim() || !quickPrn.trim()}
+                        disabled={busy || !quickFullName.trim()}
                       >
-                        {busy ? "Verifying Eligibility..." : "Continue →"}
+                        {busy ? "Verifying Identity..." : "Continue →"}
                       </button>
                     </form>
                   </>

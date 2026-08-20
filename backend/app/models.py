@@ -22,12 +22,14 @@ class ElectionState(str, enum.Enum):
     PUBLISHED = "published"
 
 
-def is_anyone_can_vote_mode(mode: str | None) -> bool:
-    """Return True if the registration mode allows any voter with Name + ID to vote without pre-registration."""
+def is_express_mode(mode: str | None) -> bool:
+    """Return True if the election is in Express Voting / Anyone Can Vote mode."""
     if not mode:
         return False
     normalized = str(mode).strip().lower().replace("-", "_").replace(" ", "_")
     return normalized in {
+        "express",
+        "express_voting",
         "anyone_can_vote",
         "anyone",
         "quick_entry",
@@ -39,6 +41,16 @@ def is_anyone_can_vote_mode(mode: str | None) -> bool:
         "open_registration",
         "open_enroll",
     }
+
+
+def is_normal_mode(mode: str | None) -> bool:
+    """Return True if the election is in Normal / Pre-Registered voting mode."""
+    return not is_express_mode(mode)
+
+
+def is_anyone_can_vote_mode(mode: str | None) -> bool:
+    """Alias for is_express_mode for backwards compatibility."""
+    return is_express_mode(mode)
 
 
 class AuthStage(str, enum.Enum):

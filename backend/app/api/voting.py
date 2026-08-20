@@ -256,7 +256,18 @@ def verify_election_id_public(election_id: str, db: Session = Depends(get_db)):
     return out
 
 
-from app.services.voter_auth import authenticate_voter
+from app.services.voter_auth import authenticate_voter, authenticate_express_voter, authenticate_normal_voter
+from app.schemas import ExpressVoterAuthRequest, NormalVoterAuthRequest
+
+
+@router.post("/express/authenticate", response_model=VoterVerifyResponse)
+@router.post("/express-authenticate", response_model=VoterVerifyResponse)
+def express_authenticate(data: ExpressVoterAuthRequest, db: Session = Depends(get_db)):
+    req = VoterVerifyRequest(
+        election_id=data.election_id,
+        voter_name=data.voter_name,
+    )
+    return authenticate_voter(db, req)
 
 
 @router.post("/verify-quick-voter", response_model=QuickVoterVerifyResponse)
@@ -334,37 +345,20 @@ def cast_vote(data: CastVote, db: Session = Depends(get_db)):
         metrics = session.metrics or {}
         voter = db.get(Voter, session.voter_id)
         voter_name = metrics.get("voter_name") or (voter.full_name if voter else data.voter_name) or "Anonymous Voter"
-        prn = metrics.get("voter_id") or metrics.get("prn") or (voter.voter_id.replace("QUICK_", "") if voter and voter.voter_id.startswith("QUICK_") else (voter.mobile if voter else data.prn)) or "0000000000"
-        normalized_prn = re.sub(r"\s+", "", str(prn).strip())
-        if not normalized_prn:
-            raise HTTPException(422, "Voter ID is required.")
+        prn = metrics.get("voter_id") or metrics.get("prn") or (voter.voter_id.replace("QUICK_", "").replace("EXP_", "") if voter else data.prn) or f"EXP_{str(session.id)[:8]}"
+        normalized_prn = re.sub(r"\s+", "", str(prn).strip()) or f"EXP_{str(session.id)[:8]}"
 
-        # Check existing QuickVoterRecord first
-        existing_rec = db.scalar(
-            select(QuickVoterRecord).where(
-                QuickVoterRecord.election_id == election.id,
-                func.lower(QuickVoterRecord.prn) == normalized_prn.lower(),
-            )
+        # Record QuickVoterRecord
+        quick_record = QuickVoterRecord(
+            election_id=election.id,
+            voter_name=voter_name,
+            prn=normalized_prn,
+            candidate_id=candidate_id_list[0] if candidate_id_list else None,
+            candidate_ids_json=candidate_id_list,
+            receipt_id=primary_receipt,
+            cast_at=current,
         )
-        if existing_rec:
-            raise HTTPException(409, "Vote already recorded. This voter ID has already participated in this election.")
-
-        # Atomic insert of QuickVoterRecord with UNIQUE(election_id, prn)
-        try:
-            quick_record = QuickVoterRecord(
-                election_id=election.id,
-                voter_name=voter_name,
-                prn=normalized_prn,
-                candidate_id=candidate_id_list[0] if candidate_id_list else None,
-                candidate_ids_json=candidate_id_list,
-                receipt_id=primary_receipt,
-                cast_at=current,
-            )
-            db.add(quick_record)
-            db.flush()
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(409, "Vote already recorded. This voter ID has already participated in this election.")
+        db.add(quick_record)
 
         # Also insert standard Vote rows for standard count calculations
         for idx, cid in enumerate(candidate_id_list):
