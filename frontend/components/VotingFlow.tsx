@@ -127,6 +127,12 @@ export default function VotingFlow({
   initialExpiresAt?: string;
   onReset?: () => void;
 }) {
+  const isAnyoneCanVote =
+    election?.voter_registration_mode === "quick_entry" ||
+    election?.voter_registration_mode === "anyone_can_vote" ||
+    election?.voter_registration_mode === "open" ||
+    election?.voter_registration_mode === "public";
+
   const [stage, setStage] = useState<Stage>("identify");
   const [hasStartedVoting, setHasStartedVoting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -330,7 +336,7 @@ export default function VotingFlow({
     setVerifyError(null);
     setDuplicateVotedError(false);
 
-    if (election.voter_registration_mode === "quick_entry") {
+    if (isAnyoneCanVote) {
       const cleanName = quickFullName.trim();
       const cleanPrn = quickPrn.trim().replace(/\s+/g, "");
 
@@ -339,21 +345,22 @@ export default function VotingFlow({
         return;
       }
       if (!cleanPrn) {
-        toast.error("Please enter your PRN / Voter ID.");
+        toast.error("Please enter your Voter ID.");
         return;
       }
 
       try {
         setBusy(true);
-        const vRes = await request("/voting/verify-quick-voter", {
+        const vRes = await request("/voting/verify-voter", {
           election_id: election.id,
-          full_name: cleanName,
-          prn: cleanPrn,
+          voter_id: cleanPrn,
+          voter_name: cleanName,
         });
-        setVoterId(`QUICK_${cleanPrn}`);
+        setVoterId(cleanPrn);
+        setVoterInternalId(vRes.voter_internal_id);
         setSession(vRes.session_id);
         const defaultExp = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-        setSessionExpiresAt(defaultExp);
+        setSessionExpiresAt(vRes.expires_at || defaultExp);
         toast.success("Voter eligibility verified successfully");
         await advanceFromStage("identify", vRes.session_id);
       } catch (err: any) {
@@ -405,6 +412,7 @@ export default function VotingFlow({
           msg.toLowerCase().includes("already cast") ||
           msg.toLowerCase().includes("already participated") ||
           msg.toLowerCase().includes("already recorded") ||
+          msg.toLowerCase().includes("already voted") ||
           err?.status === 409
         ) {
           setDuplicateVotedError(true);
@@ -871,7 +879,7 @@ export default function VotingFlow({
         payload.candidate_id = selectedCandidateId;
       }
 
-      if (election.voter_registration_mode === "quick_entry") {
+      if (isAnyoneCanVote) {
         if (quickFullName) payload.voter_name = quickFullName;
         if (quickPrn) payload.prn = quickPrn;
       }
@@ -1267,18 +1275,18 @@ export default function VotingFlow({
                       </button>
                     </div>
                   </div>
-                ) : election.voter_registration_mode === "quick_entry" ? (
+                ) : isAnyoneCanVote ? (
                   <>
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">
                           Step 1 — Eligibility Check
                         </span>
-                        <span className="badge badge-open text-[10px]">Quick Voter Entry</span>
+                        <span className="badge badge-open text-[10px]">Anyone Can Vote</span>
                       </div>
                       <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">VOTER IDENTIFICATION</h2>
                       <p className="mt-1 text-xs text-slate-600">
-                        Enter your Full Name and PRN to access your ballot.
+                        Enter your Full Name and Voter ID / PRN to access your ballot.
                       </p>
                     </div>
 
@@ -1299,18 +1307,18 @@ export default function VotingFlow({
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          PRN / VOTER ID <span className="text-red-500">*</span>
+                          VOTER ID / PRN <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           className="field font-mono text-sm tracking-wider uppercase"
                           required
-                          placeholder="e.g. TEST002 or 1234567890"
+                          placeholder="e.g. ABC123 or 1234567890"
                           value={quickPrn}
                           onChange={(e) => setQuickPrn(e.target.value)}
                         />
                         <p className="text-[11px] text-amber-700 mt-1">
-                          Quick Entry Mode: Pre-registration is not required. Your PRN / Voter ID uniquely tracks your participation.
+                          Anyone Can Vote Mode: Pre-registration is not required. Any Voter ID uniquely tracks participation to prevent duplicate voting.
                         </p>
                       </div>
 

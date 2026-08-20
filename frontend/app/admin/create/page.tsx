@@ -782,14 +782,16 @@ export default function CreateElectionWizardPage() {
                     color: "border-teal-600 bg-teal-50/70",
                   },
                   {
-                    id: "quick_entry",
-                    title: "Option B: Quick Voter Entry",
-                    badge: "Open PRN Enrollment",
-                    desc: "Any eligible person enters their Full Name + PRN during voting. Database strictly guarantees 1-person-1-vote per election.",
+                    id: "anyone_can_vote",
+                    title: "Option B: Anyone Can Vote",
+                    badge: "Open Enrollment",
+                    desc: "Any person enters their Full Name + Voter ID during voting. Zero pre-registration required. Database strictly guarantees 1-person-1-vote per election.",
                     color: "border-teal-600 bg-teal-50/70",
                   },
                 ].map((mode) => {
-                  const isSelected = voterRegistrationMode === mode.id;
+                  const isSelected =
+                    voterRegistrationMode === mode.id ||
+                    (mode.id === "anyone_can_vote" && voterRegistrationMode === "quick_entry");
                   return (
                     <div
                       key={mode.id}
@@ -1082,16 +1084,16 @@ export default function CreateElectionWizardPage() {
             </p>
           </div>
 
-          {voterRegistrationMode === "quick_entry" && (
+          {(voterRegistrationMode === "quick_entry" || voterRegistrationMode === "anyone_can_vote") && (
             <div className="p-4 bg-teal-50/80 border border-teal-200 rounded-xl space-y-2 text-xs">
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-teal-900 uppercase tracking-wider text-[11px]">
-                  ⚡ Quick Voter Entry Mode Active
+                  ⚡ Anyone Can Vote Mode Active
                 </span>
-                <span className="badge badge-open text-[10px]">Open PRN Enrollment</span>
+                <span className="badge badge-open text-[10px]">Open Enrollment</span>
               </div>
               <p className="text-teal-950 leading-relaxed">
-                Voters do not need to be manually added here. Any eligible voter can simply enter their <strong>Full Name + 10-digit PRN</strong> directly on the voting page. The database strictly enforces 1-person-1-vote per election.
+                Voters do not need to be pre-registered or added here. Any eligible voter can simply enter their <strong>Full Name + Voter ID</strong> directly on the voter login page. The database strictly enforces 1-person-1-vote per election.
               </p>
               <div className="pt-1">
                 <button
@@ -1316,8 +1318,8 @@ export default function CreateElectionWizardPage() {
             <div>
               <span className="text-slate-500 font-bold uppercase block text-[10px]">VOTER REGISTRATION MODE</span>
               <p className="font-extrabold text-slate-900 text-sm">
-                {voterRegistrationMode === "quick_entry"
-                  ? "⚡ Quick Voter Entry (Open PRN Enrollment)"
+                {voterRegistrationMode === "quick_entry" || voterRegistrationMode === "anyone_can_vote"
+                  ? "⚡ Anyone Can Vote Mode (Open Enrollment)"
                   : "🛡️ Pre-Registered Voters (Admin Enrolled)"}
               </p>
             </div>

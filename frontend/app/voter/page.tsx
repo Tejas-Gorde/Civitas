@@ -118,7 +118,11 @@ function VoterPortalContent() {
     );
   }
 
-  const isQuickEntry = election?.voter_registration_mode === "quick_entry";
+  const isQuickEntry =
+    election?.voter_registration_mode === "quick_entry" ||
+    election?.voter_registration_mode === "anyone_can_vote" ||
+    election?.voter_registration_mode === "open" ||
+    election?.voter_registration_mode === "public";
 
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-2 sm:px-0">
@@ -234,7 +238,7 @@ function VoterPortalContent() {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isQuickEntry ? "bg-amber-100 text-amber-800" : "bg-teal-100 text-teal-800"
                 }`}>
-                  {isQuickEntry ? "Quick Voter Entry" : "Pre-Registered Mode"}
+                  {isQuickEntry ? "Anyone Can Vote Mode" : "Pre-Registered Mode"}
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">{election.name}</h2>
@@ -260,7 +264,7 @@ function VoterPortalContent() {
             </h3>
             <p className="text-xs text-slate-600 mt-1">
               {isQuickEntry
-                ? "Enter your Full Name and PRN to access your ballot."
+                ? "Enter your Full Name and Voter ID / PRN to access your ballot."
                 : "Enter your registered Full Name and Voter ID to access your ballot."}
             </p>
           </div>
@@ -292,19 +296,19 @@ function VoterPortalContent() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                {isQuickEntry ? "PRN / Voter ID" : "Voter ID"} <span className="text-rose-500">*</span>
+                {isQuickEntry ? "Voter ID / PRN" : "Voter ID"} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={voterIdInput}
                 onChange={(e) => setVoterIdInput(e.target.value)}
-                placeholder={isQuickEntry ? "Enter your PRN or unique ID (e.g. TEST002 or 1234567890)" : "Enter your registered voter ID (e.g. VOTER-1001)"}
+                placeholder={isQuickEntry ? "Enter your unique Voter ID or PRN (e.g. ABC123 or 1234567890)" : "Enter your registered voter ID (e.g. VOTER-1001)"}
                 className="input font-mono uppercase"
               />
               {isQuickEntry && (
                 <p className="text-[11px] text-amber-700 mt-1">
-                  Quick Entry Mode: Pre-registration is not required. Your PRN / Voter ID uniquely tracks your participation for this election.
+                  Anyone Can Vote Mode: Pre-registration is not required. Any Voter ID uniquely tracks participation to prevent duplicate voting.
                 </p>
               )}
             </div>

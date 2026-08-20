@@ -5,6 +5,7 @@ import openpyxl
 from openpyxl.chart import BarChart, PieChart, Reference
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from app.models import is_anyone_can_vote_mode
 
 
 def create_cover_sheet(wb, title_prefix: str, election_data: dict, theme_color_hex: str = "0F172A"):
@@ -1258,7 +1259,7 @@ def generate_quick_entry_excel(data: dict) -> openpyxl.Workbook:
 # =============================================================================
 def generate_election_excel(data: dict) -> bytes:
     reg_mode = data.get("voter_registration_mode") or data.get("election", {}).get("voter_registration_mode", "pre_registered")
-    if reg_mode == "quick_entry" or data.get("quick_voter_records") or data.get("voter_records"):
+    if is_anyone_can_vote_mode(reg_mode) or data.get("quick_voter_records") or data.get("voter_records"):
         wb = generate_quick_entry_excel(data)
     else:
         voting_type = data.get("voting_type", "regular")

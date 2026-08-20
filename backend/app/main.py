@@ -69,7 +69,7 @@ def run_auto_migrations(target_engine):
                     id VARCHAR(36) PRIMARY KEY,
                     election_id VARCHAR(36) NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
                     voter_name VARCHAR(200) NOT NULL,
-                    prn VARCHAR(10) NOT NULL,
+                    prn VARCHAR(64) NOT NULL,
                     candidate_id VARCHAR(36) REFERENCES candidates(id) ON DELETE SET NULL,
                     candidate_ids_json JSON,
                     receipt_id VARCHAR(80) NOT NULL,

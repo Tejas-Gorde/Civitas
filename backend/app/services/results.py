@@ -2,7 +2,7 @@ import re
 from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from app.models import Candidate, Election, User, Vote, Voter, VoterElectionStatus
+from app.models import Candidate, Election, User, Vote, Voter, VoterElectionStatus, is_anyone_can_vote_mode
 
 
 def calculate_election_results(election_id: str, db: Session, show_voter_names: bool = False) -> dict:
@@ -122,7 +122,7 @@ def calculate_election_results(election_id: str, db: Session, show_voter_names: 
             "voters": voters_for_c,
         })
 
-    if voter_registration_mode == "quick_entry" or quick_records:
+    if is_anyone_can_vote_mode(voter_registration_mode) or quick_records:
         if len(quick_records) > 0:
             ballots_cast = max(ballots_cast, len(quick_records))
             registered_voters = max(registered_voters, len(quick_records))
@@ -137,7 +137,7 @@ def calculate_election_results(election_id: str, db: Session, show_voter_names: 
     ).all()
 
     participation_log = []
-    include_names = show_voter_names or bool(election.show_voter_names_in_results) or (voter_registration_mode == "quick_entry")
+    include_names = show_voter_names or bool(election.show_voter_names_in_results) or is_anyone_can_vote_mode(voter_registration_mode)
     for st in statuses:
         voter_id_val = db.scalar(select(Voter.voter_id).where(Voter.id == st.voter_id)) or "VOTER"
         item = {

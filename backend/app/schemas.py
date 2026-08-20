@@ -291,7 +291,7 @@ class VoterVerifyRequest(BaseModel):
     voter_id: str = Field(..., validation_alias=AliasChoices("voter_id", "voter_registration_id", "voterId", "prn", "voter_prn"), min_length=1, max_length=64)
     voter_name: str = Field(..., validation_alias=AliasChoices("voter_name", "voterName", "name", "full_name"), min_length=1, max_length=200)
 
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
 
 class VoterVerifyResponse(BaseModel):
@@ -451,7 +451,7 @@ class QuickVoterVerifyRequest(BaseModel):
             raise ValueError("Full Name is required.")
         return cleaned
 
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
 
 class QuickVoterVerifyResponse(BaseModel):

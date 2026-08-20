@@ -27,6 +27,7 @@ from app.models import (
     Vote,
     Voter,
     VoterElectionStatus,
+    is_anyone_can_vote_mode,
 )
 from app.schemas import (
     CandidateOut,
@@ -365,17 +366,17 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
 
     reg_mode = getattr(election, "voter_registration_mode", "pre_registered") or "pre_registered"
 
-    # MODE B: Quick Voter Entry / Open Registration
-    if reg_mode == "quick_entry":
+    # MODE B: ANYONE CAN VOTE / Quick Voter Entry / Open Registration
+    if is_anyone_can_vote_mode(reg_mode):
         normalized_prn = re.sub(r"\s+", "", input_voter_id)
         if not normalized_prn:
-            raise HTTPException(400, "PRN / Voter ID is required.")
+            raise HTTPException(400, "Voter ID / PRN is required.")
 
-        # Check if this PRN has already voted in THIS election
+        # Check if this voter ID has already voted in THIS election
         existing_quick_vote = db.scalar(
             select(QuickVoterRecord).where(
                 QuickVoterRecord.election_id == election.id,
-                QuickVoterRecord.prn == normalized_prn,
+                func.lower(QuickVoterRecord.prn) == normalized_prn.lower(),
             )
         )
         if existing_quick_vote:
@@ -383,6 +384,22 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
                 409,
                 "You have already voted in this election."
             )
+
+        existing_voters = db.scalars(
+            select(Voter).where(
+                (func.lower(Voter.voter_id) == f"quick_{normalized_prn}".lower()) |
+                (func.lower(Voter.voter_id) == normalized_prn.lower())
+            )
+        ).all()
+        for ev in existing_voters:
+            st = db.scalar(
+                select(VoterElectionStatus).where(
+                    VoterElectionStatus.voter_id == ev.id,
+                    VoterElectionStatus.election_id == election.id,
+                )
+            )
+            if st and st.voted_at:
+                raise HTTPException(409, "You have already voted in this election.")
 
         # Get or create backing Voter record for session and foreign key compliance
         voter = get_or_create_quick_voter(db, input_voter_name, normalized_prn)
@@ -407,20 +424,20 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
             election_id=election.id,
             stage=AuthStage.IDENTIFIED,
             expires_at=current + timedelta(minutes=settings.max_authentication_minutes),
-            metrics={"voter_name": input_voter_name, "prn": normalized_prn, "mode": "quick_entry"},
+            metrics={"voter_name": input_voter_name, "voter_id": normalized_prn, "prn": normalized_prn, "mode": "anyone_can_vote"},
         )
         db.add(session)
         db.commit()
 
         return VoterVerifyResponse(
             eligible=True,
-            message="Quick voter verification successful",
+            message="Voter eligibility verified",
             voter_id=normalized_prn,
             voter_internal_id=voter.id,
             session_id=session.id,
             expires_at=(current + timedelta(minutes=settings.max_authentication_minutes)).isoformat(),
             voting_type=getattr(election, "voting_type", "regular") or "regular",
-            voter_registration_mode="quick_entry",
+            voter_registration_mode=reg_mode,
             voting_flow_mode=getattr(election, "voting_flow_mode", "full") or "full",
             enable_step_2=bool(election.enable_step_2),
             enable_step_3=bool(election.enable_step_3),
@@ -434,11 +451,11 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
     # MODE A: Pre-Registered Voters
     voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == input_voter_id.lower()))
     if not voter:
-        raise HTTPException(404, "Voter not found")
+        raise HTTPException(404, "Voter is not registered for this election.")
 
     # Verify that voter name matches the registered full name (case-insensitive & trimmed)
     registered_name = re.sub(r"\s+", " ", voter.full_name.strip()).lower()
-    provided_name = re.sub(r"\s+", " ", input_voter_name).lower()
+    provided_name = re.sub(r"\s+", " ", input_voter_name.strip()).lower()
     if registered_name != provided_name:
         raise HTTPException(401, "Voter name and voter ID do not match")
 
@@ -456,7 +473,7 @@ def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
     if not status_row or not status_row.eligible:
         raise HTTPException(
             403,
-            "This voter is not registered for this election",
+            "Voter is not registered for this election.",
         )
 
     if status_row.voted_at:
@@ -529,25 +546,25 @@ def cast_vote(data: CastVote, db: Session = Depends(get_db)):
     reg_mode = getattr(election, "voter_registration_mode", "pre_registered") or "pre_registered"
     primary_receipt = secrets.token_urlsafe(24)
 
-    if reg_mode == "quick_entry":
+    if is_anyone_can_vote_mode(reg_mode):
         # Extract PRN and voter name from session metrics or voter record
         metrics = session.metrics or {}
         voter = db.get(Voter, session.voter_id)
         voter_name = metrics.get("voter_name") or (voter.full_name if voter else data.voter_name) or "Anonymous Voter"
-        prn = metrics.get("prn") or (voter.mobile if voter else data.prn) or "0000000000"
+        prn = metrics.get("voter_id") or metrics.get("prn") or (voter.voter_id.replace("QUICK_", "") if voter and voter.voter_id.startswith("QUICK_") else (voter.mobile if voter else data.prn)) or "0000000000"
         normalized_prn = re.sub(r"\s+", "", str(prn).strip())
         if not normalized_prn:
-            raise HTTPException(422, "PRN / Voter ID is required.")
+            raise HTTPException(422, "Voter ID is required.")
 
         # Check existing QuickVoterRecord first
         existing_rec = db.scalar(
             select(QuickVoterRecord).where(
                 QuickVoterRecord.election_id == election.id,
-                QuickVoterRecord.prn == normalized_prn,
+                func.lower(QuickVoterRecord.prn) == normalized_prn.lower(),
             )
         )
         if existing_rec:
-            raise HTTPException(409, "Vote already recorded. This PRN has already participated in this election.")
+            raise HTTPException(409, "Vote already recorded. This voter ID has already participated in this election.")
 
         # Atomic insert of QuickVoterRecord with UNIQUE(election_id, prn)
         try:
@@ -564,7 +581,7 @@ def cast_vote(data: CastVote, db: Session = Depends(get_db)):
             db.flush()
         except IntegrityError:
             db.rollback()
-            raise HTTPException(409, "Vote already recorded. This PRN has already participated in this election.")
+            raise HTTPException(409, "Vote already recorded. This voter ID has already participated in this election.")
 
         # Also insert standard Vote rows for standard count calculations
         for idx, cid in enumerate(candidate_id_list):
@@ -587,7 +604,7 @@ def cast_vote(data: CastVote, db: Session = Depends(get_db)):
         # Pre-registered mode
         status_row = db.scalar(select(VoterElectionStatus).where(VoterElectionStatus.voter_id == session.voter_id, VoterElectionStatus.election_id == election.id).with_for_update())
         if status_row and status_row.voted_at:
-            raise HTTPException(409, "A ballot was already cast for this election")
+            raise HTTPException(409, "You have already voted in this election.")
         if not status_row:
             status_row = VoterElectionStatus(voter_id=session.voter_id, election_id=election.id)
             db.add(status_row)

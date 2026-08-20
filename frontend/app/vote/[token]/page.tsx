@@ -229,7 +229,7 @@ export default function RemoteVotePage() {
             </h4>
             <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
               <li>Allow browser permission to access your device camera when prompted.</li>
-              <li>Keep your Voter Registration ID and Voter Password ready.</li>
+              <li>Keep your Full Name and Voter ID ready.</li>
               <li>Complete the biometric TouchID/Device and Face capture challenges.</li>
               <li>Do not refresh or exit until your cryptographic vote receipt is shown.</li>
             </ul>

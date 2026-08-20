@@ -334,7 +334,7 @@ export default function LiveElectionsPage() {
 
             <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <span className="text-[11px] text-slate-500 font-medium">
-                Voting requires Voter ID & Password authentication.
+                Voting requires Voter Name & Voter ID verification.
               </span>
               <button
                 type="button"

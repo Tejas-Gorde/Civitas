@@ -22,6 +22,22 @@ class ElectionState(str, enum.Enum):
     PUBLISHED = "published"
 
 
+def is_anyone_can_vote_mode(mode: str | None) -> bool:
+    """Return True if the registration mode allows any voter with Name + ID to vote without pre-registration."""
+    if not mode:
+        return False
+    normalized = str(mode).strip().lower().replace("-", "_").replace(" ", "_")
+    return normalized in {
+        "anyone_can_vote",
+        "anyone",
+        "quick_entry",
+        "open",
+        "public",
+        "quick_voter_entry",
+        "anyone_vote",
+    }
+
+
 class AuthStage(str, enum.Enum):
     IDENTIFIED = "identified"
     FINGERPRINT = "fingerprint"

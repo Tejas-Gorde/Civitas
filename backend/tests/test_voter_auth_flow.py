@@ -160,4 +160,4 @@ def test_complete_voter_registration_and_authentication_flow(client, db_session)
         },
     )
     assert verify_cross_election.status_code == 403, f"Cross-election access should return 403, got {verify_cross_election.status_code}"
-    assert "This voter is not registered for this election" in verify_cross_election.text
+    assert "Voter is not registered for this election" in verify_cross_election.text
