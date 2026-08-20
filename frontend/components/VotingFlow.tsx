@@ -130,6 +130,8 @@ export default function VotingFlow({
   const isAnyoneCanVote =
     election?.voter_registration_mode === "quick_entry" ||
     election?.voter_registration_mode === "anyone_can_vote" ||
+    election?.voter_registration_mode === "open_enrollment" ||
+    election?.voter_registration_mode === "open_registration" ||
     election?.voter_registration_mode === "open" ||
     election?.voter_registration_mode === "public";
 

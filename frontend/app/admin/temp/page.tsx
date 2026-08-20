@@ -728,11 +728,11 @@ export default function LocalAdminPage() {
                             {typeBadge.label}
                           </span>
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border ${
-                            elec.voter_registration_mode === "quick_entry" || elec.voter_registration_mode === "anyone_can_vote"
-                              ? "bg-teal-50 text-teal-800 border-teal-300"
-                              : "bg-slate-50 text-slate-700 border-slate-200"
+                            elec.voter_registration_mode === "quick_entry" || elec.voter_registration_mode === "anyone_can_vote" || elec.voter_registration_mode === "open_enrollment" || elec.voter_registration_mode === "open_registration"
+                              ? "bg-teal-50 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border-teal-300 dark:border-[#0e3834]"
+                              : "bg-slate-50 dark:bg-[#0d1117] text-slate-700 dark:text-[#a7b0bd] border-slate-200 dark:border-[#1a222c]"
                           }`}>
-                            {elec.voter_registration_mode === "quick_entry" || elec.voter_registration_mode === "anyone_can_vote" ? "⚡ Anyone Can Vote" : "🛡️ Pre-Registered"}
+                            {elec.voter_registration_mode === "quick_entry" || elec.voter_registration_mode === "anyone_can_vote" || elec.voter_registration_mode === "open_enrollment" || elec.voter_registration_mode === "open_registration" ? "⚡ Anyone Can Vote" : "🛡️ Pre-Registered"}
                           </span>
                         </div>
                         <span
@@ -1332,7 +1332,7 @@ export default function LocalAdminPage() {
                   </div>
                 </div>
 
-                {election.voter_registration_mode !== "quick_entry" && election.voter_registration_mode !== "anyone_can_vote" && (
+                {election.voter_registration_mode !== "quick_entry" && election.voter_registration_mode !== "anyone_can_vote" && election.voter_registration_mode !== "open_enrollment" && election.voter_registration_mode !== "open_registration" && (
                   <button
                     type="button"
                     onClick={() => setShowAddVoterModal(true)}
@@ -1344,13 +1344,13 @@ export default function LocalAdminPage() {
                 )}
               </div>
 
-              {(election.voter_registration_mode === "quick_entry" || election.voter_registration_mode === "anyone_can_vote") && (
-                <div className="mx-4 sm:mx-6 my-3 p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-950 flex items-center justify-between">
+              {(election.voter_registration_mode === "quick_entry" || election.voter_registration_mode === "anyone_can_vote" || election.voter_registration_mode === "open_enrollment" || election.voter_registration_mode === "open_registration") && (
+                <div className="mx-4 sm:mx-6 my-3 p-3.5 rounded-xl bg-teal-50 dark:bg-[#082421] border border-teal-200 dark:border-[#0e3834] text-xs text-teal-950 dark:text-[#2dd4bf] flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-teal-900 block">
-                      ⚡ Anyone Can Vote Mode Active
+                    <span className="font-bold text-teal-900 dark:text-[#f5f7fa] block">
+                      ⚡ Anyone Can Vote / Open Enrollment Mode Active
                     </span>
-                    <span className="text-[11px] text-teal-800">
+                    <span className="text-[11px] text-teal-800 dark:text-[#a7b0bd]">
                       Pre-registration is not required. Participants enter their Full Name and Voter ID at voting time with automatic server-side duplicate prevention.
                     </span>
                   </div>

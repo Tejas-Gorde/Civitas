@@ -121,6 +121,8 @@ function VoterPortalContent() {
   const isQuickEntry =
     election?.voter_registration_mode === "quick_entry" ||
     election?.voter_registration_mode === "anyone_can_vote" ||
+    election?.voter_registration_mode === "open_enrollment" ||
+    election?.voter_registration_mode === "open_registration" ||
     election?.voter_registration_mode === "open" ||
     election?.voter_registration_mode === "public";
 
@@ -163,7 +165,7 @@ function VoterPortalContent() {
               </span>
               Enter Election ID
             </h2>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-xs text-slate-600 dark:text-[#a7b0bd] mt-1">
               Please enter the unique ID of the election you wish to participate in.
             </p>
           </div>
@@ -180,7 +182,7 @@ function VoterPortalContent() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a7b0bd] mb-1.5">
                 Election ID
               </label>
               <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-2">
@@ -212,12 +214,12 @@ function VoterPortalContent() {
               </div>
             </div>
 
-            <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600">
+            <div className="pt-3 sm:pt-4 border-t border-slate-100 dark:border-[#141a22] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600 dark:text-[#a7b0bd]">
               <span>Don't have your Election ID?</span>
               <button
                 type="button"
                 onClick={() => router.push("/live-elections")}
-                className="text-teal-700 font-bold hover:underline inline-flex items-center gap-1 self-start sm:self-auto py-1"
+                className="text-teal-700 dark:text-teal-400 font-bold hover:underline inline-flex items-center gap-1 self-start sm:self-auto py-1"
               >
                 Browse Live Elections <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -229,19 +231,19 @@ function VoterPortalContent() {
       {/* STEP 2: VOTER AUTHENTICATION */}
       {step === "voter_auth" && election && (
         <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
-          <div className="border-b border-slate-100 pb-3 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="border-b border-slate-100 dark:border-[#141a22] pb-3 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest">
+                <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-400 uppercase tracking-widest">
                   Selected Election
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  isQuickEntry ? "bg-amber-100 text-amber-800" : "bg-teal-100 text-teal-800"
+                  isQuickEntry ? "bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-teal-300 dark:border-[#0e3834]" : "bg-blue-100 dark:bg-[#061421] text-blue-800 dark:text-[#38bdf8] border border-blue-300 dark:border-[#0e2c47]"
                 }`}>
-                  {isQuickEntry ? "Anyone Can Vote Mode" : "Pre-Registered Mode"}
+                  {isQuickEntry ? "Open Enrollment / Anyone Can Vote" : "Pre-Registered Mode"}
                 </span>
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">{election.name}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f5f7fa] mt-0.5">{election.name}</h2>
             </div>
             <button
               type="button"
@@ -255,23 +257,23 @@ function VoterPortalContent() {
             </button>
           </div>
 
-          <div className="border-b border-slate-100 pb-3 sm:pb-4">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black shrink-0">
+          <div className="border-b border-slate-100 dark:border-[#141a22] pb-3 sm:pb-4">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-[#f5f7fa] flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-transparent dark:border-[#0e3834] text-xs font-black shrink-0">
                 2
               </span>
               Voter Identification
             </h3>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-xs text-slate-600 dark:text-[#a7b0bd] mt-1">
               {isQuickEntry
-                ? "Enter your Full Name and Voter ID / PRN to access your ballot."
-                : "Enter your registered Full Name and Voter ID to access your ballot."}
+                ? "Open Enrollment — enter your Full Name and Voter ID to access your official ballot."
+                : "Enter your registered Full Name and Voter ID to access your official ballot."}
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 dark:bg-[#261d09] border border-amber-200 dark:border-[#3d2e0e] text-amber-900 dark:text-amber-300 text-xs flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Authentication Failure</p>
                 <p className="mt-0.5">{errorMsg}</p>
@@ -281,7 +283,7 @@ function VoterPortalContent() {
 
           <form onSubmit={handleVoterAuthenticate} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a7b0bd] mb-1">
                 {isQuickEntry ? "Full Name" : "Voter Full Name"} <span className="text-rose-500">*</span>
               </label>
               <input
@@ -295,7 +297,7 @@ function VoterPortalContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a7b0bd] mb-1">
                 {isQuickEntry ? "Voter ID / PRN" : "Voter ID"} <span className="text-rose-500">*</span>
               </label>
               <input
@@ -307,15 +309,15 @@ function VoterPortalContent() {
                 className="input font-mono uppercase"
               />
               {isQuickEntry && (
-                <p className="text-[11px] text-amber-700 mt-1">
-                  Anyone Can Vote Mode: Pre-registration is not required. Any Voter ID uniquely tracks participation to prevent duplicate voting.
+                <p className="text-[11px] text-teal-700 dark:text-teal-400 mt-1">
+                  Open Enrollment Mode: Zero pre-registration required. Any Voter ID uniquely tracks participation to strictly enforce 1-person-1-vote.
                 </p>
               )}
             </div>
 
-            <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                <Lock className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+            <div className="pt-3 sm:pt-4 border-t border-slate-100 dark:border-[#141a22] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#707a88] font-medium">
+                <Lock className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
                 <span>Protected against duplicate voting</span>
               </div>
 

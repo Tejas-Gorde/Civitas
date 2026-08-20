@@ -35,6 +35,9 @@ def is_anyone_can_vote_mode(mode: str | None) -> bool:
         "public",
         "quick_voter_entry",
         "anyone_vote",
+        "open_enrollment",
+        "open_registration",
+        "open_enroll",
     }
 
 

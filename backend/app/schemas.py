@@ -290,6 +290,23 @@ class VoterVerifyRequest(BaseModel):
     election_id: str = Field(..., validation_alias=AliasChoices("election_id", "electionId"))
     voter_id: str = Field(..., validation_alias=AliasChoices("voter_id", "voter_registration_id", "voterId", "prn", "voter_prn"), min_length=1, max_length=64)
     voter_name: str = Field(..., validation_alias=AliasChoices("voter_name", "voterName", "name", "full_name"), min_length=1, max_length=200)
+    voter_password: str | None = Field(default=None, validation_alias=AliasChoices("voter_password", "voterPassword", "password"))
+
+    @field_validator("voter_id")
+    @classmethod
+    def validate_voter_id(cls, v: str) -> str:
+        cleaned = str(v).strip()
+        if not cleaned:
+            raise ValueError("Voter ID is required.")
+        return cleaned
+
+    @field_validator("voter_name")
+    @classmethod
+    def validate_voter_name(cls, v: str) -> str:
+        cleaned = str(v).strip()
+        if not cleaned:
+            raise ValueError("Voter Full Name is required.")
+        return cleaned
 
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
