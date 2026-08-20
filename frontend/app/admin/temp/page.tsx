@@ -44,6 +44,7 @@ import {
   TrendingUp,
   Percent,
   Camera,
+  Save,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
@@ -116,7 +117,12 @@ export default function LocalAdminPage() {
     description: "",
     starts_at: "",
     ends_at: "",
-    voting_flow_mode: "kiosk",
+    voting_type: "regular",
+    voter_registration_mode: "pre_registered",
+    voting_flow_mode: "full",
+    max_selections: 1,
+    allow_abstain: false,
+    position_title: "",
     enable_step_2: true,
     enable_step_3: true,
     enable_step_4: true,
@@ -233,7 +239,12 @@ export default function LocalAdminPage() {
       description: elec.description || "",
       starts_at: elec.starts_at ? elec.starts_at.slice(0, 16) : "",
       ends_at: elec.ends_at ? elec.ends_at.slice(0, 16) : "",
-      voting_flow_mode: elec.voting_flow_mode || "kiosk",
+      voting_type: elec.voting_type || "regular",
+      voter_registration_mode: elec.voter_registration_mode || "pre_registered",
+      voting_flow_mode: elec.voting_flow_mode || "full",
+      max_selections: elec.max_selections || 1,
+      allow_abstain: Boolean(elec.allow_abstain),
+      position_title: elec.position_title || "",
       enable_step_2: elec.enable_step_2 !== false,
       enable_step_3: elec.enable_step_3 !== false,
       enable_step_4: elec.enable_step_4 !== false,
@@ -378,7 +389,12 @@ export default function LocalAdminPage() {
         description: settingsForm.description.trim(),
         starts_at: new Date(settingsForm.starts_at).toISOString(),
         ends_at: new Date(settingsForm.ends_at).toISOString(),
+        voting_type: settingsForm.voting_type,
+        voter_registration_mode: settingsForm.voter_registration_mode,
         voting_flow_mode: settingsForm.voting_flow_mode,
+        max_selections: Number(settingsForm.max_selections) || 1,
+        allow_abstain: Boolean(settingsForm.allow_abstain),
+        position_title: settingsForm.position_title.trim() || undefined,
         enable_step_2: settingsForm.enable_step_2,
         enable_step_3: settingsForm.enable_step_3,
         enable_step_4: settingsForm.enable_step_4,
@@ -392,7 +408,7 @@ export default function LocalAdminPage() {
       const res = await api.put(`/admin/elections/${election.id}`, payload);
       setElection(res.data);
       syncSettingsForm(res.data);
-      toast.success("Election settings saved.");
+      toast.success("Election configuration & settings saved successfully.");
       await loadTabData(res.data.id);
     } catch (err) {
       toast.error("Failed to save settings: " + readable(err));
@@ -1171,105 +1187,385 @@ export default function LocalAdminPage() {
         {/* TAB 3: ELECTION SETTINGS & SAFE LIVE ID CHANGE */}
         {activeTab === "settings" && election && (
           <div className="space-y-6 animate-fade-in">
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4 space-y-1">
-                <h2 className="text-xl font-extrabold text-slate-900">Election Configuration & Settings</h2>
-                <p className="text-xs text-slate-500">
-                  Update title, schedule dates, step verification, and Election ID.
-                </p>
-              </div>
-
-              <form onSubmit={handleSaveSettings} className="space-y-5 text-xs">
-                {/* Election ID Slug Input */}
-                <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-blue-900">
-                    <Key className="h-4 w-4 text-blue-600" />
-                    <span>Election Identifier (URL Slug)</span>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={settingsForm.election_id}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, election_id: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-blue-300 text-slate-900 font-mono uppercase focus:outline-none focus:border-blue-600 text-sm"
-                  />
-                  <p className="text-[11px] text-blue-800">
-                    Updating this updates your voting URL (<code>/vote/{settingsForm.election_id}</code>) and QR code immediately while safely preserving active voter sessions.
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#0a0d11] border border-slate-200 dark:border-[#1a222c] shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-[#141a22] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f7fa] flex items-center gap-2">
+                    <Sliders className="h-5 w-5 text-blue-600 dark:text-[#38bdf8]" />
+                    Election Configuration & Settings
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-[#707a88]">
+                    Configure election method, voter authentication mode, security pipeline, schedule, and privacy settings.
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-bold text-slate-700">Election Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={settingsForm.name}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white text-sm"
-                  />
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    settingsForm.voter_registration_mode === "pre_registered"
+                      ? "bg-blue-50 dark:bg-[#061421] text-blue-700 dark:text-[#38bdf8] border-blue-200 dark:border-[#0e2c47]"
+                      : "bg-teal-50 dark:bg-[#082421] text-teal-700 dark:text-[#2dd4bf] border-teal-200 dark:border-[#0e3834]"
+                  }`}>
+                    {settingsForm.voter_registration_mode === "pre_registered" ? "🛡️ Pre-Registered" : "⚡ Anyone Can Vote"}
+                  </span>
                 </div>
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-bold text-slate-700">Description</label>
-                  <textarea
-                    rows={2}
-                    value={settingsForm.description}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, description: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white text-sm"
-                  />
-                </div>
+              <form onSubmit={handleSaveSettings} className="space-y-6 text-xs">
+                {/* SECTION 1: ELECTION IDENTIFIERS */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
+                    1. Basic Election Information
+                  </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="font-bold text-slate-700">Start Date & Time *</label>
+                  {/* Election ID Slug Input */}
+                  <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-[#07121d] border border-blue-200 dark:border-[#0e2c47] space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-blue-900 dark:text-[#38bdf8]">
+                      <Key className="h-4 w-4 text-blue-600 dark:text-[#38bdf8]" />
+                      <span>Election Identifier (URL Slug)</span>
+                    </div>
                     <input
-                      type="datetime-local"
+                      type="text"
                       required
-                      value={settingsForm.starts_at}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, starts_at: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white"
+                      value={settingsForm.election_id}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, election_id: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#080b0f] border border-blue-300 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] font-mono uppercase focus:outline-none focus:border-blue-600 text-sm"
+                    />
+                    <p className="text-[11px] text-blue-800 dark:text-[#a7b0bd]">
+                      Updating this updates your voting URL (<code>/vote/{settingsForm.election_id}</code>) and QR code immediately while safely preserving active voter sessions.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700 dark:text-[#a7b0bd]">Election Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={settingsForm.name}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] focus:outline-none focus:border-blue-500 text-sm"
                     />
                   </div>
+
                   <div className="space-y-1.5">
-                    <label className="font-bold text-slate-700">End Date & Time *</label>
-                    <input
-                      type="datetime-local"
-                      required
-                      value={settingsForm.ends_at}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, ends_at: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white"
+                    <label className="font-bold text-slate-700 dark:text-[#a7b0bd]">Description</label>
+                    <textarea
+                      rows={2}
+                      value={settingsForm.description}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, description: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] focus:outline-none focus:border-blue-500 text-sm"
                     />
                   </div>
                 </div>
 
-                {/* Privacy Toggle */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-slate-900">Show Voter Names in Results Log</div>
-                    <div className="text-[11px] text-slate-500">
-                      When enabled, voter names appear in the participation log. When disabled, only Voter IDs are shown.
+                {/* SECTION 2: SCHEDULE */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#141a22]">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
+                    2. Voting Schedule
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-[#a7b0bd]">Start Date & Time *</label>
+                      <input
+                        type="datetime-local"
+                        required
+                        value={settingsForm.starts_at}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, starts_at: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-[#a7b0bd]">End Date & Time *</label>
+                      <input
+                        type="datetime-local"
+                        required
+                        value={settingsForm.ends_at}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, ends_at: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] focus:outline-none focus:border-blue-500"
+                      />
                     </div>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settingsForm.show_voter_names_in_results}
-                      onChange={(e) =>
-                        setSettingsForm({ ...settingsForm, show_voter_names_in_results: e.target.checked })
-                      }
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
                 </div>
 
-                <div className="flex items-center justify-end pt-2">
+                {/* SECTION 3: VOTING & BALLOT METHOD */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#141a22]">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
+                    3. Voting & Ballot Method
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-[#a7b0bd]">Voting Type / System</label>
+                      <select
+                        value={settingsForm.voting_type}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, voting_type: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] font-bold focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="regular">🗳️ Regular / General Election (Single Selection)</option>
+                        <option value="multiple_choice">📑 Multiple Choice / Committee (Multi-Select)</option>
+                        <option value="poll">📊 Opinion Poll / Single Query</option>
+                        <option value="yes_no">⚖️ Referendum / Yes-No Decision</option>
+                        <option value="rating">⭐ Rating Scale (1 to 5 Stars)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-[#a7b0bd]">Position / Office Title (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. President, Department Representative"
+                        value={settingsForm.position_title}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, position_title: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-slate-900 dark:text-[#f5f7fa] focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {settingsForm.voting_type === "multiple_choice" && (
+                    <div className="p-4 rounded-xl bg-purple-50/70 dark:bg-[#120b1e] border border-purple-200 dark:border-[#2b1647] space-y-2">
+                      <div className="font-bold text-purple-900 dark:text-purple-300">
+                        Maximum Allowed Selections per Ballot
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min={1}
+                          max={Math.max(1, candidates.length || 10)}
+                          value={settingsForm.max_selections}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, max_selections: Math.max(1, parseInt(e.target.value) || 1) })}
+                          className="w-32 px-3.5 py-2 rounded-xl bg-white dark:bg-[#080b0f] border border-purple-300 dark:border-[#2b1647] text-slate-900 dark:text-[#f5f7fa] font-bold focus:outline-none"
+                        />
+                        <span className="text-xs text-purple-800 dark:text-[#a7b0bd]">
+                          Voters can choose up to this many candidates/options.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Allow Abstain Option (NOTA)</div>
+                      <div className="text-[11px] text-slate-500 dark:text-[#707a88]">
+                        Enables a formal "Abstain / None of the Above" choice on voter ballots.
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsForm.allow_abstain}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, allow_abstain: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* SECTION 4: VOTER REGISTRATION & ACCESS MODE */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#141a22]">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
+                    4. Voter Registration & Authentication Mode
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "pre_registered" })}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        settingsForm.voter_registration_mode === "pre_registered"
+                          ? "bg-blue-50/80 dark:bg-[#061421] border-blue-500 dark:border-[#38bdf8] shadow-xs"
+                          : "bg-slate-50 dark:bg-[#0d1117] border-slate-200 dark:border-[#1a222c] opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-[#f5f7fa]">
+                        <input
+                          type="radio"
+                          name="reg_mode"
+                          checked={settingsForm.voter_registration_mode === "pre_registered"}
+                          onChange={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "pre_registered" })}
+                          className="text-blue-600"
+                        />
+                        <span>🛡️ Option A — Pre-Registered Whitelist</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-[#a7b0bd] mt-1.5 pl-5">
+                        Only voters registered in the voter roster database are allowed to vote. Requires Name + Voter ID matching.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "anyone_can_vote" })}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        settingsForm.voter_registration_mode === "anyone_can_vote" || settingsForm.voter_registration_mode === "quick_entry" || settingsForm.voter_registration_mode === "open_enrollment"
+                          ? "bg-teal-50/80 dark:bg-[#082421] border-teal-500 dark:border-[#2dd4bf] shadow-xs"
+                          : "bg-slate-50 dark:bg-[#0d1117] border-slate-200 dark:border-[#1a222c] opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-[#f5f7fa]">
+                        <input
+                          type="radio"
+                          name="reg_mode"
+                          checked={settingsForm.voter_registration_mode === "anyone_can_vote" || settingsForm.voter_registration_mode === "quick_entry" || settingsForm.voter_registration_mode === "open_enrollment"}
+                          onChange={() => setSettingsForm({ ...settingsForm, voter_registration_mode: "anyone_can_vote" })}
+                          className="text-teal-600"
+                        />
+                        <span>⚡ Option B — Anyone Can Vote / Open Enrollment</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-[#a7b0bd] mt-1.5 pl-5">
+                        Zero pre-registration required. Participants enter their Full Name and Voter ID to vote with automatic election-scoped duplicate prevention.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 5: SECURITY & PRE-VOTING VERIFICATION PIPELINE */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#141a22]">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
+                      5. Security & Verification Pipeline
+                    </h3>
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-[#38bdf8]">
+                      {settingsForm.voting_flow_mode === "direct" ? "Direct Voting" : "Full Multi-Step Verification"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, voting_flow_mode: "full" })}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition ${
+                        settingsForm.voting_flow_mode !== "direct"
+                          ? "bg-blue-50/60 dark:bg-[#061421] border-blue-400 dark:border-[#0e2c47]"
+                          : "bg-slate-50 dark:bg-[#0d1117] border-slate-200 dark:border-[#1a222c] opacity-60"
+                      }`}
+                    >
+                      <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Standard Multi-Step Pipeline</div>
+                      <div className="text-[11px] text-slate-500 dark:text-[#707a88] mt-0.5">
+                        Executes configured verification steps before issuing cryptographic voting grant.
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, voting_flow_mode: "direct" })}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition ${
+                        settingsForm.voting_flow_mode === "direct"
+                          ? "bg-teal-50/60 dark:bg-[#082421] border-teal-400 dark:border-[#0e3834]"
+                          : "bg-slate-50 dark:bg-[#0d1117] border-slate-200 dark:border-[#1a222c] opacity-60"
+                      }`}
+                    >
+                      <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Direct Ballot Access (Kiosk/Quick)</div>
+                      <div className="text-[11px] text-slate-500 dark:text-[#707a88] mt-0.5">
+                        Immediately opens the ballot after identity verification.
+                      </div>
+                    </div>
+                  </div>
+
+                  {settingsForm.voting_flow_mode !== "direct" && (
+                    <div className="space-y-2 pt-2">
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Step 2: Passkey / Hardware Token</div>
+                          <div className="text-[11px] text-slate-500 dark:text-[#707a88]">
+                            WebAuthn / FIDO2 device verification for registered hardware tokens.
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.enable_step_2}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, enable_step_2: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Step 3: Voter Photo Capture & Audit Trail</div>
+                          <div className="text-[11px] text-slate-500 dark:text-[#707a88]">
+                            Captures camera photo at voting time and stores in Local Admin Verification Photos gallery.
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.enable_step_3}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, enable_step_3: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Step 4: Security Cryptographic Challenge</div>
+                          <div className="text-[11px] text-slate-500 dark:text-[#707a88]">
+                            Cryptographic challenge-response handshake to prevent session hijacking.
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.enable_step_4}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, enable_step_4: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Step 5: AI Liveness Verification</div>
+                          <div className="text-[11px] text-slate-500 dark:text-[#707a88]">
+                            Anti-spoofing dynamic face tracking and motion verification.
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.enable_step_5}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, enable_step_5: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* SECTION 6: PRIVACY & RESULTS */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#141a22]">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-[#707a88]">
+                    6. Privacy & Results Log
+                  </h3>
+
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-slate-900 dark:text-[#f5f7fa]">Show Voter Names in Results Log</div>
+                      <div className="text-[11px] text-slate-500 dark:text-[#707a88]">
+                        When enabled, voter names appear in the participation log. When disabled, only Voter IDs are shown.
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsForm.show_voter_names_in_results}
+                        onChange={(e) =>
+                          setSettingsForm({ ...settingsForm, show_voter_names_in_results: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end pt-4 border-t border-slate-100 dark:border-[#141a22]">
                   <button
                     type="submit"
                     disabled={savingSettings}
-                    className="py-2.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-xs"
+                    className="py-3 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md flex items-center gap-2 text-sm"
                   >
-                    {savingSettings ? "Saving Settings..." : "Save Settings"}
+                    {savingSettings ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin inline" />
+                        Saving Configuration...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save & Apply Configuration
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

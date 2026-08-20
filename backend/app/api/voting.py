@@ -256,86 +256,33 @@ def verify_election_id_public(election_id: str, db: Session = Depends(get_db)):
     return out
 
 
+from app.services.voter_auth import authenticate_voter
+
+
 @router.post("/verify-quick-voter", response_model=QuickVoterVerifyResponse)
 def verify_quick_voter(data: QuickVoterVerifyRequest, db: Session = Depends(get_db)):
-    current = datetime.now(timezone.utc)
-    clean_id = str(data.election_id).strip()
-    election = db.scalar(
-        select(Election).where(
-            (func.lower(Election.id) == clean_id.lower()) |
-            (func.lower(Election.election_id) == clean_id.lower())
-        )
+    verify_req = VoterVerifyRequest(
+        election_id=data.election_id,
+        voter_id=data.prn,
+        voter_name=data.full_name,
     )
-    if not election:
-        raise HTTPException(404, "Election not found.")
-    if election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)):
-        raise HTTPException(400, "This election is not currently open")
-
-    normalized_prn = re.sub(r"\s+", "", data.prn.strip())
-    if not normalized_prn:
-        raise HTTPException(400, "PRN / Voter ID is required.")
-
-    clean_name = data.full_name.strip()
-    if not clean_name:
-        raise HTTPException(400, "Full Name is required.")
-
-    # Check if this PRN has already voted in THIS election
-    existing_quick_vote = db.scalar(
-        select(QuickVoterRecord).where(
-            QuickVoterRecord.election_id == election.id,
-            QuickVoterRecord.prn == normalized_prn,
-        )
-    )
-    if existing_quick_vote:
-        raise HTTPException(
-            409,
-            "You have already voted in this election."
-        )
-
-    # Get or create backing Voter record for session and foreign key compliance
-    voter = get_or_create_quick_voter(db, clean_name, normalized_prn)
-
-    # Ensure VoterElectionStatus is eligible
-    status_row = db.scalar(
-        select(VoterElectionStatus).where(
-            VoterElectionStatus.voter_id == voter.id,
-            VoterElectionStatus.election_id == election.id,
-        )
-    )
-    if not status_row:
-        status_row = VoterElectionStatus(voter_id=voter.id, election_id=election.id, eligible=True)
-        db.add(status_row)
-        db.flush()
-    elif status_row.voted_at:
-        raise HTTPException(409, "You have already voted in this election.")
-
-    # Start authentication session
-    session = AuthSession(
-        voter_id=voter.id,
-        election_id=election.id,
-        stage=AuthStage.IDENTIFIED,
-        expires_at=current + timedelta(minutes=settings.max_authentication_minutes),
-        metrics={"voter_name": clean_name, "prn": normalized_prn, "mode": "quick_entry"},
-    )
-    db.add(session)
-    db.commit()
-
+    res = authenticate_voter(db, verify_req)
     return QuickVoterVerifyResponse(
-        eligible=True,
-        message="Quick voter verification successful",
-        voter_name=clean_name,
-        prn=normalized_prn,
-        session_id=session.id,
-        voting_type=getattr(election, "voting_type", "regular") or "regular",
-        voter_registration_mode="quick_entry",
-        voting_flow_mode=getattr(election, "voting_flow_mode", "full") or "full",
-        enable_step_2=bool(election.enable_step_2),
-        enable_step_3=bool(election.enable_step_3),
-        enable_step_4=bool(election.enable_step_4),
-        enable_step_5=bool(election.enable_step_5),
-        max_selections=getattr(election, "max_selections", 1) or 1,
-        allow_abstain=bool(getattr(election, "allow_abstain", False)),
-        position_title=getattr(election, "position_title", None),
+        eligible=res.eligible,
+        message=res.message,
+        voter_name=data.full_name.strip(),
+        prn=res.voter_id or data.prn.strip(),
+        session_id=res.session_id,
+        voting_type=res.voting_type,
+        voter_registration_mode=res.voter_registration_mode,
+        voting_flow_mode=res.voting_flow_mode,
+        enable_step_2=res.enable_step_2,
+        enable_step_3=res.enable_step_3,
+        enable_step_4=res.enable_step_4,
+        enable_step_5=res.enable_step_5,
+        max_selections=res.max_selections,
+        allow_abstain=res.allow_abstain,
+        position_title=res.position_title,
     )
 
 
@@ -343,171 +290,7 @@ def verify_quick_voter(data: QuickVoterVerifyRequest, db: Session = Depends(get_
 @router.post("/voter/authenticate", response_model=VoterVerifyResponse)
 @router.post("/verify-voter", response_model=VoterVerifyResponse)
 def verify_voter(data: VoterVerifyRequest, db: Session = Depends(get_db)):
-    current = datetime.now(timezone.utc)
-    clean_id = str(data.election_id).strip()
-    election = db.scalar(
-        select(Election).where(
-            (func.lower(Election.id) == clean_id.lower()) |
-            (func.lower(Election.election_id) == clean_id.lower())
-        )
-    )
-    if not election:
-        raise HTTPException(404, "Election not found.")
-    if election.state != ElectionState.OPEN or not (ensure_utc(election.starts_at) <= current <= ensure_utc(election.ends_at)):
-        raise HTTPException(400, "This election is not currently open")
-
-    input_voter_id = data.voter_id.strip() if data.voter_id else ""
-    input_voter_name = data.voter_name.strip() if data.voter_name else ""
-
-    if not input_voter_id:
-        raise HTTPException(400, "Voter ID / PRN is required.")
-    if not input_voter_name:
-        raise HTTPException(400, "Full Name is required.")
-
-    reg_mode = getattr(election, "voter_registration_mode", "pre_registered") or "pre_registered"
-
-    # MODE B: ANYONE CAN VOTE / Quick Voter Entry / Open Registration
-    if is_anyone_can_vote_mode(reg_mode):
-        normalized_prn = re.sub(r"\s+", "", input_voter_id)
-        if not normalized_prn:
-            raise HTTPException(400, "Voter ID / PRN is required.")
-
-        # Check if this voter ID has already voted in THIS election
-        existing_quick_vote = db.scalar(
-            select(QuickVoterRecord).where(
-                QuickVoterRecord.election_id == election.id,
-                func.lower(QuickVoterRecord.prn) == normalized_prn.lower(),
-            )
-        )
-        if existing_quick_vote:
-            raise HTTPException(
-                409,
-                "You have already voted in this election."
-            )
-
-        existing_voters = db.scalars(
-            select(Voter).where(
-                (func.lower(Voter.voter_id) == f"quick_{normalized_prn}".lower()) |
-                (func.lower(Voter.voter_id) == normalized_prn.lower())
-            )
-        ).all()
-        for ev in existing_voters:
-            st = db.scalar(
-                select(VoterElectionStatus).where(
-                    VoterElectionStatus.voter_id == ev.id,
-                    VoterElectionStatus.election_id == election.id,
-                )
-            )
-            if st and st.voted_at:
-                raise HTTPException(409, "You have already voted in this election.")
-
-        # Get or create backing Voter record for session and foreign key compliance
-        voter = get_or_create_quick_voter(db, input_voter_name, normalized_prn)
-
-        # Ensure VoterElectionStatus is eligible
-        status_row = db.scalar(
-            select(VoterElectionStatus).where(
-                VoterElectionStatus.voter_id == voter.id,
-                VoterElectionStatus.election_id == election.id,
-            )
-        )
-        if not status_row:
-            status_row = VoterElectionStatus(voter_id=voter.id, election_id=election.id, eligible=True)
-            db.add(status_row)
-            db.flush()
-        elif status_row.voted_at:
-            raise HTTPException(409, "You have already voted in this election.")
-
-        # Start authentication session
-        session = AuthSession(
-            voter_id=voter.id,
-            election_id=election.id,
-            stage=AuthStage.IDENTIFIED,
-            expires_at=current + timedelta(minutes=settings.max_authentication_minutes),
-            metrics={"voter_name": input_voter_name, "voter_id": normalized_prn, "prn": normalized_prn, "mode": "anyone_can_vote"},
-        )
-        db.add(session)
-        db.commit()
-
-        return VoterVerifyResponse(
-            eligible=True,
-            message="Voter eligibility verified",
-            voter_id=normalized_prn,
-            voter_internal_id=voter.id,
-            session_id=session.id,
-            expires_at=(current + timedelta(minutes=settings.max_authentication_minutes)).isoformat(),
-            voting_type=getattr(election, "voting_type", "regular") or "regular",
-            voter_registration_mode=reg_mode,
-            voting_flow_mode=getattr(election, "voting_flow_mode", "full") or "full",
-            enable_step_2=bool(election.enable_step_2),
-            enable_step_3=bool(election.enable_step_3),
-            enable_step_4=bool(election.enable_step_4),
-            enable_step_5=bool(election.enable_step_5),
-            max_selections=getattr(election, "max_selections", 1) or 1,
-            allow_abstain=bool(getattr(election, "allow_abstain", False)),
-            position_title=getattr(election, "position_title", None),
-        )
-
-    # MODE A: Pre-Registered Voters
-    voter = db.scalar(select(Voter).where(func.lower(Voter.voter_id) == input_voter_id.lower()))
-    if not voter:
-        raise HTTPException(404, "Voter is not registered for this election.")
-
-    # Verify that voter name matches the registered full name (case-insensitive & trimmed)
-    registered_name = re.sub(r"\s+", " ", voter.full_name.strip()).lower()
-    provided_name = re.sub(r"\s+", " ", input_voter_name.strip()).lower()
-    if registered_name != provided_name:
-        raise HTTPException(401, "Voter name and voter ID do not match")
-
-    user = db.get(User, voter.user_id)
-    if not user or not user.is_active:
-        raise HTTPException(403, "Voter account is inactive or not eligible to vote")
-
-    status_row = db.scalar(
-        select(VoterElectionStatus).where(
-            VoterElectionStatus.voter_id == voter.id,
-            VoterElectionStatus.election_id == election.id,
-        )
-    )
-
-    if not status_row or not status_row.eligible:
-        raise HTTPException(
-            403,
-            "Voter is not registered for this election.",
-        )
-
-    if status_row.voted_at:
-        raise HTTPException(409, "You have already voted in this election.")
-
-    # Start authentication session
-    session = AuthSession(
-        voter_id=voter.id,
-        election_id=election.id,
-        stage=AuthStage.IDENTIFIED,
-        expires_at=current + timedelta(minutes=settings.max_authentication_minutes),
-        metrics={"voter_name": voter.full_name, "voter_id": voter.voter_id, "mode": "pre_registered"},
-    )
-    db.add(session)
-    db.commit()
-
-    return VoterVerifyResponse(
-        eligible=True,
-        message="Voter eligibility verified",
-        voter_id=voter.voter_id,
-        voter_internal_id=voter.id,
-        session_id=session.id,
-        expires_at=(current + timedelta(minutes=settings.max_authentication_minutes)).isoformat(),
-        voting_type=getattr(election, "voting_type", "regular") or "regular",
-        voter_registration_mode="pre_registered",
-        voting_flow_mode=getattr(election, "voting_flow_mode", "full") or "full",
-        enable_step_2=bool(election.enable_step_2),
-        enable_step_3=bool(election.enable_step_3),
-        enable_step_4=bool(election.enable_step_4),
-        enable_step_5=bool(election.enable_step_5),
-        max_selections=getattr(election, "max_selections", 1) or 1,
-        allow_abstain=bool(getattr(election, "allow_abstain", False)),
-        position_title=getattr(election, "position_title", None),
-    )
+    return authenticate_voter(db, data)
 
 
 @router.post("/cast", response_model=VoteReceipt, status_code=201)

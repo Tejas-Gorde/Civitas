@@ -934,6 +934,16 @@ def update_election(election_id: str, data: ElectionUpdate, admin: User = Depend
     if new_ends <= new_starts:
         raise HTTPException(400, "Election end time must be after start time")
 
+    if data.voting_type is not None:
+        election.voting_type = data.voting_type
+    if data.voter_registration_mode is not None:
+        election.voter_registration_mode = data.voter_registration_mode
+    if data.max_selections is not None:
+        election.max_selections = max(1, data.max_selections)
+    if data.allow_abstain is not None:
+        election.allow_abstain = data.allow_abstain
+    if data.position_title is not None:
+        election.position_title = data.position_title.strip() if data.position_title else None
     if data.voting_flow_mode is not None:
         election.voting_flow_mode = data.voting_flow_mode
     if data.enable_step_2 is not None:
