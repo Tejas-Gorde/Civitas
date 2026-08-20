@@ -127,17 +127,17 @@ function VoterPortalContent() {
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Top Banner */}
-      <div className="card p-5 sm:p-8 bg-gradient-to-r from-slate-900 to-teal-950 text-white">
+      <div className="card p-5 sm:p-8 bg-gradient-to-r from-slate-900 to-teal-950 dark:from-[#0a0d11] dark:to-[#0d1117] text-white border border-transparent dark:border-[#1a222c]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 bg-teal-900/60 px-3 py-1 rounded-full border border-teal-700/50">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-teal-400 dark:text-[#2dd4bf] bg-teal-900/60 dark:bg-[#051816] px-3 py-1 rounded-full border border-teal-700/50 dark:border-[#0e3834]">
               <UserCheck className="h-3.5 w-3.5" />
               OPTION 1 — VOTER PORTAL
             </div>
-            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight text-white dark:text-[#f5f7fa]">
               Official Voter Entry & Ballot
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300">
+            <p className="mt-1 text-xs sm:text-sm text-slate-300 dark:text-[#a7b0bd]">
               Enter your Election ID to securely access your official ballot.
             </p>
           </div>
@@ -156,9 +156,9 @@ function VoterPortalContent() {
       {/* STEP 1: ELECTION SELECTION */}
       {step === "election_input" && (
         <div className="card p-5 sm:p-8 space-y-5 sm:space-y-6">
-          <div className="border-b border-slate-100 pb-3 sm:pb-4">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-800 text-xs font-black shrink-0">
+          <div className="border-b border-slate-100 dark:border-[#141a22] pb-3 sm:pb-4">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-[#f5f7fa] flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 dark:bg-[#082421] text-teal-800 dark:text-[#2dd4bf] border border-transparent dark:border-[#0e3834] text-xs font-black shrink-0">
                 1
               </span>
               Enter Election ID

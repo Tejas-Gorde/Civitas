@@ -44,7 +44,7 @@ export default function AdminSidebar({
 
   return (
     <aside
-      className={`bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-all duration-300 flex flex-col justify-between border-r border-slate-200 dark:border-slate-800/80 shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] z-30 ${
+      className={`bg-white dark:bg-[#05070a] text-slate-800 dark:text-[#f5f7fa] transition-all duration-300 flex flex-col justify-between border-r border-slate-200 dark:border-[#141a22] shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] z-30 ${
         collapsed ? "w-16" : "w-60"
       }`}
     >
@@ -63,20 +63,20 @@ export default function AdminSidebar({
                 title={collapsed ? item.label : undefined}
                 className={`w-full flex items-center gap-3 py-2.5 px-3.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-slate-100/90 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold border border-slate-200/80 dark:border-slate-800 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "bg-slate-100/90 dark:bg-[#0d1117] text-slate-900 dark:text-[#f5f7fa] font-bold border border-slate-200/80 dark:border-[#1a222c] shadow-xs"
+                    : "text-slate-600 dark:text-[#a7b0bd] hover:bg-slate-50 dark:hover:bg-[#11161d] hover:text-slate-900 dark:hover:text-[#f5f7fa]"
                 } ${collapsed ? "justify-center px-0" : ""}`}
               >
                 <Icon
                   className={`h-4 w-4 shrink-0 stroke-[2] ${
-                    isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"
+                    isActive ? "text-teal-600 dark:text-teal-400" : "text-slate-400 dark:text-[#707a88]"
                   }`}
                 />
                 {!collapsed && (
                   <span className="truncate flex-1 text-left">{item.label}</span>
                 )}
                 {!collapsed && item.badge ? (
-                  <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                     {item.badge}
                   </span>
                 ) : null}
@@ -87,11 +87,11 @@ export default function AdminSidebar({
       </div>
 
       {/* Footer Section */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+      <div className="p-3 border-t border-slate-200 dark:border-[#141a22] space-y-2">
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="w-full py-2 px-3 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center gap-2 text-xs font-semibold transition"
+          className="w-full py-2 px-3 rounded-lg text-slate-400 hover:text-slate-700 dark:text-[#707a88] dark:hover:text-[#f5f7fa] hover:bg-slate-100 dark:hover:bg-[#0d1117] flex items-center justify-center gap-2 text-xs font-semibold transition"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           {!collapsed && <span>Collapse</span>}

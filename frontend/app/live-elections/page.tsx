@@ -57,17 +57,17 @@ export default function LiveElectionsPage() {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto py-4 sm:py-6 px-2 sm:px-0">
       {/* Header Banner */}
-      <div className="card p-5 sm:p-8 bg-gradient-to-r from-sky-900 via-slate-900 to-teal-950 text-white">
+      <div className="card p-5 sm:p-8 bg-gradient-to-r from-sky-900 via-slate-900 to-teal-950 dark:from-[#0a0d11] dark:to-[#0d1117] text-white border border-transparent dark:border-[#1a222c]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-900/60 px-3 py-1 rounded-full border border-sky-700/50">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-sky-400 dark:text-[#38bdf8] bg-sky-900/60 dark:bg-[#061421] px-3 py-1 rounded-full border border-sky-700/50 dark:border-[#0e2c47]">
               <Activity className="h-3.5 w-3.5 text-sky-400" />
               OPTION 3 — LIVE ELECTIONS SHOWCASE
             </div>
-            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="mt-2 text-xl sm:text-3xl font-extrabold tracking-tight text-white dark:text-[#f5f7fa]">
               Currently Active Elections
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300">
+            <p className="mt-1 text-xs sm:text-sm text-slate-300 dark:text-[#a7b0bd]">
               Real-time public elections open for democratic voting across authorized districts.
             </p>
           </div>

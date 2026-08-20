@@ -62,16 +62,16 @@ export default function ElectionManagementPage() {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto py-4 sm:py-6 px-2 sm:px-0">
       {/* Header Banner */}
-      <div className="card p-5 sm:p-8 bg-slate-950 text-white rounded-xl shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+      <div className="card p-5 sm:p-8 bg-slate-950 dark:bg-[#0a0d11] text-white rounded-xl shadow-md border border-slate-800 dark:border-[#1a222c] flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-indigo-400 bg-indigo-950/80 px-3 py-1 rounded-full border border-indigo-800/60">
-            <Shield className="h-3.5 w-3.5 text-indigo-400" />
+          <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-teal-400 dark:text-[#2dd4bf] bg-slate-800/80 dark:bg-[#082421] px-3 py-1 rounded-full border border-slate-700 dark:border-[#0e3834]">
+            <Shield className="h-3.5 w-3.5 text-teal-400" />
             <span>CREATE & MANAGE ELECTION HUB</span>
           </div>
-          <h1 className="mt-2 text-xl sm:text-3xl font-black tracking-tight text-white">
+          <h1 className="mt-2 text-xl sm:text-3xl font-black tracking-tight text-white dark:text-[#f5f7fa]">
             Election Management Hub
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-slate-400 dark:text-[#a7b0bd]">
             Create new secure elections or log in as Local Admin to manage voters, candidates, and live results.
           </p>
         </div>

@@ -94,24 +94,24 @@ export default function HeaderNav() {
   };
 
   return (
-    <header className="border-b border-slate-200 dark:border-slate-800/90 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
+    <header className="border-b border-slate-200 dark:border-[#141a22] bg-white/95 dark:bg-[#05070a]/95 backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Brand Identity */}
         <Link href="/" className="flex items-center gap-2.5 group transition-opacity hover:opacity-95">
-          <div className="text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          <div className="text-teal-600 dark:text-teal-400 flex items-center justify-center">
             <Landmark className="h-6 w-6 stroke-[2.2]" />
           </div>
-          <span className="text-lg font-black tracking-tight text-blue-900 dark:text-blue-300 font-sans">
+          <span className="text-lg font-black tracking-tight text-slate-900 dark:text-[#f5f7fa] font-sans">
             CIVITAS
           </span>
         </Link>
 
         {/* Global Navigation Links (Desktop) */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600 dark:text-[#a7b0bd]">
           <Link
             href="/voter"
-            className={`transition-colors hover:text-blue-600 dark:hover:text-blue-400 ${
-              pathname.startsWith("/voter") ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-600 dark:text-slate-300"
+            className={`transition-colors hover:text-teal-600 dark:hover:text-teal-400 ${
+              pathname.startsWith("/voter") ? "text-teal-600 dark:text-teal-400 font-bold" : "text-slate-600 dark:text-[#a7b0bd]"
             }`}
           >
             Voter Portal
@@ -119,8 +119,8 @@ export default function HeaderNav() {
 
           <Link
             href="/live-elections"
-            className={`transition-colors hover:text-blue-600 dark:hover:text-blue-400 ${
-              pathname.startsWith("/live-elections") ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-600 dark:text-slate-300"
+            className={`transition-colors hover:text-teal-600 dark:hover:text-teal-400 ${
+              pathname.startsWith("/live-elections") ? "text-teal-600 dark:text-teal-400 font-bold" : "text-slate-600 dark:text-[#a7b0bd]"
             }`}
           >
             Live Elections
@@ -128,8 +128,8 @@ export default function HeaderNav() {
 
           <Link
             href="/local-admin"
-            className={`transition-colors hover:text-blue-600 dark:hover:text-blue-400 ${
-              pathname.startsWith("/local-admin") ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-600 dark:text-slate-300"
+            className={`transition-colors hover:text-teal-600 dark:hover:text-teal-400 ${
+              pathname.startsWith("/local-admin") ? "text-teal-600 dark:text-teal-400 font-bold" : "text-slate-600 dark:text-[#a7b0bd]"
             }`}
           >
             Manage
@@ -144,8 +144,8 @@ export default function HeaderNav() {
           {isBigAdmin ? (
             <>
               {/* Big / Main Admin Status Pill */}
-              <div className="flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 shadow-xs">
-                <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+              <div className="flex items-center gap-2 rounded-full bg-slate-100 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-[#a7b0bd] shadow-xs">
+                <span className="h-2 w-2 rounded-full bg-teal-500 shrink-0" />
                 <span className="hidden sm:inline">System Admin</span>
                 <span className="sm:hidden">Admin</span>
               </div>
@@ -155,7 +155,7 @@ export default function HeaderNav() {
                 type="button"
                 onClick={() => handleOpenLogout("big_admin")}
                 aria-label="Log Out of Main Admin"
-                className="flex items-center gap-1.5 rounded-full bg-slate-100/90 dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-700 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 border border-slate-200/80 dark:border-slate-800 px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 transition shadow-xs cursor-pointer min-h-[36px]"
+                className="flex items-center gap-1.5 rounded-full bg-slate-100/90 dark:bg-[#0d1117] hover:bg-red-50 dark:hover:bg-[#1a0a0c] hover:text-red-700 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-[#3d1418] border border-slate-200/80 dark:border-[#1a222c] px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-[#a7b0bd] transition shadow-xs cursor-pointer min-h-[36px]"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Log Out</span>
@@ -164,8 +164,8 @@ export default function HeaderNav() {
           ) : isLocalAdmin ? (
             <>
               {/* Local Admin Status Pill */}
-              <div className="flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 shadow-xs">
-                <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+              <div className="flex items-center gap-2 rounded-full bg-slate-100 dark:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-[#a7b0bd] shadow-xs">
+                <span className="h-2 w-2 rounded-full bg-teal-500 shrink-0" />
                 <span className="hidden sm:inline">Local Admin</span>
                 <span className="sm:hidden">Admin</span>
               </div>
@@ -175,7 +175,7 @@ export default function HeaderNav() {
                 type="button"
                 onClick={() => handleOpenLogout("local_admin")}
                 aria-label="Log Out of Local Admin"
-                className="flex items-center gap-1.5 rounded-full bg-slate-100/90 dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-700 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 border border-slate-200/80 dark:border-slate-800 px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 transition shadow-xs cursor-pointer min-h-[36px]"
+                className="flex items-center gap-1.5 rounded-full bg-slate-100/90 dark:bg-[#0d1117] hover:bg-red-50 dark:hover:bg-[#1a0a0c] hover:text-red-700 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-[#3d1418] border border-slate-200/80 dark:border-[#1a222c] px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-[#a7b0bd] transition shadow-xs cursor-pointer min-h-[36px]"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Log Out</span>
@@ -188,15 +188,15 @@ export default function HeaderNav() {
               onClick={handleBigAdminDirectLogin}
               disabled={loadingBigAdmin}
               aria-label="Access Big Admin Portal"
-              className="hidden sm:flex items-center gap-2 rounded-full bg-slate-100/90 dark:bg-slate-900 hover:bg-slate-200/90 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 transition shadow-xs disabled:opacity-60 cursor-pointer"
+              className="hidden sm:flex items-center gap-2 rounded-full bg-slate-100/90 dark:bg-[#0d1117] hover:bg-slate-200/90 dark:hover:bg-[#11161d] border border-slate-200/80 dark:border-[#1a222c] px-3.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-[#a7b0bd] transition shadow-xs disabled:opacity-60 cursor-pointer"
             >
-              <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+              <span className="h-2 w-2 rounded-full bg-teal-500 shrink-0" />
               <span>{loadingBigAdmin ? "Connecting..." : "System Admin"}</span>
             </button>
           )}
 
           {/* User Profile Icon */}
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white shadow-xs shrink-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-teal-600 dark:bg-teal-600 flex items-center justify-center text-white shadow-xs shrink-0">
             <User className="h-4 w-4" />
           </div>
 
@@ -205,7 +205,7 @@ export default function HeaderNav() {
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-            className="md:hidden flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition"
+            className="md:hidden flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-xl text-slate-700 dark:text-[#f5f7fa] hover:bg-slate-100 dark:hover:bg-[#0d1117] border border-slate-200 dark:border-[#1a222c] transition"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -214,14 +214,14 @@ export default function HeaderNav() {
 
       {/* Mobile Navigation Dropdown Sheet */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 py-3 space-y-2 shadow-lg animate-in slide-in-from-top-2 duration-150">
+        <div className="md:hidden border-t border-slate-100 dark:border-[#141a22] bg-white/95 dark:bg-[#05070a]/95 backdrop-blur-md px-4 py-3 space-y-2 shadow-lg animate-in slide-in-from-top-2 duration-150">
           <Link
             href="/voter"
             onClick={() => setMobileMenuOpen(false)}
             className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
               pathname.startsWith("/voter")
-                ? "bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800"
-                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
+                ? "bg-teal-50 dark:bg-[#082421] text-teal-700 dark:text-[#2dd4bf] border border-teal-200 dark:border-[#0e3834]"
+                : "text-slate-700 dark:text-[#a7b0bd] hover:bg-slate-50 dark:hover:bg-[#0d1117]"
             }`}
           >
             <Vote className="h-4 w-4 text-teal-600 dark:text-teal-400" />
@@ -233,8 +233,8 @@ export default function HeaderNav() {
             onClick={() => setMobileMenuOpen(false)}
             className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
               pathname.startsWith("/live-elections")
-                ? "bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800"
-                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
+                ? "bg-sky-50 dark:bg-[#0a2034] text-sky-700 dark:text-[#38bdf8] border border-sky-200 dark:border-[#0e2c47]"
+                : "text-slate-700 dark:text-[#a7b0bd] hover:bg-slate-50 dark:hover:bg-[#0d1117]"
             }`}
           >
             <Activity className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -246,15 +246,15 @@ export default function HeaderNav() {
             onClick={() => setMobileMenuOpen(false)}
             className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
               pathname.startsWith("/local-admin")
-                ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800"
-                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
+                ? "bg-slate-100 dark:bg-[#0d1117] text-slate-900 dark:text-[#f5f7fa] border border-slate-200 dark:border-[#1a222c]"
+                : "text-slate-700 dark:text-[#a7b0bd] hover:bg-slate-50 dark:hover:bg-[#0d1117]"
             }`}
           >
             <Shield className="h-4 w-4 text-slate-700 dark:text-slate-400" />
             <span>Manage Elections</span>
           </Link>
 
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-2 border-t border-slate-100 dark:border-[#141a22]">
             <ThemeToggle variant="dropdown" />
           </div>
         </div>
@@ -262,8 +262,8 @@ export default function HeaderNav() {
 
       {/* Log Out Confirmation Dialog Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white dark:bg-[#0a0d11] border border-slate-200 dark:border-[#1a222c] rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
                 <LogOut className="h-5 w-5" />

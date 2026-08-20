@@ -417,16 +417,16 @@ export default function CreateElectionWizardPage() {
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Top Banner */}
-      <div className="card p-5 sm:p-8 bg-slate-950 text-white rounded-xl shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="card p-5 sm:p-8 bg-slate-950 dark:bg-[#0a0d11] text-white rounded-xl shadow-md border border-slate-800 dark:border-[#1a222c] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-indigo-400 bg-indigo-950/80 px-3 py-1 rounded-full border border-indigo-800/60">
+          <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-teal-400 dark:text-[#2dd4bf] bg-slate-800/80 dark:bg-[#082421] px-3 py-1 rounded-full border border-slate-700 dark:border-[#0e3834]">
             <Plus className="h-3.5 w-3.5" />
             <span>CREATE NEW ELECTION WIZARD</span>
           </div>
-          <h1 className="mt-2 text-xl sm:text-3xl font-black tracking-tight text-white">
+          <h1 className="mt-2 text-xl sm:text-3xl font-black tracking-tight text-white dark:text-[#f5f7fa]">
             Create Election & Local Admin Credentials
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-slate-400 dark:text-[#a7b0bd]">
             Guided 6-step election setup starting with dedicated Local Admin provisioning.
           </p>
         </div>

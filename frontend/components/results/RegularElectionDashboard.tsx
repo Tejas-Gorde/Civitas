@@ -67,7 +67,7 @@ export default function RegularElectionDashboard({
   return (
     <div className="space-y-6">
       {/* Top Header & Export Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 rounded-2xl text-white shadow-md border border-slate-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-[#0a0d11] dark:to-[#0d1117] p-6 rounded-2xl text-white shadow-md border border-slate-700 dark:border-[#1a222c]">
         <div>
           <div className="flex items-center gap-2">
             <span className="badge bg-teal-500/20 text-teal-300 border-teal-500/40 text-xs font-bold uppercase tracking-wider">

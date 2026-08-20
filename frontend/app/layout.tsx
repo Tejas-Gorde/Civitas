@@ -83,7 +83,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }}
         />
       </head>
-      <body suppressHydrationWarning className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      <body suppressHydrationWarning className="flex min-h-screen flex-col bg-slate-50 dark:bg-[#030507] text-slate-900 dark:text-[#f5f7fa] transition-colors duration-200">
         <ThemeProvider>
           <HeaderNav />
 
@@ -93,15 +93,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </main>
 
           {/* Footer */}
-          <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-200">
+          <footer className="border-t border-slate-200 dark:border-[#141a22] bg-white dark:bg-[#05070a] py-6 text-xs text-slate-500 dark:text-[#707a88] transition-colors duration-200">
             <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 sm:flex-row sm:px-6">
               <div>
-                <p className="font-semibold text-slate-700 dark:text-slate-300">CIVITAS Secure Digital Voting System</p>
-                <p className="mt-0.5 text-slate-500 dark:text-slate-500">
+                <p className="font-semibold text-slate-700 dark:text-[#a7b0bd]">CIVITAS Secure Digital Voting System</p>
+                <p className="mt-0.5 text-slate-500 dark:text-[#707a88]">
                   Authorized Election Security Verification Platform
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-4 text-slate-500 dark:text-[#707a88]">
                 <span className="inline-flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
                   System Operational

@@ -221,7 +221,7 @@ export default function CivitasHelpAssistant() {
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? "Close Help Assistant" : "Open CIVITAS Assistant"}
           aria-expanded={isOpen}
-          className="group flex items-center gap-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/25 px-4 py-3 sm:px-4.5 sm:py-3.5 transition-all transform hover:scale-105 active:scale-95 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+          className="group flex items-center gap-2.5 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-xl shadow-teal-600/25 px-4 py-3 sm:px-4.5 sm:py-3.5 transition-all transform hover:scale-105 active:scale-95 border border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2"
         >
           {isOpen ? (
             <X className="h-5 w-5" />
@@ -243,19 +243,19 @@ export default function CivitasHelpAssistant() {
           ref={panelRef}
           role="dialog"
           aria-label="CIVITAS Assistant"
-          className="fixed bottom-20 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] max-h-[580px] h-[520px] flex flex-col bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden animate-fade-in font-sans"
+          className="fixed bottom-20 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] max-h-[580px] h-[520px] flex flex-col bg-white dark:bg-[#0a0d11] border border-slate-200 dark:border-[#1a222c] rounded-2xl shadow-2xl overflow-hidden animate-fade-in font-sans"
         >
           {/* Panel Header */}
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+          <div className="p-4 border-b border-slate-100 dark:border-[#141a22] flex items-center justify-between bg-slate-50/80 dark:bg-[#05070a]">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+              <div className="h-9 w-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs">
                 <ShieldCheck className="h-5 w-5 stroke-[2.2]" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-[#f5f7fa] leading-tight">
                   CIVITAS Assistant
                 </h3>
-                <p className="text-[11px] text-slate-500 font-medium">
+                <p className="text-[11px] text-slate-500 dark:text-[#707a88] font-medium">
                   How can we help you?
                 </p>
               </div>
@@ -267,7 +267,7 @@ export default function CivitasHelpAssistant() {
                 onClick={handleResetConversation}
                 title="Start Over"
                 aria-label="Start Over"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-[#707a88] dark:hover:text-[#f5f7fa] hover:bg-slate-200/70 dark:hover:bg-[#11161d] transition"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -276,7 +276,7 @@ export default function CivitasHelpAssistant() {
                 onClick={() => setIsOpen(false)}
                 title="Close"
                 aria-label="Close Assistant"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-[#707a88] dark:hover:text-[#f5f7fa] hover:bg-slate-200/70 dark:hover:bg-[#11161d] transition"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -286,7 +286,7 @@ export default function CivitasHelpAssistant() {
           {/* Panel Scrollable Messages Body */}
           <div
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto p-4 space-y-4 text-xs custom-scrollbar bg-slate-50/30"
+            className="flex-1 overflow-y-auto p-4 space-y-4 text-xs custom-scrollbar bg-slate-50/30 dark:bg-[#030507]"
           >
             {messages.map((m) => {
               const isAssistant = m.sender === "assistant";
@@ -302,8 +302,8 @@ export default function CivitasHelpAssistant() {
                   <div
                     className={`max-w-[85%] rounded-2xl p-3.5 leading-relaxed ${
                       isAssistant
-                        ? "bg-white text-slate-800 border border-slate-200 shadow-xs rounded-tl-xs whitespace-pre-line font-medium"
-                        : "bg-blue-600 text-white font-semibold rounded-tr-xs shadow-xs"
+                        ? "bg-white dark:bg-[#0d1117] text-slate-800 dark:text-[#f5f7fa] border border-slate-200 dark:border-[#1a222c] shadow-xs rounded-tl-xs whitespace-pre-line font-medium"
+                        : "bg-teal-600 text-white font-semibold rounded-tr-xs shadow-xs"
                     }`}
                   >
                     {m.text}
@@ -314,7 +314,7 @@ export default function CivitasHelpAssistant() {
 
             {/* Predefined FAQ Buttons Section */}
             <div className="pt-2 space-y-2">
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">
+              <div className="text-[11px] font-bold text-slate-500 dark:text-[#707a88] uppercase tracking-wider px-1">
                 Suggested Questions
               </div>
               <div className="flex flex-col gap-1.5">
@@ -323,10 +323,10 @@ export default function CivitasHelpAssistant() {
                     key={item.id}
                     type="button"
                     onClick={() => handleSelectQuestion(item)}
-                    className="w-full text-left p-2.5 rounded-xl bg-white hover:bg-blue-50/80 text-slate-700 hover:text-blue-700 border border-slate-200/90 hover:border-blue-200 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs transition group cursor-pointer"
+                    className="w-full text-left p-2.5 rounded-xl bg-white dark:bg-[#0a0d11] hover:bg-teal-50/80 dark:hover:bg-[#11161d] text-slate-700 dark:text-[#a7b0bd] hover:text-teal-700 dark:hover:text-[#f5f7fa] border border-slate-200/90 dark:border-[#1a222c] hover:border-teal-200 dark:hover:border-[#263342] text-xs font-semibold flex items-center justify-between gap-2 shadow-xs transition group cursor-pointer"
                   >
                     <span className="line-clamp-1">{item.question}</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-teal-600 shrink-0 transition-transform group-hover:translate-x-0.5" />
                   </button>
                 ))}
               </div>
@@ -334,30 +334,30 @@ export default function CivitasHelpAssistant() {
           </div>
 
           {/* Footer Controls & Input Bar */}
-          <div className="p-3 border-t border-slate-100 bg-white space-y-2">
+          <div className="p-3 border-t border-slate-100 dark:border-[#141a22] bg-white dark:bg-[#05070a] space-y-2">
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <input
                 type="text"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 placeholder="Ask a question..."
-                className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
+                className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#080b0f] border border-slate-200 dark:border-[#1a222c] text-xs text-slate-800 dark:text-[#f5f7fa] placeholder-slate-400 dark:placeholder-[#707a88] focus:outline-none focus:border-teal-500 dark:focus:border-teal-500 focus:bg-white dark:focus:bg-[#080b0f]"
               />
               <button
                 type="submit"
                 disabled={!inputVal.trim()}
                 aria-label="Send message"
-                className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs"
+                className="p-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs"
               >
                 <Send className="h-3.5 w-3.5" />
               </button>
             </form>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-[#707a88] px-1">
               <button
                 type="button"
                 onClick={handleResetConversation}
-                className="hover:text-slate-700 font-semibold flex items-center gap-1"
+                className="hover:text-slate-700 dark:hover:text-[#f5f7fa] font-semibold flex items-center gap-1"
               >
                 <RotateCcw className="h-3 w-3" />
                 <span>Start Over</span>
@@ -365,7 +365,7 @@ export default function CivitasHelpAssistant() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="hover:text-slate-700 font-semibold"
+                className="hover:text-slate-700 dark:hover:text-[#f5f7fa] font-semibold"
               >
                 Close
               </button>

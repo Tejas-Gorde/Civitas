@@ -75,8 +75,8 @@ export default function VoteReview({
       className="max-w-2xl mx-auto space-y-5 sm:space-y-6"
     >
       {/* Header Banner */}
-      <div className="card p-5 sm:p-8 bg-gradient-to-br from-slate-900 to-teal-950 text-white rounded-3xl border border-slate-800 shadow-xl space-y-2">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-teal-400">
+      <div className="card p-5 sm:p-8 bg-gradient-to-br from-slate-900 to-teal-950 dark:from-[#0a0d11] dark:to-[#0d1117] text-white rounded-3xl border border-slate-800 dark:border-[#1a222c] shadow-xl space-y-2">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-teal-400 dark:text-[#2dd4bf]">
           <ShieldCheck className="h-4 w-4" />
           <span>BALLOT REVIEW & FINAL CONFIRMATION</span>
         </div>

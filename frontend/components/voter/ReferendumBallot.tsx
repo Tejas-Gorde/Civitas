@@ -90,8 +90,8 @@ export default function ReferendumBallot({
   return (
     <div className="space-y-6">
       {/* Proposal Question Card */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-teal-950 text-white shadow-lg space-y-3 border border-slate-800">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-teal-400">
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-teal-950 dark:from-[#0a0d11] dark:to-[#0d1117] text-white shadow-lg space-y-3 border border-slate-800 dark:border-[#1a222c]">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-teal-400 dark:text-[#2dd4bf]">
           <HelpCircle className="h-4 w-4" />
           <span>Official Referendum / Ballot Question</span>
         </div>
