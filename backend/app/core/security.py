@@ -11,7 +11,11 @@ from fastapi import HTTPException, status
 from app.core.config import get_settings
 
 settings = get_settings()
-password_hasher = PasswordHasher()
+password_hasher = PasswordHasher(
+    time_cost=2,
+    memory_cost=19456,
+    parallelism=1
+)
 
 
 def password_hash(password: str) -> str:

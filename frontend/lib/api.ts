@@ -64,7 +64,7 @@ export const api = axios.create({
   baseURL: getApiBaseUrl(),
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
-  timeout: 60000, // 60 seconds to handle Render cold-start delays gracefully
+  timeout: 90000, // 90 seconds to handle Render cold-start delays gracefully
 });
 
 // Automatic Request Interceptor to inject Authorization Bearer token
@@ -126,28 +126,28 @@ export function readable(error: unknown): string {
       return data.message;
     }
     if (error.response?.status === 401) {
-      return "Invalid voter ID, Local Admin ID, or password.";
+      return "Authentication failed: Invalid credentials or session expired.";
     }
     if (error.response?.status === 403) {
-      return "Access forbidden. You are not authorized to access this election.";
+      return "Permission denied: You are not authorized to perform this action.";
     }
     if (error.response?.status === 404) {
-      return "Requested resource or election not found.";
+      return "Resource not found: The requested endpoint or record does not exist.";
     }
     if (error.response?.status === 409) {
-      return "Conflict: Record or voter ID already registered.";
+      return "Conflict: The resource already exists or there is a data conflict.";
     }
     if (error.response?.status === 422) {
-      return "Validation error: Please check your input fields.";
+      return "Validation error: Please verify your input data.";
     }
     if (error.response?.status === 500) {
-      return data?.detail || "Server error occurred. Please verify backend logs.";
+      return data?.detail || "Server error: An unexpected issue occurred on the backend.";
     }
     if (error.code === "ECONNABORTED") {
-      return "Connection timed out. The server may be starting up from sleep (this can take up to 60 seconds). Please wait a moment and try again.";
+      return "Connection timed out. The server may be starting up from sleep (this can take up to 60 seconds) or processing a heavy request. Please try again.";
     }
     if (error.code === "ERR_NETWORK") {
-      return "Unable to connect to the election server. This may be a network issue, a CORS error, or the backend may be unreachable.";
+      return "Network error: Unable to connect to the server. Please check your connection or backend status.";
     }
   }
   if (error instanceof Error && error.message) {
