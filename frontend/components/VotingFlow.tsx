@@ -193,7 +193,7 @@ export default function VotingFlow({
           setMobileVerificationEnabled(res.data.mobile_device_verification_enabled);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     if (initialSession) {
       setSession(initialSession);
@@ -255,9 +255,12 @@ export default function VotingFlow({
         if (activeSession) {
           try {
             const r = await request(`/biometric/risk?session_id=${activeSession}`, {});
-            setGrant(r.voting_grant);
+            if (r?.voting_grant) {
+              setGrant(r.voting_grant);
+            }
           } catch (e) {
             console.error("Risk grant error:", e);
+            toast.error("Verification error: " + readable(e));
           }
         }
         const cs = (await api.get(`/voting/elections/${election.id}/candidates`)).data;
@@ -395,7 +398,7 @@ export default function VotingFlow({
         });
         setVoterInternalId(vRes.voter_internal_id);
         setSession(vRes.session_id);
-        
+
         // Calculate initial 30m / 15m expiration client fallback if not in progress
         const defaultExp = new Date(Date.now() + 30 * 60 * 1000).toISOString();
         setSessionExpiresAt(vRes.expires_at || defaultExp);
@@ -487,8 +490,8 @@ export default function VotingFlow({
           touchErr?.name === "NotAllowedError" || rawMsg.includes("cancelled")
             ? "Touch ID / Passkey verification was cancelled."
             : rawMsg.includes("relying party ID") || rawMsg.includes("RP ID")
-            ? "Device verification could not start because the security domain configuration is invalid."
-            : rawMsg || "Touch ID authentication failed. Please try again.";
+              ? "Device verification could not start because the security domain configuration is invalid."
+              : rawMsg || "Touch ID authentication failed. Please try again.";
         setVerifyError(cancelMsg);
         toast.error(cancelMsg);
         voice.speak(FEEDBACK_MESSAGES[voice.language]?.touch_failed || FEEDBACK_MESSAGES.en.touch_failed);
@@ -583,7 +586,7 @@ export default function VotingFlow({
         });
 
         if (response.data.success || response.data.status === "ok") {
-      pendingUploadBlob.current = null;
+          pendingUploadBlob.current = null;
           setPhotoStatus("saved");
           if (response.data.challenge) {
             const arr = response.data.challenge.split(",") as ChallengeType[];
@@ -704,7 +707,7 @@ export default function VotingFlow({
       tracker.onFaceLost = () => setLivenessMessage("Face lost! Please stay in frame.");
       tracker.onFaceFound = () => setLivenessMessage("Face found! " + getInstructionFor(challengesList[currentChallengeIdx]));
       tracker.onMultipleFaces = () => setLivenessMessage("Multiple faces detected! Please ensure you are alone.");
-      
+
       tracker.onChallengePassed = () => {
         handleChallengePassed(tracker);
       };
@@ -734,7 +737,7 @@ export default function VotingFlow({
 
   const handleChallengePassed = (tracker: LivenessTracker) => {
     tracker.stopTracking();
-    
+
     // Check if there's another challenge
     setCurrentChallengeIdx((prev) => {
       const nextIdx = prev + 1;
@@ -759,7 +762,7 @@ export default function VotingFlow({
     setChallengeStepState("completed");
     setLivenessMessage("✓ All challenges completed securely!");
     toast.success("Active liveness passed.");
-    
+
     tracker.dispose();
     setLivenessTracker(null);
 
@@ -812,8 +815,8 @@ export default function VotingFlow({
           votingType === "rating"
             ? "Please select a star rating before proceeding."
             : votingType === "yes_no"
-            ? "Please choose YES or NO before proceeding."
-            : "Please select an option before proceeding."
+              ? "Please choose YES or NO before proceeding."
+              : "Please select an option before proceeding."
         );
         return;
       }
@@ -1012,13 +1015,12 @@ export default function VotingFlow({
                 type="button"
                 onClick={handleEnableVoice}
                 disabled={voiceTestStatus === "testing"}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors shadow-sm ${
-                  voiceTestStatus === "testing"
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors shadow-sm ${voiceTestStatus === "testing"
                     ? "bg-amber-600 text-white cursor-wait"
                     : voice.voiceUnlocked
-                    ? "bg-emerald-700 text-white"
-                    : "bg-teal-700 text-white hover:bg-teal-800"
-                }`}
+                      ? "bg-emerald-700 text-white"
+                      : "bg-teal-700 text-white hover:bg-teal-800"
+                  }`}
                 title="Enable Voice Guidance"
               >
                 <Volume2 className={`h-3.5 w-3.5 ${voiceTestStatus === "testing" ? "animate-pulse" : ""}`} />
@@ -1026,8 +1028,8 @@ export default function VotingFlow({
                   {voiceTestStatus === "testing"
                     ? "Enabling..."
                     : voice.voiceUnlocked
-                    ? "✓ Voice Enabled"
-                    : "Enable Voice Guidance"}
+                      ? "✓ Voice Enabled"
+                      : "Enable Voice Guidance"}
                 </span>
               </button>
             )}
@@ -1038,15 +1040,14 @@ export default function VotingFlow({
                 type="button"
                 onClick={handleTestVoice}
                 disabled={voiceTestStatus === "testing"}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border ${
-                  voiceTestStatus === "testing"
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border ${voiceTestStatus === "testing"
                     ? "bg-amber-50 text-amber-800 border-amber-300 cursor-wait"
                     : voiceTestStatus === "success"
-                    ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                    : voiceTestStatus === "failed"
-                    ? "bg-red-50 text-red-800 border-red-300"
-                    : "bg-teal-50 text-teal-800 hover:bg-teal-100 border-teal-200"
-                }`}
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                      : voiceTestStatus === "failed"
+                        ? "bg-red-50 text-red-800 border-red-300"
+                        : "bg-teal-50 text-teal-800 hover:bg-teal-100 border-teal-200"
+                  }`}
                 title="Test Voice Guidance"
               >
                 <Volume2 className={`h-3.5 w-3.5 ${voiceTestStatus === "testing" ? "animate-pulse" : ""}`} />
@@ -1054,10 +1055,10 @@ export default function VotingFlow({
                   {voiceTestStatus === "testing"
                     ? "Testing..."
                     : voiceTestStatus === "success"
-                    ? "✓ Test Passed"
-                    : voiceTestStatus === "failed"
-                    ? "✗ Test Failed"
-                    : "🔊 Test Voice"}
+                      ? "✓ Test Passed"
+                      : voiceTestStatus === "failed"
+                        ? "✗ Test Failed"
+                        : "🔊 Test Voice"}
                 </span>
               </button>
             )}
@@ -1081,13 +1082,12 @@ export default function VotingFlow({
                 type="button"
                 onClick={voice.toggleMute}
                 disabled={!voice.adminVoiceEnabled}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${
-                  !voice.adminVoiceEnabled
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${!voice.adminVoiceEnabled
                     ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
                     : voice.voterMuted
-                    ? "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300"
-                    : "bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100"
-                }`}
+                      ? "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300"
+                      : "bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100"
+                  }`}
               >
                 {!voice.adminVoiceEnabled ? (
                   <>
@@ -1132,24 +1132,22 @@ export default function VotingFlow({
             return (
               <div key={sKey} className="flex flex-col items-center gap-1.5">
                 <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
-                    isCompleted
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${isCompleted
                       ? "bg-teal-700 text-white"
                       : isCurrent
-                      ? "bg-slate-900 text-white ring-4 ring-teal-100"
-                      : "bg-slate-100 text-slate-400 border border-slate-200"
-                  }`}
+                        ? "bg-slate-900 text-white ring-4 ring-teal-100"
+                        : "bg-slate-100 text-slate-400 border border-slate-200"
+                    }`}
                 >
                   {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : idx + 1}
                 </div>
                 <span
-                  className={`text-[11px] font-medium leading-tight ${
-                    isCurrent
+                  className={`text-[11px] font-medium leading-tight ${isCurrent
                       ? "font-bold text-slate-900"
                       : isCompleted
-                      ? "text-teal-800"
-                      : "text-slate-400"
-                  }`}
+                        ? "text-teal-800"
+                        : "text-slate-400"
+                    }`}
                 >
                   {cfg.shortLabel}
                 </span>
@@ -1517,22 +1515,21 @@ export default function VotingFlow({
                   <div className={challengeStepState === "completed" ? "opacity-50 pointer-events-none" : ""}>
                     <Camera ref={camera} />
                   </div>
-                  
+
                   {challengeStepState === "tracking" && (
                     <div className="absolute bottom-6 left-0 right-0 px-4 text-center z-30">
-                       <div className="bg-slate-900/90 backdrop-blur-md rounded-xl p-4 border border-slate-700 shadow-2xl inline-block max-w-sm w-full mx-auto animate-fade-in">
-                          <p className="text-sm sm:text-base font-extrabold text-teal-300">
-                            {livenessMessage}
-                          </p>
-                          <div className="flex justify-center gap-2 mt-3">
-                            {challengesList.map((c, i) => (
-                              <div key={i} className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                                i < currentChallengeIdx ? "bg-teal-400" :
+                      <div className="bg-slate-900/90 backdrop-blur-md rounded-xl p-4 border border-slate-700 shadow-2xl inline-block max-w-sm w-full mx-auto animate-fade-in">
+                        <p className="text-sm sm:text-base font-extrabold text-teal-300">
+                          {livenessMessage}
+                        </p>
+                        <div className="flex justify-center gap-2 mt-3">
+                          {challengesList.map((c, i) => (
+                            <div key={i} className={`h-2.5 w-2.5 rounded-full transition-colors ${i < currentChallengeIdx ? "bg-teal-400" :
                                 i === currentChallengeIdx ? "bg-amber-400 animate-pulse" : "bg-slate-700"
                               }`} />
-                            ))}
-                          </div>
-                       </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1597,21 +1594,21 @@ export default function VotingFlow({
                       {votingType === "poll"
                         ? "Community Opinion Poll"
                         : votingType === "multiple_choice"
-                        ? "Multiple Choice Ballot"
-                        : votingType === "yes_no"
-                        ? "Proposal Referendum Ballot"
-                        : votingType === "rating"
-                        ? "Satisfaction Evaluation Scale"
-                        : "Official Secret Ballot"}
+                          ? "Multiple Choice Ballot"
+                          : votingType === "yes_no"
+                            ? "Proposal Referendum Ballot"
+                            : votingType === "rating"
+                              ? "Satisfaction Evaluation Scale"
+                              : "Official Secret Ballot"}
                     </span>
                     <span className="badge badge-open text-[10px] sm:text-xs">
                       {votingType === "multiple_choice"
                         ? `Multiple Selections (${selectedCandidateIds.length} Selected)`
                         : votingType === "yes_no"
-                        ? "Binary Decision"
-                        : votingType === "rating"
-                        ? "1–5 Star Rating"
-                        : "Single Choice Allowed"}
+                          ? "Binary Decision"
+                          : votingType === "rating"
+                            ? "1–5 Star Rating"
+                            : "Single Choice Allowed"}
                     </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{election.name}</h2>
@@ -1651,19 +1648,17 @@ export default function VotingFlow({
                           <div
                             key={c.id}
                             onClick={handleSelectOption}
-                            className={`p-5 sm:p-6 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex flex-col justify-between space-y-3 ${
-                              isSelected
+                            className={`p-5 sm:p-6 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex flex-col justify-between space-y-3 ${isSelected
                                 ? isYes
                                   ? "border-emerald-500 bg-emerald-50/80 ring-2 ring-emerald-500/30 shadow-md"
                                   : "border-rose-500 bg-rose-50/80 ring-2 ring-rose-500/30 shadow-md"
                                 : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center justify-between">
                               <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold text-white shadow-xs ${
-                                  isYes ? "bg-emerald-600" : "bg-rose-600"
-                                }`}
+                                className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold text-white shadow-xs ${isYes ? "bg-emerald-600" : "bg-rose-600"
+                                  }`}
                               >
                                 {isYes ? (
                                   <ThumbsUp className="h-5 w-5" />
@@ -1672,13 +1667,12 @@ export default function VotingFlow({
                                 )}
                               </div>
                               <span
-                                className={`h-5 w-5 rounded-full border flex items-center justify-center ${
-                                  isSelected
+                                className={`h-5 w-5 rounded-full border flex items-center justify-center ${isSelected
                                     ? isYes
                                       ? "border-emerald-600 bg-emerald-600 text-white"
                                       : "border-rose-600 bg-rose-600 text-white"
                                     : "border-slate-300 bg-white"
-                                }`}
+                                  }`}
                               >
                                 {isSelected && <CheckCircle2 className="h-4 w-4" />}
                               </span>
@@ -1686,13 +1680,12 @@ export default function VotingFlow({
 
                             <div>
                               <h4
-                                className={`text-lg sm:text-xl font-black ${
-                                  isSelected
+                                className={`text-lg sm:text-xl font-black ${isSelected
                                     ? isYes
                                       ? "text-emerald-950"
                                       : "text-rose-950"
                                     : "text-slate-900"
-                                }`}
+                                  }`}
                               >
                                 {c.name}
                               </h4>
@@ -1753,11 +1746,10 @@ export default function VotingFlow({
                               className="p-1 sm:p-2 transition-transform hover:scale-125 focus:outline-none"
                             >
                               <Star
-                                className={`h-9 w-9 sm:h-12 sm:w-12 transition-colors ${
-                                  isHighlighted
+                                className={`h-9 w-9 sm:h-12 sm:w-12 transition-colors ${isHighlighted
                                     ? "fill-amber-400 text-amber-500 drop-shadow-sm"
                                     : "text-slate-300 hover:text-amber-300"
-                                }`}
+                                  }`}
                               />
                             </button>
                           );
@@ -1783,11 +1775,10 @@ export default function VotingFlow({
                           <div
                             key={c.id}
                             onClick={() => setSelectedCandidateId(c.id)}
-                            className={`p-3.5 sm:p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                              isSelected
+                            className={`p-3.5 sm:p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${isSelected
                                 ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs"
                                 : "border-slate-200 bg-white hover:border-slate-300"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-900 font-extrabold text-xs">
@@ -1801,11 +1792,10 @@ export default function VotingFlow({
                               </div>
                             </div>
                             <span
-                              className={`h-5 w-5 rounded-full border flex items-center justify-center ${
-                                isSelected
+                              className={`h-5 w-5 rounded-full border flex items-center justify-center ${isSelected
                                   ? "border-amber-600 bg-amber-600 text-white"
                                   : "border-slate-300 bg-white"
-                              }`}
+                                }`}
                             >
                               {isSelected && <CheckCircle2 className="h-4 w-4" />}
                             </span>
@@ -1843,11 +1833,10 @@ export default function VotingFlow({
                           <div
                             key={c.id}
                             onClick={toggleChoice}
-                            className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3.5 ${
-                              isChecked
+                            className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3.5 ${isChecked
                                 ? "border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-600/30 shadow-xs"
                                 : "border-slate-200 bg-white hover:border-slate-300 active:bg-slate-50"
-                            }`}
+                              }`}
                           >
                             <div className="pt-0.5">
                               {isChecked ? (
@@ -1920,11 +1909,10 @@ export default function VotingFlow({
                                 handleSelectCandidate();
                               }
                             }}
-                            className={`card-interactive cursor-pointer p-4 sm:p-5 transition-all duration-150 rounded-xl sm:rounded-2xl select-none ${
-                              isSelected
+                            className={`card-interactive cursor-pointer p-4 sm:p-5 transition-all duration-150 rounded-xl sm:rounded-2xl select-none ${isSelected
                                 ? "border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/30 shadow-md"
                                 : "hover:border-slate-300 active:bg-slate-50"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-start gap-3 sm:gap-4">
                               <div className="pt-0.5">
@@ -1940,24 +1928,22 @@ export default function VotingFlow({
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center justify-between gap-1.5">
                                   <h3
-                                    className={`text-base font-extrabold transition-colors ${
-                                      isSelected ? "text-teal-950" : "text-slate-900"
-                                    }`}
+                                    className={`text-base font-extrabold transition-colors ${isSelected ? "text-teal-950" : "text-slate-900"
+                                      }`}
                                   >
                                     {c.name}
                                   </h3>
                                   {c.party && (
                                     <span
-                                      className={`rounded-lg px-2.5 py-0.5 text-xs font-bold border ${
-                                        isSelected
+                                      className={`rounded-lg px-2.5 py-0.5 text-xs font-bold border ${isSelected
                                           ? "bg-teal-100 text-teal-800 border-teal-300"
                                           : "bg-slate-100 text-slate-700 border-slate-200"
-                                      }`}
+                                        }`}
                                     >
                                       {c.party}
                                     </span>
                                   )}
-</div>
+                                </div>
                                 {c.manifesto && (
                                   <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
                                     {c.manifesto}

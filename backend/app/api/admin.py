@@ -429,6 +429,8 @@ def delete_voter(voter_id: str, admin: User = Depends(admin_only), db: Session =
     db.flush()
     remaining = db.scalar(select(func.count(VoterElectionStatus.id)).where(VoterElectionStatus.voter_id == voter.id)) or 0
     if remaining == 0:
+        from sqlalchemy import delete as sa_delete
+        db.execute(sa_delete(AuthenticationLog).where(AuthenticationLog.voter_id == voter.id))
         user = db.get(User, voter.user_id)
         if user:
             db.delete(user)
@@ -634,7 +636,14 @@ def update_public_url_config(data: PublicUrlConfigIn, admin: User = Depends(big_
     is_online = _is_tunnel_online(clean_url) if clean_url else False
 
     # Safely update env files without duplicating entries
-    for env_path in ["/Users/tejas/Documents/GPT/.env", "/Users/tejas/Documents/GPT/backend/.env", "/Users/tejas/Documents/GPT/frontend/.env.local"]:
+    from app.core.config import BACKEND_DIR
+    project_root = BACKEND_DIR.parent
+    env_paths = [
+        str(project_root / ".env"),
+        str(BACKEND_DIR / ".env"),
+        str(project_root / "frontend" / ".env.local"),
+    ]
+    for env_path in env_paths:
         _update_env_file_safe(env_path, clean_url)
 
     return PublicUrlConfigOut(
@@ -1025,6 +1034,9 @@ def delete_election(election_id: str, admin: User = Depends(admin_only), db: Ses
     voter_statuses = db.scalars(select(VoterElectionStatus).where(VoterElectionStatus.election_id == election.id)).all()
     for vs in voter_statuses:
         db.delete(vs)
+
+    from sqlalchemy import delete as sa_delete
+    db.execute(sa_delete(AuthenticationLog).where(AuthenticationLog.election_id == election.id))
 
     audit(db, admin.id, "election_deleted", "election", str(election.id), {"name": election.name})
     db.delete(election)
@@ -1520,10 +1532,18 @@ def view_voter_photo(
     if not photo:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Photo not found.")
         
-    if admin.role == Role.TEMP_ADMIN and photo.local_admin_id != str(admin.id):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "You are not authorized to access this photo.")
+    if admin.role == Role.TEMP_ADMIN:
+        election = db.get(Election, photo.election_id)
+        if photo.local_admin_id != str(admin.id) and (not election or str(election.temp_admin_user_id) != str(admin.id)):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "You are not authorized to access this photo.")
         
-    if not os.path.exists(photo.storage_path):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image file no longer exists on disk.")
+    actual_path = photo.storage_path
+    if not os.path.exists(actual_path):
+        from app.api.verification import VOTER_PHOTOS_DIR
+        fallback = os.path.join(VOTER_PHOTOS_DIR, os.path.basename(photo.storage_path))
+        if os.path.exists(fallback):
+            actual_path = fallback
+        else:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Image file no longer exists on disk.")
         
-    return FileResponse(photo.storage_path)
+    return FileResponse(actual_path)

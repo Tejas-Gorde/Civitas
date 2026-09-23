@@ -13,12 +13,7 @@ redis>=5.2.0
 slowapi>=0.1.9
 python-multipart>=0.0.20
 opencv-python-headless>=4.10.0
-mediapipe>=0.10.14
-deepface>=0.0.93
 httpx>=0.28.0
 pytest>=8.3.0
 webauthn>=2.2.0
 openpyxl>=3.1.0
-
-
-

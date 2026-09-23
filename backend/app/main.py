@@ -114,13 +114,15 @@ def run_auto_migrations(target_engine):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.environment == "development":
-        Base.metadata.create_all(bind=engine)
-        run_auto_migrations(engine)
+    # Guarantee database schema and runtime migrations in all environments
+    Base.metadata.create_all(bind=engine)
+    run_auto_migrations(engine)
+    try:
         from app.seed import main as seed_db
         seed_db()
-    else:
-        run_auto_migrations(engine)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Seeding skipped or logged warning: %s", e)
     yield
 
 

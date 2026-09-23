@@ -33,9 +33,15 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def resolve_db_url(cls, v: str) -> str:
-        if isinstance(v, str) and (v == "sqlite:///./voting.db" or v.startswith("sqlite:///./")):
-            rel_path = v.replace("sqlite:///./", "")
-            return f"sqlite:///{BACKEND_DIR}/{rel_path}"
+        if isinstance(v, str):
+            # Normalize Render PostgreSQL URI dialects to psycopg3
+            if v.startswith("postgres://"):
+                v = v.replace("postgres://", "postgresql+psycopg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+"):
+                v = v.replace("postgresql://", "postgresql+psycopg://", 1)
+            if v == "sqlite:///./voting.db" or v.startswith("sqlite:///./"):
+                rel_path = v.replace("sqlite:///./", "")
+                return f"sqlite:///{BACKEND_DIR}/{rel_path}"
         return v
 
     @property
@@ -91,6 +97,7 @@ class Settings(BaseSettings):
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
             "https://civitas-frontend.onrender.com",
+            "https://civitas-frontend-nvp6.onrender.com",
         ]
         for d in defaults:
             if d not in base_list:

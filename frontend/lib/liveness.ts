@@ -10,13 +10,13 @@ export class LivenessTracker {
   private lastVideoTime: number = -1;
   private requestAnimationId: number | null = null;
   private targetChallenge: ChallengeType | null = null;
-  
+
   // Handlers
-  public onFaceLost: () => void = () => {};
-  public onFaceFound: () => void = () => {};
-  public onMultipleFaces: () => void = () => {};
-  public onChallengePassed: () => void = () => {};
-  
+  public onFaceLost: () => void = () => { };
+  public onFaceFound: () => void = () => { };
+  public onMultipleFaces: () => void = () => { };
+  public onChallengePassed: () => void = () => { };
+
   // Temporal tolerance
   private FRAMES_TO_PASS = 8;
   private faceLostFrames = 0;
@@ -29,16 +29,30 @@ export class LivenessTracker {
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
     );
-    this.landmarker = await FaceLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-        delegate: "GPU",
-      },
-      outputFaceBlendshapes: true,
-      outputFacialTransformationMatrixes: true,
-      runningMode: "VIDEO",
-      numFaces: 2, // Allow 2 so we can detect multi-face violations
-    });
+    try {
+      this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+          delegate: "GPU",
+        },
+        outputFaceBlendshapes: true,
+        outputFacialTransformationMatrixes: true,
+        runningMode: "VIDEO",
+        numFaces: 2, // Allow 2 so we can detect multi-face violations
+      });
+    } catch {
+      // Graceful fallback to CPU delegate for devices lacking WebGL2/GPU acceleration
+      this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+          delegate: "CPU",
+        },
+        outputFaceBlendshapes: true,
+        outputFacialTransformationMatrixes: true,
+        runningMode: "VIDEO",
+        numFaces: 2,
+      });
+    }
   }
 
   setChallenge(challenge: ChallengeType) {
@@ -127,7 +141,7 @@ export class LivenessTracker {
           isPassingFrame = true;
         }
         break;
-      
+
       case "open_mouth":
         if (shapes["jawOpen"] > 0.25) {
           isPassingFrame = true;
@@ -141,7 +155,7 @@ export class LivenessTracker {
         const nose = landmarks[1];
         const leftCheek = landmarks[234];
         const rightCheek = landmarks[454];
-        
+
         const distLeft = Math.abs(nose.x - leftCheek.x);
         const distRight = Math.abs(rightCheek.x - nose.x);
         const ratio = distLeft / (distRight + 0.0001); // Avoid div by zero
@@ -150,11 +164,11 @@ export class LivenessTracker {
         // Turn Left (User turns head to their left): Nose moves toward the left side of the image (which is rightCheek 454).
         // So distRight gets very small, ratio goes up.
         // Turn Right: Nose moves toward leftCheek (234), distLeft gets very small, ratio goes down.
-        
+
         if (this.targetChallenge === "turn_left" && ratio > 1.8) {
-           isPassingFrame = true;
+          isPassingFrame = true;
         } else if (this.targetChallenge === "turn_right" && ratio < 0.55) {
-           isPassingFrame = true;
+          isPassingFrame = true;
         }
         break;
     }

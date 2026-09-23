@@ -3,9 +3,28 @@ import axios from "axios";
 export const DEFAULT_PRODUCTION_API_URL = "https://civitas-backend-adjg.onrender.com/api/v1";
 
 export const getApiBaseUrl = (): string => {
+  // 1. Check runtime override if set in browser storage (useful for testing & custom backends)
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("civitas_api_url") || sessionStorage.getItem("civitas_api_url");
+      if (stored && stored.trim()) {
+        const clean = stored.trim().replace(/\/+$/, "");
+        return clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+      }
+    } catch {
+      // Storage access blocked or restricted
+    }
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // 1. If explicit valid remote URL is provided in NEXT_PUBLIC_API_URL (not localhost)
+  // 2. If explicit relative URL (/api/v1) is set for Next.js same-origin proxying
+  if (envUrl && envUrl.trim().startsWith("/")) {
+    const clean = envUrl.trim().replace(/\/+$/, "");
+    return clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+  }
+
+  // 3. If explicit remote URL is provided in NEXT_PUBLIC_API_URL
   if (envUrl && typeof envUrl === "string" && envUrl.trim() && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
     let cleanUrl = envUrl.trim().replace(/\/+$/, "");
     if (!cleanUrl.endsWith("/api/v1")) {
@@ -14,19 +33,27 @@ export const getApiBaseUrl = (): string => {
     return cleanUrl;
   }
 
-  // 2. If running on client/browser:
+  // 4. If running on client/browser outside localhost:
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
-    // If not running on localhost/127.0.0.1 (e.g. *.onrender.com, custom domain, tunnel):
     if (host && host !== "localhost" && host !== "127.0.0.1") {
+      // If NEXT_PUBLIC_API_URL is available, use it; else fallback to default production URL
+      if (envUrl && envUrl.trim() && !envUrl.includes("localhost")) {
+        const clean = envUrl.trim().replace(/\/+$/, "");
+        return clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+      }
       return DEFAULT_PRODUCTION_API_URL;
     }
   } else if (process.env.NODE_ENV === "production") {
-    // 3. During production build or SSR:
+    // 5. During production build or SSR:
+    if (envUrl && envUrl.trim() && !envUrl.includes("localhost")) {
+      const clean = envUrl.trim().replace(/\/+$/, "");
+      return clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+    }
     return DEFAULT_PRODUCTION_API_URL;
   }
 
-  // 4. Local development environment fallback
+  // 6. Local development environment fallback
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
     return envUrl.trim().replace(/\/+$/, "");
   }
@@ -40,17 +67,13 @@ export const api = axios.create({
   timeout: 60000, // 60 seconds to handle Render cold-start delays gracefully
 });
 
-// Automatic Request Interceptor to inject Authorization Bearer token and ensure production base URL
+// Automatic Request Interceptor to inject Authorization Bearer token
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host && host !== "localhost" && host !== "127.0.0.1") {
-      const currentBase = config.baseURL || "";
-      if (!currentBase || currentBase.startsWith("/") || currentBase.includes("localhost") || currentBase.includes("127.0.0.1")) {
-        config.baseURL = DEFAULT_PRODUCTION_API_URL;
-      } else if (!currentBase.endsWith("/api/v1")) {
-        config.baseURL = `${currentBase.replace(/\/+$/, "")}/api/v1`;
-      }
+    // Ensure active baseURL matches current configuration
+    const activeBase = getApiBaseUrl();
+    if (!config.baseURL || (config.baseURL.includes("localhost") && window.location.hostname !== "localhost")) {
+      config.baseURL = activeBase;
     }
 
     const token = localStorage.getItem("token") || sessionStorage.getItem("voting-access");

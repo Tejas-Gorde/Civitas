@@ -67,11 +67,17 @@ def verify_election_access(election_id: str, user: User, db: Session, write_acce
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Election not found.")
 
     if write_access:
-        # Big Admin cannot modify elections managed by Local Admins
-        if user.role in (Role.BIG_ADMIN, Role.ADMIN):
+        # Full System Administrator has master write access
+        if user.role == Role.ADMIN:
+            return election
+
+        # Big Admin can modify elections that have no assigned Local Admin
+        if user.role == Role.BIG_ADMIN:
+            if election.temp_admin_user_id is None:
+                return election
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
-                "Big Administrator is restricted to read-only system monitoring and cannot modify election configurations or records.",
+                "This election is managed by a Local Administrator. Big Administrator is restricted to read-only monitoring for assigned elections.",
             )
 
         if user.role == Role.TEMP_ADMIN:

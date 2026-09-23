@@ -63,12 +63,13 @@ def _get_rp_id_and_origins(request: Request) -> tuple[str, list[str]]:
     Dynamically resolves WebAuthn RP ID (hostname ONLY) and expected origins.
     Inspects X-Forwarded-Host, Origin, Referer, and Host request headers safely.
     """
-    xf_host = _extract_hostname(request.headers.get("x-forwarded-host"))
     origin_host = _extract_hostname(request.headers.get("origin"))
     referer_host = _extract_hostname(request.headers.get("referer"))
+    xf_host = _extract_hostname(request.headers.get("x-forwarded-host"))
     direct_host = _extract_hostname(request.headers.get("host"))
 
-    candidate_host = xf_host or origin_host or referer_host or direct_host or "localhost"
+    # Prioritize client document origin over proxy backend host
+    candidate_host = origin_host or referer_host or xf_host or direct_host or "localhost"
 
     if candidate_host in ("localhost", "127.0.0.1"):
         rp_id = "localhost"
